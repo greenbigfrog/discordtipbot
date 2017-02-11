@@ -11,3 +11,11 @@ targets:
 crystal: 0.20.5
 
 license: MIT
+
+dependencies:
+  pg:
+    github: will/crystal-pg
+    branch: master
+  discordcr:
+    github: meew0/discordcr
+    branch: master
