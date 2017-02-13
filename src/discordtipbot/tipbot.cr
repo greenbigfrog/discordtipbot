@@ -1,4 +1,5 @@
 class Tipbot
+  @db : DB::Database
   def initialize(@config : Config, @log : Logger)
     @log.debug("Starting bot: #{@config.coinname_full}")
     @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
