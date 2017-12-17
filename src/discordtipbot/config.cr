@@ -7,6 +7,14 @@ class Config
     discord_token: String,
     discord_client_id: UInt64,
 
+    coin_api_type: String,
+
+    blockio_api_key: String,
+
+    rpc_url: String,
+    rpc_username: String,
+    rpc_password: String,
+
     prefix: String,
 
     coinname_full: String,

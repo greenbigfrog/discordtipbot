@@ -5,6 +5,8 @@ require "pg"
 require "discordcr"
 
 log = Logger.new(STDOUT)
+
+# Set your logger level here
 log.level = Logger::DEBUG
 
 log.debug("Tipbot network got started")
