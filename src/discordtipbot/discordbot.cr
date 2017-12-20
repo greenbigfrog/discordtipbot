@@ -22,5 +22,9 @@ class DiscordBot
 
   # withdraw: withdraw amount to address
 
-  # deposit: return address, if address in db, else generate and set new address
+  # deposit: return address
+
+  # soak: send coins to all currently online users
+
+  # rain: split amount between people who recently sent a message
 end
