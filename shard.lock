@@ -1,0 +1,18 @@
+version: 1.0
+shards:
+  bitcoin_rpc:
+    github: citizen428/bitcoin_rpc
+    commit: 3565447caf4a659bc7dfe9e839874903c790fbcf
+
+  db:
+    github: crystal-lang/crystal-db
+    version: 0.4.3
+
+  discordcr:
+    github: meew0/discordcr
+    commit: f2776e88447beb2db6c9378d4b617926526012b3
+
+  pg:
+    github: will/crystal-pg
+    commit: 22a6f1317b00195b4302d79b3b3d47b36c883099
+

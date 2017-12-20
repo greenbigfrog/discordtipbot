@@ -8,6 +8,7 @@ targets:
   discordtipbot:
     main: src/discordtipbot.cr
 
+
 crystal: 0.20.5
 
 license: MIT
@@ -19,3 +20,5 @@ dependencies:
   discordcr:
     github: meew0/discordcr
     branch: master
+  bitcoin_rpc:
+    github: citizen428/bitcoin_rpc
