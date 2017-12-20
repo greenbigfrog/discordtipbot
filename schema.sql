@@ -20,13 +20,13 @@ CREATE TABLE accounts (
        created_time timestamptz NOT NULL DEFAULT now()
 );
 
-INSERT INTO accounts VALUES userid=00000000;
+INSERT INTO accounts (userid) VALUES (00000000);
 
 CREATE TABLE transactions (
        id serial PRIMARY KEY,
        memo text NOT NULL,
-       from_id bigint NOT NULL FOREIGN KEY REFERENCES accounts(userid),
-       to_id bigint NOT NULL FOREIGN KEY REFERENCES accounts(userid),
+       from_id bigint NOT NULL REFERENCES accounts(userid),
+       to_id bigint NOT NULL REFERENCES accounts(userid),
        amount float8 NOT NULL,
 
        time timestamptz NOT NULL DEFAULT now()

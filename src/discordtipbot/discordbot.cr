@@ -17,4 +17,10 @@ class DiscordBot
     @bot.run
     @log.info("Started #{@config.coinname_full} bot")
   end
+
+  # tip: transfer from user to user
+
+  # withdraw: withdraw amount to address
+
+  # deposit: return address, if address in db, else generate and set new address
 end

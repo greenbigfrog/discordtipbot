@@ -12,9 +12,11 @@ TODO: Write a description here
 
 - First make sure you've got [crystal](https://crystal-lang.org/) installed.
 - Install dependencies (`shards install`)
-- TODO: database and wallet setup
+- TODO: wallet setup
+- create the database for each of the currencies you plan on running on: `createdb dogecoin-testnet`
+- set the schema for the database by running: `psql -d dogecoin-testnet' -f schema.sql'`
 - Copy the sample config
-- Run bot `crystal run src/discordtipbot.cr`
+- Run bot `crystal run src/discordtipbot.cr -- config.json`
 
 ## Usage
 

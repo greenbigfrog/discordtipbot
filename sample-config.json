@@ -1,6 +1,6 @@
 [
     {
-        "database_url": "postgres://localhost:5432/dogecoin-test",
+        "database_url": "postgres://127.0.0.1:5432/dogecoin-testnet",
         
         "discord_token": "MTY4MjQ4ODg3NzIxN.922d8sdg8.GGDSGD",
         "discord_client_id": 16824888772172,
