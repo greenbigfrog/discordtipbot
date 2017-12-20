@@ -2,6 +2,12 @@
 
 TODO: Write a description here
 
+## About
+- First we launch the main watcher at src/discordtipbot.cr
+- This reads the config file
+- It then forks a process for each bot
+- And in every of those processes it then launches src/discordtipbot/controller.cr which creates the actual tipbot
+
 ## Installation
 
 - First make sure you've got [crystal](https://crystal-lang.org/) installed.

@@ -4,12 +4,15 @@ require "logger"
 require "pg"
 require "discordcr"
 
+puts "No Config File specified! Exiting!" if ARGV.size == 0
+exit if ARGV.size == 0
+
 log = Logger.new(STDOUT)
 
 # Set your logger level here
 log.level = Logger::DEBUG
 
-log.debug("Tipbot network got started")
+log.debug("Tipbot network getting started")
 
 log.debug("Attempting to read config from \"#{ARGV[0]}\"")
 config = File.open(ARGV[0], "r") do |file|

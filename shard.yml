@@ -21,4 +21,4 @@ dependencies:
     github: meew0/discordcr
     branch: master
   bitcoin_rpc:
-    github: citizen428/bitcoin_rpc
+    github: greenbigfrog/bitcoin_rpc

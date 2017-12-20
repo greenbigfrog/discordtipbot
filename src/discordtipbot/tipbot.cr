@@ -1,23 +1,19 @@
-class Tipbot
+class TipBot
   @db : DB::Database
 
   def initialize(@config : Config, @log : Logger)
-    @log.debug("Starting bot: #{@config.coinname_full}")
-    @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
-    @log.info("Started #{@config.coinname_full} bot")
-
     @db = DB.open(@config.database_url)
   end
 
-  def reply(payload : Discord::Message, msg : String)
-    begin
-      @bot.create_message(payload.channel_id, msg)
-    rescue
-      @log.warn("bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
-    end
-  end
-
-  def run
-    @bot.run
+  def transfer(from : UInt64, to : UInt64, amount : Float32)
+    @log.debug("Attempting to transfer #{amount} #{coinname_short} from #{from} to #{to}")
+    sql = <<-SQL
+        BEGIN;
+        INSERT INTO transactions VALUES ('tip', #{from}, #{to}, #{amount});
+        UPDATE accounts SET balance = ((SELECT count(amount) FROM transactions WHERE to_id = #{from}) - (SELECT count(amount) FROM transactions WHERE from_id = #{from})) WHERE userid = #{from};
+        UPDATE accounts SET balance = ((SELECT count(amount) FROM transactions WHERE to_id = #{from}) - (SELECT count(amount) FROM transactions WHERE from_id = #{from})) WHERE userid = #{to};
+        COMMIT;
+        SQL
+    @db.exec(sql)
   end
 end

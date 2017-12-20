@@ -1,8 +1,8 @@
 version: 1.0
 shards:
   bitcoin_rpc:
-    github: citizen428/bitcoin_rpc
-    commit: 3565447caf4a659bc7dfe9e839874903c790fbcf
+    github: greenbigfrog/bitcoin_rpc
+    commit: 6a3c10245e9a66378ebe88e5c69317a414b3a65b
 
   db:
     github: crystal-lang/crystal-db
@@ -15,4 +15,8 @@ shards:
   pg:
     github: will/crystal-pg
     commit: 22a6f1317b00195b4302d79b3b3d47b36c883099
+
+  sam:
+    github: imdrasil/sam.cr
+    version: 0.2.4
 

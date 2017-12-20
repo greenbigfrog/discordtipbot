@@ -1,14 +1,16 @@
 DROP TABLE IF EXISTS coin_transactions, transactions, accounts;
 
-CREATE TABLE coin_transactions (
-       txid text PRIMARY KEY,
-       status text NOT NULL DEFAULT "unchecked",
-       amount float8,
-       credited_userid bigint FOREIGN KEY REFERENCES accounts(userid),
-
-       created_time timestamptz NOT NULL DEFAULT now(),
-       credited_at timestamptz
-);
+/*
+ *   CREATE TABLE coin_transactions (
+ *   txid text PRIMARY KEY,
+ *   status text NOT NULL DEFAULT "unchecked",
+ *   amount float8,
+ *   credited_userid bigint FOREIGN KEY REFERENCES accounts(userid),
+ *
+ *   created_time timestamptz NOT NULL DEFAULT now(),
+ *   credited_at timestamptz
+ *   );
+ */
 
 CREATE TABLE accounts (
        userid bigint PRIMARY KEY,

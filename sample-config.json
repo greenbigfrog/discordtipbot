@@ -1,0 +1,29 @@
+[
+    {
+        "database_url": "postgres://localhost:5432/dogecoin-test",
+        
+        "discord_token": "MTY4MjQ4ODg3NzIxN.922d8sdg8.GGDSGD",
+        "discord_client_id": 16824888772172,
+        
+        "coin_api_type": "rpc",
+        
+        "blockio_api_key": "jsdjgjdsjkdgs",
+    
+        "rpc_url": "127.0.0.1",
+        "rpc_port": 44555,
+        "rpc_username": "testnet",
+        "rpc_password": "hunter2",
+        
+        "prefix": "~",
+    
+        "coinname_full": "Dogecoin (Testnet)",
+        "coinname_short": "D",
+    
+        "min_tip": 0.1,
+        "min_soak": 5.0,
+        "min_rain": 1.0,
+        "min_withdraw": 1.0,
+        
+        "admins": [163607982473609216]
+  }
+]
