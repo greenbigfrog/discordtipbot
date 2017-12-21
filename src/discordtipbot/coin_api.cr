@@ -4,13 +4,13 @@ class CoinApi
   @type : String
 
   def initialize(@config : Config, @log : Logger)
-    @log.debug("Initializing Coin Interaction API for #{@config.coinname_full} with type #{@config.coin_api_type}")
+    @log.debug("#{config.coinname_short}: Initializing Coin Interaction API for #{@config.coinname_full} with type #{@config.coin_api_type}")
 
     @type = @config.coin_api_type
 
     # For RPC communication we are using https://github.com/citizen428/bitcoin_rpc
-          @rpc = BitcoinRpc.new(@config.rpc_url, @config.rpc_username, @config.rpc_password)
-          @log.debug(@rpc.getinfo)
+    @rpc = BitcoinRpc.new(@config.rpc_url, @config.rpc_username, @config.rpc_password)
+    @log.debug(@rpc.getinfo)
     # elsif @type == "blockio"
     # @blockio = Blockio::Client.new(@config.blockio_api_key)
   end

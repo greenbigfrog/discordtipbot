@@ -1,6 +1,6 @@
 class DiscordBot
   def initialize(@config : Config, @log : Logger)
-    @log.debug("Starting bot: #{@config.coinname_full}")
+    @log.debug("#{@config.coinname_short}: tarting bot: #{@config.coinname_full}")
     @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
     @tip = TipBot.new(@config, @log)
   end
@@ -9,13 +9,13 @@ class DiscordBot
     begin
       @bot.create_message(payload.channel_id, msg)
     rescue
-      @log.warn("bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
+      @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
     end
   end
 
   def run
     @bot.run
-    @log.info("Started #{@config.coinname_full} bot")
+    @log.info("#{@config.coinname_short}: Started #{@config.coinname_full} bot")
   end
 
   # tip: transfer from user to user

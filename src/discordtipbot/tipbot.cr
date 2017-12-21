@@ -7,7 +7,7 @@ class TipBot
   end
 
   def transfer(from : UInt64, to : UInt64, amount : Float32)
-    @log.debug("Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
+    @log.debug("#{config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
     self.ensure_user(from)
     self.ensure_user(to)
     sql = <<-SQL
@@ -17,12 +17,12 @@ class TipBot
         SQL
     db.transaction do |tx|
       tx.exec(sql)
-      @log.debug("Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
+      @log.debug("#{config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
     end
   end
 
   def withdraw(from : UInt64, address : String, amount : Float32)
-    @log.debug("Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
+    @log.debug("#{config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
     self.ensure_user(from)
     sql = <<-SQL
             INSERT INTO transactions VALUES ('withdrawal', #{from})
@@ -34,7 +34,7 @@ class TipBot
   end
 
   def multi_transfer(from : UInt64, users : Array[UInt64], total : Float32)
-    @log.debug("Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
+    @log.debug("#{config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     db.transaction do |tx|
       users.each do |x|
@@ -44,7 +44,7 @@ class TipBot
   end
 
   def get_address(user : UInt64)
-    @log.debug("Attempting to get deposit address for #{user}")
+    @log.debug("#{config.coinname_short}: Attempting to get deposit address for #{user}")
     self.ensure_user(user)
     sql = <<-SQL
         SELECT address FROM accounts WHERE userid=#{user}
@@ -63,7 +63,7 @@ class TipBot
   end
 
   private def ensure_user(user : UInt64)
-    @debug.log("Ensuring user: #{user}")
+    @debug.log("#{config.coinname_short}: Ensuring user: #{user}")
     db.transaction do |tx|
       tx.exec("INSERT INTO accounts(userid) VALUES (#{user})") if tx.exec("SELECT * FROM accounts WHERE userid=#{user}")
     end
