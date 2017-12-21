@@ -9,8 +9,7 @@
         
         "blockio_api_key": "jsdjgjdsjkdgs",
     
-        "rpc_url": "127.0.0.1",
-        "rpc_port": 44555,
+        "rpc_url": "http://127.0.0.1:44555",
         "rpc_username": "testnet",
         "rpc_password": "hunter2",
         

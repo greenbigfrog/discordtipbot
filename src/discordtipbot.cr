@@ -21,7 +21,15 @@ end
 log.info("read config from \"#{ARGV[0]}\"")
 
 log.debug("starting forking")
-bots = config.each { |x| Process.fork { Controller.new(x, log) } }
+bots = config.each do |x|
+  Process.fork do
+    begin
+      Controller.new(x, log)
+    rescue ex
+      ex.inspect_with_backtrace(STDERR)
+    end
+  end
+end
 log.debug("finished forking")
 
 log.info("All bots should be running now")
