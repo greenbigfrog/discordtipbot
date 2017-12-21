@@ -22,14 +22,11 @@ log.info("read config from \"#{ARGV[0]}\"")
 
 log.debug("starting forking")
 bots = config.each do |x|
-  Process.fork do
-    begin
-      Controller.new(x, log)
-    rescue ex
-      ex.inspect_with_backtrace(STDERR)
-    end
+  spawn do
+    Controller.new(x, log)
   end
 end
 log.debug("finished forking")
 
 log.info("All bots should be running now")
+sleep
