@@ -62,6 +62,10 @@ class TipBot
     db.exec("SELECT balance FROM accounts WHERE userid=#{user}")
   end
 
+  def get_info
+    @coin_api.get_info
+  end
+
   private def ensure_user(user : UInt64)
     @debug.log("#{config.coinname_short}: Ensuring user: #{user}")
     db.transaction do |tx|

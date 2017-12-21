@@ -15,6 +15,10 @@ class CoinApi
     # @blockio = Blockio::Client.new(@config.blockio_api_key)
   end
 
+  def get_info
+    @rpc.getinfo
+  end
+
   def withdraw(address : String, amount : String, comment : String)
     if @type == "rpc"
       @rpc.sendtoaddress(address, amount, comment)
