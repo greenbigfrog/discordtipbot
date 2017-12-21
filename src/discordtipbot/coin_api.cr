@@ -10,7 +10,7 @@ class CoinApi
 
     # For RPC communication we are using https://github.com/citizen428/bitcoin_rpc
     @rpc = BitcoinRpc.new(@config.rpc_url, @config.rpc_username, @config.rpc_password)
-    @log.debug(@rpc.getinfo)
+    @log.debug("#{config.coinname_short}: #{@rpc.getinfo}")
     # elsif @type == "blockio"
     # @blockio = Blockio::Client.new(@config.blockio_api_key)
   end
