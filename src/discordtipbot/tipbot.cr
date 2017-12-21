@@ -2,7 +2,6 @@ class TipBot
   @db : DB::Database
 
   def initialize(@config : Config, @log : Logger)
-    puts @config.database_url
     @db = DB.open(@config.database_url)
     @coin_api = CoinApi.new(@config, @log)
   end
