@@ -1,4 +1,6 @@
 class DiscordBot
+  USER_REGEX = /<@!?(?<id>\d+)>/
+
   def initialize(@config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
     @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
@@ -10,20 +12,23 @@ class DiscordBot
       case msg.content
       when prefix + "ping"
         self.ping(msg)
-      when prefix + "tip"
+      when .starts_with? prefix + "tip"
         self.tip(msg)
-      when prefix + "withdraw"
+      when .starts_with? prefix + "withdraw"
         self.withdraw(msg)
-      when prefix + "deposit"
+      when .starts_with? prefix + "deposit"
         self.deposit(msg)
-      when prefix + "soak"
+      when .starts_with? prefix + "soak"
         self.soak(msg)
-      when prefix + "rain"
+      when .starts_with? prefix + "rain"
         self.rain(msg)
       when prefix + "getinfo"
         self.getinfo(msg)
       end
+      # TODO: Add config
     end
+
+    # TODO: DM owner of guild, to config the bot when they add the bot
   end
 
   # Since there is no easy way, just to reply to a message
@@ -54,7 +59,30 @@ class DiscordBot
 
   # transfer from user to user
   def tip(msg : Discord::Message)
-    # TODO
+    cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
+    # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
+    cmd = msg.content.split(" ")
+
+    return reply(msg, "Error! Usage: #{cmd_usage}") unless cmd.size > 2
+
+    if match = USER_REGEX.match(cmd[1])
+      id = match["id"].try &.to_u64
+    end
+    err = "Error: Please specify the user you want to tip! #{cmd_usage}"
+    return reply(msg, err) unless id
+    begin
+      to = @bot.get_user(id)
+    rescue
+      return reply(msg, err)
+    end
+
+    if m = /(?<amount>\d+)/.match(cmd[2])
+      amount = m["amount"].try &.to_f32
+    end
+    return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
+
+    @tip.transfer(from: msg.author.id, to: id, amount: amount)
+    # TODO Add message
   end
 
   # withdraw amount to address
