@@ -65,24 +65,34 @@ class DiscordBot
 
     return reply(msg, "Error! Usage: #{cmd_usage}") unless cmd.size > 2
 
-    if match = USER_REGEX.match(cmd[1])
-      id = match["id"].try &.to_u64
-    end
+    match = USER_REGEX.match(cmd[1])
+    id = match["id"].try &.to_u64 if match
+
     err = "Error: Please specify the user you want to tip! #{cmd_usage}"
     return reply(msg, err) unless id
     begin
-      to = @bot.get_user(id)
+      to = @cache.resolve_user(id)
     rescue
       return reply(msg, err)
     end
 
-    if m = /(?<amount>\d+)/.match(cmd[2])
+    if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
       amount = m["amount"].try &.to_f32
     end
     return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
 
-    @tip.transfer(from: msg.author.id, to: id, amount: amount)
-    # TODO Add message
+    return reply(msg, "Error: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
+
+    tip = @tip.transfer(from: msg.author.id, to: id, amount: amount)
+
+    case tip
+    when "success"
+      return reply(msg, "<@#{msg.author.id}> tipped #{amount} #{@config.coinname_short} to <@#{match}>")
+    when "insufficient balance"
+      return reply(msg, "Insufficient Balance")
+    when "error"
+      return reply(msg, "Something went wrong!")
+    end
   end
 
   # withdraw amount to address
