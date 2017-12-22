@@ -12,7 +12,7 @@ class TipBot
     ensure_user(to)
     raise "Insufficient Balance" if balance(from) < amount
     @db.transaction do |tx|
-      tx.connection.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', #{from}, #{to}, #{amount});")
+      tx.connection.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', $1, $2, $3);", from, to, amount)
       @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
     end
     update_balance(from)
@@ -24,7 +24,7 @@ class TipBot
     ensure_user(from)
     raise "Insufficient Balance" if balance(from) < amount
     db.transaction do |tx|
-      tx.connection.exec("INSERT INTO transactions VALUES ('withdrawal', #{from})")
+      tx.connection.exec("INSERT INTO transactions VALUES ('withdrawal', $1)", from)
       @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
       @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address}")
     end
@@ -47,7 +47,7 @@ class TipBot
   def get_address(user : UInt64)
     @log.debug("#{@config.coinname_short}: Attempting to get deposit address for #{user}")
     ensure_user(user)
-    res = @db.query("SELECT address FROM accounts WHERE userid=#{user}").read(String)
+    res = @db.query("SELECT address FROM accounts WHERE userid=$1", user).read(String)
     if res.empty?
       res = @coin_api.new_address
       @log.debug("#{@config.coinname_short}: New address for #{user}: #{res}")
@@ -67,15 +67,15 @@ class TipBot
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
     @db.transaction do |tx|
       db = tx.connection
-      db.exec("INSERT INTO accounts(userid) VALUES (#{user})") unless db.exec("SELECT * FROM accounts WHERE userid=#{user}").rows_affected > 0
+      db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) unless db.query("SELECT 1 FROM accounts WHERE userid=$1", user) > 0
     end
   end
 
   private def update_balance(id : UInt64)
-    @db.exec("UPDATE accounts SET balance = ((SELECT count(amount) FROM transactions WHERE to_id = #{id}) - (SELECT count(amount) FROM transactions WHERE from_id = #{id})) WHERE userid = #{id};")
+    @db.exec("UPDATE accounts SET balance = ((SELECT count(amount) FROM transactions WHERE to_id = $1) - (SELECT count(amount) FROM transactions WHERE from_id = $1)) WHERE userid = $1", id)
   end
 
   private def balance(id : UInt64)
-    @db.query("SELECT balance FROM accounts WHERE userid=#{id}").read(Float32)
+    @db.query("SELECT balance FROM accounts WHERE userid=$1", id).read(Float32)
   end
 end
