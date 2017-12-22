@@ -10,13 +10,20 @@ class TipBot
     @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
     ensure_user(from)
     ensure_user(to)
-    raise "Insufficient Balance" if balance(from) < amount
-    @db.transaction do |tx|
-      tx.connection.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', $1, $2, $3);", from, to, amount)
+
+    return "insufficient balance" if balance(from) < amount
+
+    tx = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', $1, $2, $3);", from, to, amount)
+    if tx.rows_affected == 1
       @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
+    else
+      @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
+      return "error"
     end
     update_balance(from)
     update_balance(to)
+    return "success"
+    @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
   end
 
   def withdraw(from : UInt64, address : String, amount : Float32)
@@ -65,10 +72,7 @@ class TipBot
 
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
-    @db.transaction do |tx|
-      db = tx.connection
-      db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) unless db.query("SELECT 1 FROM accounts WHERE userid=$1", user) > 0
-    end
+    @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)) == [0]
   end
 
   private def update_balance(id : UInt64)
@@ -76,6 +80,8 @@ class TipBot
   end
 
   private def balance(id : UInt64)
-    @db.query("SELECT balance FROM accounts WHERE userid=$1", id).read(Float32)
+    a = @db.query_all("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64))[0]
+    return a if a
+    return 0
   end
 end
