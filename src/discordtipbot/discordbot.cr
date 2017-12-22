@@ -82,7 +82,7 @@ class DiscordBot
     return reply(msg, "Error: As a design choice you aren't allowed to tip Bot accounts") if to.bot
 
     if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
-      amount = m["amount"].try &.to_f32
+      amount = m["amount"].try &.to_f64
     end
     return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
 
@@ -102,12 +102,27 @@ class DiscordBot
 
   # withdraw amount to address
   def withdraw(msg : Discord::Message)
-    # TODO
+    cmd_usage = "#{@config.prefix}withdraw [address] [amount]"
+
+    # cmd[0]: command, cmd[1]: address, cmd[2]: amount
+    cmd = msg.content.split(" ")
+
+    address = cmd[1]
+
+    if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
+      amount = m["amount"].try &.to_f64
+    end
+    return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
+
+    return reply(msg, "Error: Please specify a valid #{@config.coinname_full} address") unless @tip.validate_address(address)
+    a = @tip.withdraw(msg.author.id, address, amount)
+    return reply(msg, "Error: Please try again later") unless a
+    reply(msg, "Successfully withdrew #{amount} #{@config.coinname_short} to #{address}")
   end
 
   # return deposit address
   def deposit(msg : Discord::Message)
-    # TODO
+    reply(msg, "You're deposit address is: **#{@tip.get_address(msg.author.id)}**")
   end
 
   # send coins to all currently online users

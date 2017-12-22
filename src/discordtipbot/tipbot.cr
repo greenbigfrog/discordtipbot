@@ -6,7 +6,7 @@ class TipBot
     @coin_api = CoinApi.new(@config, @log)
   end
 
-  def transfer(from : UInt64, to : UInt64, amount : Float32)
+  def transfer(from : UInt64, to : UInt64, amount : Float64)
     @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
     ensure_user(from)
     ensure_user(to)
@@ -26,19 +26,21 @@ class TipBot
     @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
   end
 
-  def withdraw(from : UInt64, address : String, amount : Float32)
+  def withdraw(from : UInt64, address : String, amount : Float64)
     @log.debug("#{@config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
     ensure_user(from)
     raise "Insufficient Balance" if balance(from) < amount
-    db.transaction do |tx|
-      tx.connection.exec("INSERT INTO transactions VALUES ('withdrawal', $1)", from)
-      @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
+
+    if @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
+      @db.exec("INSERT INTO transactions VALUES ('withdrawal', $1)", from)
       @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address}")
+    else
+      @log.error("#{@config.coinname_short}: Failed to withdraw!")
     end
     update_balance(from)
   end
 
-  def multi_transfer(from : UInt64, users : Array[UInt64], total : Float32)
+  def multi_transfer(from : UInt64, users : Array[UInt64], total : Float64)
     @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
@@ -68,6 +70,10 @@ class TipBot
 
   def get_info
     @coin_api.get_info
+  end
+
+  def validate_address(address : String)
+    @coin_api.validate_address(address)
   end
 
   private def ensure_user(user : UInt64)
