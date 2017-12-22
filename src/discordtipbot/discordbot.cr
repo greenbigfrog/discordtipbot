@@ -23,6 +23,8 @@ class DiscordBot
         self.soak(msg)
       when .starts_with? prefix + "rain"
         self.rain(msg)
+      when .starts_with? prefix + "balance"
+        self.balance(msg)
       when prefix + "getinfo"
         self.getinfo(msg)
       end
@@ -114,5 +116,10 @@ class DiscordBot
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message)
     # TODO
+  end
+
+  # the users balance
+  def balance(msg : Discord::Message)
+    reply(msg, "Your balance is: #{@tip.get_balance(msg.author.id)} #{@config.coinname_short}")
   end
 end

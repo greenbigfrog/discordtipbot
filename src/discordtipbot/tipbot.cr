@@ -76,12 +76,19 @@ class TipBot
   end
 
   private def update_balance(id : UInt64)
-    @db.exec("UPDATE accounts SET balance = ((SELECT count(amount) FROM transactions WHERE to_id = $1) - (SELECT count(amount) FROM transactions WHERE from_id = $1)) WHERE userid = $1", id)
+    sql = <<-SQL
+    UPDATE accounts SET balance=(
+      SELECT (
+          (SELECT COALESCE( SUM (amount), 0) FROM transactions WHERE to_id=$1)
+          - (SELECT COALESCE( SUM (amount), 0) FROM transactions WHERE from_id=$1)
+      ) AS sum)
+    WHERE userid=$1;
+    SQL
+
+    @db.exec(sql, id)
   end
 
   private def balance(id : UInt64)
-    a = @db.query_all("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64))[0]
-    return a if a
-    return 0
+    @db.query_all("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64))[0] || 0
   end
 end
