@@ -79,6 +79,8 @@ class DiscordBot
       return reply(msg, err)
     end
 
+    return reply(msg, "Error: As a design choice you aren't allowed to tip Bot accounts") if to.bot
+
     if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
       amount = m["amount"].try &.to_f32
     end
@@ -90,7 +92,7 @@ class DiscordBot
 
     case tip
     when "success"
-      return reply(msg, "<@#{msg.author.id}> tipped #{amount} #{@config.coinname_short} to <@#{match}>")
+      return reply(msg, "<@#{msg.author.id}> tipped #{amount} #{@config.coinname_short} to <@#{to.id}>")
     when "insufficient balance"
       return reply(msg, "Insufficient Balance")
     when "error"
