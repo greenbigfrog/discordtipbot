@@ -43,16 +43,16 @@ class TipBot
     return true
   end
 
-  def multi_transfer(from : UInt64, users : Array[UInt64], total : Float64)
+  def multi_transfer(from : UInt64, users : Array(UInt64), total : Float64)
     @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
-    raise "Insufficient Balance" if balance(from) < amount
+    raise "Insufficient Balance" if balance(from) < total
     @db.transaction do |tx|
       users.each do |x|
         self.transfer(from, x, (total/users.size))
       end
-      @log.debug("#{config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
+      @log.debug("#{@config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
     end
   end
 
