@@ -43,6 +43,10 @@ class DiscordBot
     end
   end
 
+  private def private?(msg : Discord::Message)
+    @cache.resolve_channel(msg.channel_id).type == 1
+  end
+
   def run
     @bot.run
     @log.info("#{@config.coinname_short}: Started #{@config.coinname_full} bot")
@@ -62,6 +66,7 @@ class DiscordBot
 
   # transfer from user to user
   def tip(msg : Discord::Message)
+    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
     cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
     cmd = msg.content.split(" ")
@@ -79,7 +84,9 @@ class DiscordBot
       return reply(msg, err)
     end
 
-    return reply(msg, "Error: As a design choice you aren't allowed to tip Bot accounts") if to.bot
+    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if to.bot
+
+    return reply(msg, "**ERROR**: You trying to tip yourself!?") if id == msg.author.id
 
     if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
       amount = m["amount"].try &.to_f64
@@ -133,7 +140,9 @@ class DiscordBot
 
   # return deposit address
   def deposit(msg : Discord::Message)
-    reply(msg, "You're deposit address is: **#{@tip.get_address(msg.author.id)}**")
+    return reply(msg, "This command doesn't work in public channels! Please use this command in a Direct Message") unless private?(msg)
+
+    reply(msg, "You're deposit address is: **#{@tip.get_address(msg.author.id)}**\nPlease keep in mind, that this address is for one time use only. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.")
   end
 
   # send coins to all currently online users
