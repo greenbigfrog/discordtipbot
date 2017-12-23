@@ -20,11 +20,13 @@ class Config
     coinname_full: String,
     coinname_short: String,
 
-    min_tip: Float32,
-    min_soak: Float32,
-    min_rain: Float32,
-    min_withdraw: Float32,
+    txfee: Float64,
 
-    admins: Array(Int64)
+    min_tip: Float64,
+    min_soak: Float64,
+    min_rain: Float64,
+    min_withdraw: Float64,
+
+    admins: Array(UInt64)
   )
 end

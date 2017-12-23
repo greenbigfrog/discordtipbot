@@ -17,6 +17,8 @@
     
         "coinname_full": "Dogecoin (Testnet)",
         "coinname_short": "D",
+
+        "txfee": 1,
     
         "min_tip": 0.1,
         "min_soak": 5.0,
