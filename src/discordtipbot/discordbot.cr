@@ -64,12 +64,14 @@ class DiscordBot
     unless @config.admins.includes?(msg.author.id)
       return reply(msg, "**ERROR**: This is a admin only command!")
     end
+    # TODO format message
     reply(msg, "#{@tip.get_info}")
   end
 
   # transfer from user to user
   def tip(msg : Discord::Message)
     return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
+
     cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
     cmd = msg.content.split(" ")
@@ -102,7 +104,7 @@ class DiscordBot
 
     case tip
     when "success"
-      return reply(msg, "<@#{msg.author.id}> tipped #{amount} #{@config.coinname_short} to <@#{to.id}>")
+      return reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
     when "insufficient balance"
       return reply(msg, "Insufficient Balance")
     when "error"
