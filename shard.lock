@@ -9,14 +9,10 @@ shards:
     version: 0.4.3
 
   discordcr:
-    github: meew0/discordcr
-    commit: f2776e88447beb2db6c9378d4b617926526012b3
+    github: greenbigfrog/discordcr
+    commit: 98b9aa23254c1a0f41bbeb62417895db992c522a
 
   pg:
     github: will/crystal-pg
     commit: 22a6f1317b00195b4302d79b3b3d47b36c883099
-
-  sam:
-    github: imdrasil/sam.cr
-    version: 0.2.4
 

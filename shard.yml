@@ -18,7 +18,7 @@ dependencies:
     github: will/crystal-pg
     branch: master
   discordcr:
-    github: meew0/discordcr
-    branch: master
+    github: greenbigfrog/discordcr
+    branch: type-fix
   bitcoin_rpc:
     github: greenbigfrog/bitcoin_rpc
