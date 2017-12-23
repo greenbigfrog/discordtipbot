@@ -29,15 +29,18 @@ class TipBot
   def withdraw(from : UInt64, address : String, amount : Float64)
     @log.debug("#{@config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
     ensure_user(from)
-    raise "Insufficient Balance" if balance(from) < amount
+    return "insufficient balance" if balance(from) < amount + @config.txfee
 
-    if @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
-      @db.exec("INSERT INTO transactions VALUES ('withdrawal', $1)", from)
-      @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address}")
+    if tx = @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
+      memo = "withdrawal: #{address}; #{tx}"
+      @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)
+      @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address} in TX #{tx}")
     else
       @log.error("#{@config.coinname_short}: Failed to withdraw!")
+      return false
     end
     update_balance(from)
+    return true
   end
 
   def multi_transfer(from : UInt64, users : Array[UInt64], total : Float64)
@@ -56,11 +59,14 @@ class TipBot
   def get_address(user : UInt64)
     @log.debug("#{@config.coinname_short}: Attempting to get deposit address for #{user}")
     ensure_user(user)
-    res = @db.query("SELECT address FROM accounts WHERE userid=$1", user).read(String)
-    if res.empty?
-      res = @coin_api.new_address
-      @log.debug("#{@config.coinname_short}: New address for #{user}: #{res}")
+
+    address = @db.query_one("SELECT address FROM accounts WHERE userid=$1", user, &.read(String | Nil))
+    if address.nil?
+      address = @coin_api.new_address
+      @db.exec("UPDATE accounts SET address=$1 WHERE userid=$2", address, user)
+      @log.debug("#{@config.coinname_short}: New address for #{user}: #{address}")
     end
+    return address
   end
 
   def get_balance(user : UInt64)
@@ -95,6 +101,6 @@ class TipBot
   end
 
   private def balance(id : UInt64)
-    @db.query_all("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64))[0] || 0
+    @db.query_all("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64))[0] || 0.0
   end
 end

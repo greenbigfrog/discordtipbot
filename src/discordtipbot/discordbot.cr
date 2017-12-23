@@ -107,17 +107,28 @@ class DiscordBot
     # cmd[0]: command, cmd[1]: address, cmd[2]: amount
     cmd = msg.content.split(" ")
 
-    address = cmd[1]
+    return reply(msg, "Error! Usage: #{cmd_usage}") unless cmd.size > 2
 
-    if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
-      amount = m["amount"].try &.to_f64
+    if cmd[2] == "all"
+      amount = @tip.get_balance(msg.author.id)
+    else
+      if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
+        amount = m["amount"].try &.to_f64
+      end
     end
     return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
 
+    address = cmd[1]
     return reply(msg, "Error: Please specify a valid #{@config.coinname_full} address") unless @tip.validate_address(address)
-    a = @tip.withdraw(msg.author.id, address, amount)
-    return reply(msg, "Error: Please try again later") unless a
-    reply(msg, "Successfully withdrew #{amount} #{@config.coinname_short} to #{address}")
+
+    case @tip.withdraw(msg.author.id, address, amount)
+    when "insufficient balance"
+      return reply(msg, "**ERROR:** You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee}")
+    when false
+      return reply(msg, "**ERROR:** Please try again later")
+    when true
+      reply(msg, "Successfully withdrew **#{amount} #{@config.coinname_short}** to **#{address}**")
+    end
   end
 
   # return deposit address
