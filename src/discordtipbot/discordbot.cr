@@ -10,6 +10,7 @@ class DiscordBot
     prefix = @config.prefix
 
     @bot.on_message_create do |msg|
+      next if msg.author.id == @cache.resolve_current_user.id
       case msg.content
       when prefix + "ping"
         self.ping(msg)
@@ -44,7 +45,25 @@ class DiscordBot
   end
 
   private def private?(msg : Discord::Message)
-    @cache.resolve_channel(msg.channel_id).type == 1
+    channel(msg).type == 1
+  end
+
+  private def channel(msg : Discord::Message) : Discord::Channel
+    @cache.resolve_channel(msg.channel_id)
+  end
+
+  private def guild_id(msg : Discord::Message)
+    channel(msg).guild_id
+  end
+
+  private def amount(msg : Discord::Message, string)
+    if string == "all"
+      amount = @tip.get_balance(msg.author.id)
+    else
+      if m = /(?<amount>^[0-9,\.]+)/.match(string)
+        amount = m["amount"].try &.to_f64
+      end
+    end
   end
 
   def run
@@ -93,9 +112,7 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: You trying to tip yourself!?") if id == msg.author.id
 
-    if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
-      amount = m["amount"].try &.to_f64
-    end
+    amount = amount(msg, cmd[2])
     return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
 
     return reply(msg, "Error: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
@@ -121,16 +138,10 @@ class DiscordBot
 
     return reply(msg, "Error! Usage: #{cmd_usage}") unless cmd.size > 2
 
-    if cmd[2] == "all"
-      amount = @tip.get_balance(msg.author.id)
-    else
-      if m = /(?<amount>^[0-9,\.]+)/.match(cmd[2])
-        amount = m["amount"].try &.to_f64
-      end
-    end
+    amount = amount(msg, cmd[2])
     return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "You have to withdraw at least #{@config.min_withdraw}") if amount < @config.min_withdraw
+    return reply(msg, "You have to withdraw at least #{@config.min_withdraw}") if amount <= @config.min_withdraw
 
     address = cmd[1]
     return reply(msg, "Error: Please specify a valid #{@config.coinname_full} address") unless @tip.validate_address(address)
@@ -154,14 +165,59 @@ class DiscordBot
 
   # send coins to all currently online users
   def soak(msg : Discord::Message)
-    # TODO
-    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts")#  if to.bot
+    return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private?(msg)
+
+    cmd_usage = "#{@config.prefix}soak [amount]"
+
+    # cmd[0]: command, cmd[1]: amount
+    cmd = msg.content.split(" ")
+
+    return reply(msg, cmd_usage) unless cmd.size > 1
+
+    amount = amount(msg, cmd[1])
+    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
+
+    return reply(msg, "**You have to soak at least #{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
+
+    return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
+
+    users = Array(UInt64).new
+    last_id = 0_u64
+
+    loop do
+      new_users = @bot.list_guild_members(guild_id, after: last_id)
+      break if new_users.size == 0
+      last_id = new_users.last.user.id
+      new_users.reject!(&.user.bot)
+      new_users.each { |x| users << x.user.id unless x.user.id == msg.author.id }
+    end
+
+    # TODO only soak people that can view the channel
+
+    return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
+
+    if (users.size * @config.min_soak) > @config.min_soak_total
+      targets = users.sample((@config.min_soak_total / @config.min_soak).to_i32)
+    else
+      targets = users
+    end
+    targets.reject! { |x| x == nil }
+
+    case @tip.multi_transfer(from: msg.author.id, users: targets, total: amount)
+    when "insufficient balance"
+      return reply(msg, "**ERROR**: Insufficient Balance")
+    when false
+      reply(msg, "**ERROR**: Please try again later")
+    when true
+      string = ""
+      targets.each { |x| string = string + ", <@#{x}>"}
+      reply(msg, "#{msg.author.username} soaked #{amount} #{@config.coinname_short} onto #{string}")
+    end
   end
 
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message)
-    # TODO
-    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") # if to.bot
+    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
   end
 
   # the users balance
