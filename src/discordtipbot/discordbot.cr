@@ -61,6 +61,9 @@ class DiscordBot
 
   # respond getinfo RPC
   def getinfo(msg : Discord::Message)
+    unless @config.admins.includes?(msg.author.id)
+      return reply(msg, "**ERROR**: This is a admin only command!")
+    end
     reply(msg, "#{@tip.get_info}")
   end
 
@@ -150,11 +153,13 @@ class DiscordBot
   # send coins to all currently online users
   def soak(msg : Discord::Message)
     # TODO
+    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts")#  if to.bot
   end
 
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message)
     # TODO
+    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") # if to.bot
   end
 
   # the users balance
