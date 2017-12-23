@@ -125,6 +125,8 @@ class DiscordBot
     end
     return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
 
+    return reply(msg, "You have to withdraw at least #{@config.min_withdraw}") if amount < @config.min_withdraw
+
     address = cmd[1]
     return reply(msg, "Error: Please specify a valid #{@config.coinname_full} address") unless @tip.validate_address(address)
 
