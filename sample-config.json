@@ -21,7 +21,8 @@
         "txfee": 1,
     
         "min_tip": 0.1,
-        "min_soak": 5.0,
+        "min_soak": 0.1,
+        "min_soak_total": 5.0,
         "min_rain": 1.0,
         "min_withdraw": 1.0,
         
