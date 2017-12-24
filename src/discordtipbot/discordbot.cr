@@ -192,6 +192,7 @@ class DiscordBot
       new_users.each { |x| users << x.user.id unless x.user.id == msg.author.id }
     end
 
+    # TODO only soak online people
     # TODO only soak people that can view the channel
 
     return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
@@ -218,6 +219,55 @@ class DiscordBot
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message)
     return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
+
+    cmd_usage = "#{@config.prefix}rain [amount]"
+
+    # cmd[0]: command, cmd[1]: amount
+    cmd = msg.content.split(" ")
+
+    return reply(msg, cmd_usage) unless cmd.size > 1
+
+    amount = amount(msg, cmd[1])
+    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
+
+    return reply(msg, "**You have to soak at least #{@config.min_rain_total} #{@config.coinname_short}**") unless amount >= @config.min_rain_total
+
+    return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
+
+    msgs = Array(Discord::Message).new
+    channel = @cache.resolve_channel(msg.channel_id)
+    last_id = channel.last_message_id
+    before = Time.now - 10.minutes
+
+    loop do
+      new_msgs = @bot.get_channel_messages(msg.channel_id, before: last_id)
+      if new_msgs.size < 50
+        new_msgs.each { |x| msgs << x }
+        break
+      end
+      break if new_msgs.last.timestamp > before
+      last_id = new_msgs.last.id
+      new_msgs.each { |x| msgs << x }
+    end
+
+    msgs.reject!(&.author.bot)
+    msgs.reject! { |x| x.timestamp < before }
+    msgs.reject! { |x| x.author == msg.author }
+
+    authors = Array(UInt64).new
+    msgs.each { |x| authors << x.author.id }
+    authors.uniq!
+
+    case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount)
+    when "insufficient balance"
+      return reply(msg, "**ERROR**: Insufficient Balance")
+    when false
+      reply(msg, "**ERROR**: Please try again later")
+    when true
+      string = ""
+      authors.each { |x| string = string + ", <@#{x}>"}
+      reply(msg, "#{msg.author.username} rained **#{amount} #{@config.coinname_short}** onto #{string}")
+    end
   end
 
   # the users balance
