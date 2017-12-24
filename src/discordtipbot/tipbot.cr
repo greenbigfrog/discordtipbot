@@ -6,14 +6,14 @@ class TipBot
     @coin_api = CoinApi.new(@config, @log)
   end
 
-  def transfer(from : UInt64, to : UInt64, amount : Float64)
+  def transfer(from : UInt64, to : UInt64, amount : Float64, memo : String)
     @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
     ensure_user(from)
     ensure_user(to)
 
     return "insufficient balance" if balance(from) < amount
 
-    tx = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', $1, $2, $3);", from, to, amount)
+    tx = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4);", memo, from, to, amount)
     if tx.rows_affected == 1
       @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
     else
@@ -43,14 +43,14 @@ class TipBot
     return true
   end
 
-  def multi_transfer(from : UInt64, users : Array(UInt64), total : Float64)
+  def multi_transfer(from : UInt64, users : Array(UInt64), total : Float64, memo : String)
     @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
     raise "Insufficient Balance" if balance(from) < total
     @db.transaction do |tx|
       users.each do |x|
-        self.transfer(from, x, (total/users.size))
+        self.transfer(from, x, (total/users.size), memo)
       end
       @log.debug("#{@config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
     end

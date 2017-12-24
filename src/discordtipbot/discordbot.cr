@@ -117,9 +117,7 @@ class DiscordBot
 
     return reply(msg, "Error: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
 
-    tip = @tip.transfer(from: msg.author.id, to: id, amount: amount)
-
-    case tip
+    case @tip.transfer(from: msg.author.id, to: id, amount: amount, memo: "tip")
     when "success"
       return reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
     when "insufficient balance"
@@ -204,7 +202,7 @@ class DiscordBot
     end
     targets.reject! { |x| x == nil }
 
-    case @tip.multi_transfer(from: msg.author.id, users: targets, total: amount)
+    case @tip.multi_transfer(from: msg.author.id, users: targets, total: amount, memo: "soak")
     when "insufficient balance"
       return reply(msg, "**ERROR**: Insufficient Balance")
     when false
@@ -258,7 +256,7 @@ class DiscordBot
     msgs.each { |x| authors << x.author.id }
     authors.uniq!
 
-    case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount)
+    case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
       return reply(msg, "**ERROR**: Insufficient Balance")
     when false
