@@ -25,7 +25,7 @@ class Config
     min_tip: Float64,
     min_soak: Float64,
     min_soak_total: Float64,
-    min_rain: Float64,
+    min_rain_total: Float64,
     min_withdraw: Float64,
 
     admins: Array(UInt64)
