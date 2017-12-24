@@ -28,6 +28,8 @@ class DiscordBot
         self.balance(msg)
       when prefix + "getinfo"
         self.getinfo(msg)
+      when .starts_with? prefix + "help"
+        self.help(msg)
       end
       # TODO: Add config
     end
@@ -85,6 +87,15 @@ class DiscordBot
     end
     # TODO format message
     reply(msg, "#{@tip.get_info}")
+  end
+
+  def help(msg : Discord::Message)
+    cmds = ""
+    ["ping", "tip", "soak", "rain", "balance"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`'}
+
+    cmds = cmds.strip(',')
+    cmds = cmds.strip
+    reply(msg, "Currently the following commands are available: #{cmds}")
   end
 
   # transfer from user to user
