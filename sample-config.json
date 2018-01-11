@@ -2,7 +2,7 @@
     {
         "database_url": "postgresql://localhost:5432/dogecoin-testnet",
         
-        "discord_token": "MTY4MjQ4ODg3NzIxN.922d8sdg8.GGDSGD",
+        "discord_token": "Bot MTY4MjQ4ODg3NzIxN.922d8sdg8.GGDSGD",
         "discord_client_id": 16824888772172,
         
         "coin_api_type": "rpc",
