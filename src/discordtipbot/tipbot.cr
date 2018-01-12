@@ -47,8 +47,8 @@ class TipBot
     @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
-    raise "Insufficient Balance" if balance(from) < total
-    @db.transaction do |tx|
+    return "insufficient balance" if balance(from) < total
+    return @db.transaction do |tx|
       users.each do |x|
         self.transfer(from, x, (total/users.size), memo)
       end
@@ -80,6 +80,25 @@ class TipBot
 
   def validate_address(address : String)
     @coin_api.validate_address(address)
+  end
+
+  def get_config(server : UInt64, memo : String)
+    case memo
+    when "soak"
+      @db.query_one("SELECT soak FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+    when "mention"
+      @db.query_one("SELECT mention FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+    when "rain"
+      @db.query_one("SELECT rain FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+    end
+  end
+
+  def update_config
+    # TODO
+  end
+
+  def add_server(id : UInt64)
+    @db.exec("INSERT INTO config (serverid) SELECT $1 WHERE NOT EXISTS (SELECT serverid FROM config WHERE serverid = $1)", id)
   end
 
   private def ensure_user(user : UInt64)

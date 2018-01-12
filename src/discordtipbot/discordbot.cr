@@ -5,6 +5,7 @@ class DiscordBot
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
     @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
     @cache = Discord::Cache.new(@bot)
+    @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
 
     prefix = @config.prefix
@@ -30,11 +31,17 @@ class DiscordBot
         self.getinfo(msg)
       when .starts_with? prefix + "help"
         self.help(msg)
+      when .starts_with? prefix + "config"
+        self.config(msg)
       end
       # TODO: Add config
     end
 
-    # TODO: DM owner of guild, to config the bot when they add the bot
+    # Add server to config, if not existent
+    @bot.on_guild_create do |guild|
+      @tip.add_server(guild.id)
+      # TODO contact guild owner unless @tip.get_config(guild.id, "contacted")
+    end
   end
 
   # Since there is no easy way, just to reply to a message
@@ -55,7 +62,7 @@ class DiscordBot
   end
 
   private def guild_id(msg : Discord::Message)
-    channel(msg).guild_id
+    channel(msg).guild_id.as(UInt64)
   end
 
   private def amount(msg : Discord::Message, string)
@@ -176,6 +183,8 @@ class DiscordBot
   def soak(msg : Discord::Message)
     return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private?(msg)
 
+    return reply(msg, "The owner of this server disabled soaks. Contact them and ask them to enable it. They should have gotten an DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
+
     cmd_usage = "#{@config.prefix}soak [amount]"
 
     # cmd[0]: command, cmd[1]: amount
@@ -198,7 +207,10 @@ class DiscordBot
       break if new_users.size == 0
       last_id = new_users.last.user.id
       new_users.reject!(&.user.bot)
-      new_users.each { |x| users << x.user.id unless x.user.id == msg.author.id }
+      new_users.each do |x|
+        users << x.user.id unless x.user.id == msg.author.id
+        @cache.cache(x.user)
+      end
     end
 
     # TODO only soak online people
@@ -220,7 +232,12 @@ class DiscordBot
       reply(msg, "**ERROR**: Please try again later")
     when true
       string = ""
-      targets.each { |x| string = string + ", <@#{x}>"}
+
+      if @tip.get_config(guild_id(msg), "mention")
+        targets.each { |x| string = string + ", <@#{x}>"}
+      else
+        targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
+      end
       reply(msg, "#{msg.author.username} soaked #{amount} #{@config.coinname_short} onto #{string}")
     end
   end
@@ -228,6 +245,8 @@ class DiscordBot
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message)
     return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
+
+    return reply(msg, "The owner of this server disabled rains. Contact them and ask them to enable it. They should have gotten an DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
 
     cmd_usage = "#{@config.prefix}rain [amount]"
 
@@ -239,12 +258,12 @@ class DiscordBot
     amount = amount(msg, cmd[1])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**You have to soak at least #{@config.min_rain_total} #{@config.coinname_short}**") unless amount >= @config.min_rain_total
+    return reply(msg, "**You have to rain at least #{@config.min_rain_total} #{@config.coinname_short}**") unless amount >= @config.min_rain_total
 
     return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
 
     msgs = Array(Discord::Message).new
-    channel = @cache.resolve_channel(msg.channel_id)
+    channel = @bot.get_channel(msg.channel_id)
     last_id = channel.last_message_id
     before = Time.now - 10.minutes
 
@@ -254,27 +273,34 @@ class DiscordBot
         new_msgs.each { |x| msgs << x }
         break
       end
-      break if new_msgs.last.timestamp > before
       last_id = new_msgs.last.id
       new_msgs.each { |x| msgs << x }
+      break if new_msgs.last.timestamp < before
     end
 
     msgs.reject!(&.author.bot)
     msgs.reject! { |x| x.timestamp < before }
-    msgs.reject! { |x| x.author == msg.author }
+    msgs.reject! { |x| x.author.id == msg.author.id }
 
     authors = Array(UInt64).new
     msgs.each { |x| authors << x.author.id }
     authors.uniq!
 
+    return reply(msg, "**ERROR**: There is no one to rain on!") if authors.empty?
+
     case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
-      return reply(msg, "**ERROR**: Insufficient Balance")
+      reply(msg, "**ERROR**: Insufficient Balance")
     when false
       reply(msg, "**ERROR**: Please try again later")
     when true
       string = ""
-      authors.each { |x| string = string + ", <@#{x}>"}
+
+      if @tip.get_config(guild_id(msg), "mention")
+        authors.each { |x| string = string + ", <@#{x}>"}
+      else
+        authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
+      end
       reply(msg, "#{msg.author.username} rained **#{amount} #{@config.coinname_short}** onto #{string}")
     end
   end
@@ -282,5 +308,10 @@ class DiscordBot
   # the users balance
   def balance(msg : Discord::Message)
     reply(msg, "Your balance is: #{@tip.get_balance(msg.author.id)} #{@config.coinname_short}")
+  end
+
+  # Config command (available to admins and respective server owner)
+  def config(msg : Discord::Message)
+
   end
 end

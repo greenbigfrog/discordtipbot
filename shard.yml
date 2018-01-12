@@ -22,3 +22,4 @@ dependencies:
     branch: type-fix
   bitcoin_rpc:
     github: greenbigfrog/bitcoin_rpc
+
