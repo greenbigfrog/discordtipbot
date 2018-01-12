@@ -34,7 +34,6 @@ class DiscordBot
       when .starts_with? prefix + "config"
         self.config(msg)
       end
-      # TODO: Add config
     end
 
     # Add server to config, if not existent
@@ -98,7 +97,7 @@ class DiscordBot
 
   def help(msg : Discord::Message)
     cmds = ""
-    ["ping", "tip", "soak", "rain", "balance"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`'}
+    ["ping", "tip", "soak", "rain", "balance"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
 
     cmds = cmds.strip(',')
     cmds = cmds.strip
@@ -234,7 +233,7 @@ class DiscordBot
       string = ""
 
       if @tip.get_config(guild_id(msg), "mention")
-        targets.each { |x| string = string + ", <@#{x}>"}
+        targets.each { |x| string = string + ", <@#{x}>" }
       else
         targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
@@ -297,7 +296,7 @@ class DiscordBot
       string = ""
 
       if @tip.get_config(guild_id(msg), "mention")
-        authors.each { |x| string = string + ", <@#{x}>"}
+        authors.each { |x| string = string + ", <@#{x}>" }
       else
         authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
@@ -312,6 +311,24 @@ class DiscordBot
 
   # Config command (available to admins and respective server owner)
   def config(msg : Discord::Message)
+    reply(msg, "Since it's hard to identify which server you want to config if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
 
+    reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
+
+    cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
+    # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
+    cmd = msg.content.split(" ")
+
+    return reply(msg, cmd_usage) unless cmd.size == 3
+    return reply(msg, cmd_usage) unless {"rain", "soak", "mention"}.includes?(cmd[1]) && {"on", "off"}.includes?(cmd[2])
+
+    memo = cmd[1]
+    if cmd[2] == "on"
+      status = true
+    else
+      status = false
+    end
+
+    reply(msg, "Successfully turned #{memo} #{cmd[2]}") if @tip.update_config(memo, status, guild_id(msg))
   end
 end

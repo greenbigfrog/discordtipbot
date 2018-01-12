@@ -93,8 +93,15 @@ class TipBot
     end
   end
 
-  def update_config
-    # TODO
+  def update_config(memo : String, status : Bool, server : UInt64)
+    case memo
+    when "mention"
+      @db.exec("UPDATE config SET mention=$1 WHERE serverid=$2", status, server)
+    when "soak"
+      @db.exec("UPDATE config SET soak=$1 WHERE serverid=$2", status, server)
+    when "rain"
+      @db.exec("UPDATE config SET rain=$1 WHERE serverid=$2", status, server)
+    end
   end
 
   def add_server(id : UInt64)
