@@ -21,23 +21,23 @@ class CoinApi
 
   def withdraw(address : String, amount : Float64, comment : String)
     if @type == "rpc"
-      @rpc.sendtoaddress(address, amount, comment)
+      @rpc.send_to_address(address, amount, comment)
     end
   end
 
   def new_address
-    @rpc.getnewaddress
+    @rpc.get_new_address
   end
 
   def get_received_by_address(address : String)
-    @rpc.getreceivedbyaddress(address)
+    @rpc.get_received_by_address(address)
   end
 
   def list_transactions
-    @rpc.listtransactions
+    @rpc.list_transactions
   end
 
   def validate_address(address : String)
-    @rpc.validateaddress(address)
+    @rpc.validate_address(address)
   end
 end
