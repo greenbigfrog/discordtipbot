@@ -21,11 +21,15 @@ class DiscordBot
         self.withdraw(msg)
       when .starts_with? prefix + "deposit"
         self.deposit(msg)
+      when .starts_with? prefix + "address"
+        self.deposit(msg)
       when .starts_with? prefix + "soak"
         self.soak(msg)
       when .starts_with? prefix + "rain"
         self.rain(msg)
       when .starts_with? prefix + "balance"
+        self.balance(msg)
+      when .starts_with? prefix + "bal"
         self.balance(msg)
       when prefix + "getinfo"
         self.getinfo(msg)
@@ -237,6 +241,7 @@ class DiscordBot
       else
         targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
+      string = string.lchop(", ")
       reply(msg, "#{msg.author.username} soaked #{amount} #{@config.coinname_short} onto #{string}")
     end
   end
@@ -300,6 +305,7 @@ class DiscordBot
       else
         authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
+      string = string.lchop(", ")
       reply(msg, "#{msg.author.username} rained **#{amount} #{@config.coinname_short}** onto #{string}")
     end
   end
