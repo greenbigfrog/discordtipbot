@@ -43,7 +43,8 @@ class DiscordBot
     # Add server to config, if not existent
     @bot.on_guild_create do |guild|
       @tip.add_server(guild.id)
-      # TODO contact guild owner unless @tip.get_config(guild.id, "contacted")
+      string = "Hey! Someone just added me to your guild (#{guild.name}). By default raining and soaking is disabled. Configure the bot using #{@config.prefix}config [rain/soak/mention] [on/off]. If you have any further questions, join the support guild at https://discord.gg/0whr1ddNztgG3vJU"
+      @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string) unless @tip.get_config(guild.id, "contacted")
     end
   end
 

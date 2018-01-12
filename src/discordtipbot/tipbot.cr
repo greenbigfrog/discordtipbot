@@ -90,6 +90,8 @@ class TipBot
       @db.query_one("SELECT mention FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
     when "rain"
       @db.query_one("SELECT rain FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+    when "contacted"
+      @db.query_one("SELECT contacted FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
     end
   end
 
