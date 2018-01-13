@@ -93,11 +93,20 @@ class DiscordBot
 
   # respond getinfo RPC
   def getinfo(msg : Discord::Message)
-    unless @config.admins.includes?(msg.author.id)
-      return reply(msg, "**ERROR**: This is a admin only command!")
-    end
-    # TODO format message
-    reply(msg, "#{@tip.get_info}")
+    return reply(msg, "**ERROR**: This is a admin only command!") unless @config.admins.includes?(msg.author.id)
+    return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
+
+    info = @tip.get_info
+    return unless info.is_a?(Hash(String, JSON::Type))
+
+    balance = info["balance"]
+    blocks = info["blocks"]
+    connections = info["connections"]
+    errors = info["errors"]
+
+    string = "**Balance**: #{balance}\n**Blocks**: #{blocks}\n**Connections**: #{connections}\n**Errors**: *#{errors}*"
+
+    reply(msg, string)
   end
 
   def help(msg : Discord::Message)
