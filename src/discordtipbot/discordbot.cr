@@ -115,7 +115,7 @@ class DiscordBot
 
   def help(msg : Discord::Message)
     cmds = ""
-    ["ping", "tip", "soak", "rain", "balance"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
+    ["ping", "tip", "soak", "rain", "balance", "terms", "withdraw", "deposit"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
 
     cmds = cmds.strip(',')
     cmds = cmds.strip
