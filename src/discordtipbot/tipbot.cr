@@ -120,6 +120,10 @@ class TipBot
     @db.query_one("SELECT SUM (balance) FROM accounts", &.read(Float64))
   end
 
+  def node_balance
+    @coin_api.balance
+  end
+
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
     @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)) == [0]

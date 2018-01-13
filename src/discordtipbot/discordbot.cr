@@ -60,10 +60,9 @@ class DiscordBot
     # Check if total user balance exceeds node balance every ~60 seconds in extra fiber
     spawn do
       Discord.every(10.seconds) do
-        info = @tip.get_info
-        next unless info.is_a?(Hash(String, JSON::Type))
+        node = @tip.node_balance
+        next if node.nil?
 
-        node = info["balance"].as(Float64)
         users = @tip.db_balance.as(Float64)
         if users > node
           string = "**ALARM**: Total user balance exceeds node balance: **#{users} > #{node}**\n*Shutting bot down*"
@@ -407,6 +406,13 @@ class DiscordBot
     # cmd[0] = command, cmd[1] = type, cmd [2] = user
 
     reply(msg, "Current total user balances: **#{@tip.db_balance}**") if cmd.size == 1
+
+    if cmd[1] == "unclaimed"
+      node = @tip.node_balance
+      return if node.nil?
+      unclaimed = node - @tip.db_balance
+      reply(msg, "Unclaimed coins: **#{unclaimed}** #{@config.coinname_short}")
+    end
 
     if cmd.size == 3
       if cmd[1] == "balance"
