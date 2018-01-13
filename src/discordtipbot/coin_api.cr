@@ -33,8 +33,8 @@ class CoinApi
     @rpc.get_received_by_address(address)
   end
 
-  def list_transactions
-    @rpc.list_transactions
+  def list_transactions(count : Int32)
+    @rpc.list_transactions("", count)
   end
 
   def validate_address(address : String)

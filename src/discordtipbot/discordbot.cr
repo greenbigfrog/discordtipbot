@@ -85,6 +85,14 @@ class DiscordBot
     end
 
     # on launch check for deposits during down time
+    spawn do
+      users = @tip.check_history_deposits
+      next if users.nil?
+      next if users.empty?
+      users.each do |x|
+        dm_deposit(x)
+      end
+    end
 
     # check for confirmed deposits every 60 seconds
     spawn do
@@ -93,7 +101,7 @@ class DiscordBot
         next if users.nil?
         next if users.empty?
         users.each do |x|
-          @bot.create_message(@cache.resolve_dm_channel(x), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit")
+          dm_deposit(x)
         end
       end
     end
@@ -106,6 +114,10 @@ class DiscordBot
     rescue
       @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
     end
+  end
+
+  private def dm_deposit(user : UInt64)
+    @bot.create_message(@cache.resolve_dm_channel(user), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit")
   end
 
   private def private?(msg : Discord::Message)

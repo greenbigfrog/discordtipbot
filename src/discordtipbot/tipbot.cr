@@ -166,7 +166,7 @@ class TipBot
 
         query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", details["address"], &.read(Int64 | Nil))
 
-        next if update_coin_transaction(transaction, "never") if query.empty? 
+        next if update_coin_transaction(transaction, "never") if query.empty?
 
         userid = query[0]
         next if userid.nil?
@@ -176,12 +176,51 @@ class TipBot
           update_coin_transaction(transaction, "credited to #{userid}")
         end
         update_balance(userid.to_u64)
+        delete_deposit_address(userid.to_u64)
 
         users << userid.to_u64 if db
       end
     end
 
     return users
+  end
+
+  def check_history_deposits
+    txlist = @coin_api.list_transactions(1000)
+    return unless txlist.is_a?(Array(JSON::Type))
+    return unless txlist.size > 0
+
+    users = Array(UInt64).new
+
+    txlist.each do |tx|
+      next unless tx.is_a?(Hash(String, JSON::Type))
+
+      confirmations = tx["confirmations"]
+      next if confirmations.nil?
+      next unless confirmations.is_a?(Int64)
+      next unless confirmations >= @config.confirmations
+
+      query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", tx["address"], &.read(Int64 | Nil))
+      next if query.empty?
+
+      userid = query.first
+      next if userid.nil?
+
+      exe = @db.query_all("SELECT txhash FROM coin_transactions WHERE txhash=$1", tx["txid"], &.read(String | Nil))
+      next unless exe.empty?
+
+      db = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, 0, $2, $3)", "deposit (#{tx["txid"]})", userid.to_u64, tx["amount"])
+      update_balance(userid.to_u64)
+      delete_deposit_address(userid.to_u64)
+
+      users << userid.to_u64 if db
+    end
+
+    return users
+  end
+
+  private def delete_deposit_address(user : UInt64)
+    @db.exec("UPDATE accounts SET address=null WHERE userid=$1", user)
   end
 
   private def update_coin_transaction(transaction : String, memo : String)
@@ -191,7 +230,7 @@ class TipBot
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
     if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)).empty?
-      @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) 
+      @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user)
       @log.debug("#{@config.coinname_short}: Added user #{user}")
     end
   end
