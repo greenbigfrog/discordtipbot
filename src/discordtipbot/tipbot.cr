@@ -103,6 +103,8 @@ class TipBot
       @db.exec("UPDATE config SET soak=$1 WHERE serverid=$2", status, server)
     when "rain"
       @db.exec("UPDATE config SET rain=$1 WHERE serverid=$2", status, server)
+    when "contacted"
+      @db.exec("UPDATE config SET contacted=$1 WHERE serverid=$2", status, server)
     end
   end
 
