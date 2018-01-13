@@ -43,6 +43,8 @@ class DiscordBot
         self.blocks(msg)
       when .starts_with? prefix + "connections"
         self.connections(msg)
+      when .starts_with? prefix + "admin"
+        self.admin(msg)
       end
     end
 
@@ -392,5 +394,22 @@ class DiscordBot
     return unless info.is_a?(Hash(String, JSON::Type))
 
     reply(msg, "The node has **#{info["connections"]} Connections**")
+  end
+
+  def admin(msg : Discord::Message)
+    return reply(msg, "Alarm: This is an admin only command! You have been reported!") unless @config.admins.includes?(msg.author.id)
+    return reply(msg, "This command only works in DMs") unless private?(msg)
+
+    cmd = msg.content.split(" ")
+    # cmd[0] = command, cmd[1] = type, cmd [2] = user
+
+    reply(msg, "Current total user balances: **#{@tip.db_balance}**") if cmd.size == 1
+
+    if cmd.size == 3
+      if cmd[1] == "balance"
+        bal = @tip.get_balance(cmd[2].to_u64)
+        reply(msg, "**#{cmd[2]}**'s Balance is: **#{bal}** #{@config.coinname_short}")
+      end
+    end
   end
 end
