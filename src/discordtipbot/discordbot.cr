@@ -278,6 +278,8 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
 
+    @bot.trigger_typing_indicator(msg.channel_id)
+
     users = Array(UInt64).new
     last_id = 0_u64
 
@@ -341,6 +343,8 @@ class DiscordBot
     return reply(msg, "**You have to rain at least #{@config.min_rain_total} #{@config.coinname_short}**") unless amount >= @config.min_rain_total
 
     return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
+
+    @bot.trigger_typing_indicator(msg.channel_id)
 
     msgs = Array(Discord::Message).new
     channel = @bot.get_channel(msg.channel_id)
