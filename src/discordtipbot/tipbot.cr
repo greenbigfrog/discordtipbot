@@ -31,6 +31,10 @@ class TipBot
     ensure_user(from)
     return "insufficient balance" if balance(from) < amount + @config.txfee
 
+    return "invalid address" unless @coin_api.validate_address(address)
+
+    return "internal address" if @coin_api.internal?(address)
+
     if tx = @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
       memo = "withdrawal: #{address}; #{tx}"
       @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)

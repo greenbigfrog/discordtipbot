@@ -202,13 +202,16 @@ class DiscordBot
     return reply(msg, "You have to withdraw at least #{@config.min_withdraw}") if amount <= @config.min_withdraw
 
     address = cmd[1]
-    return reply(msg, "Error: Please specify a valid #{@config.coinname_full} address") unless @tip.validate_address(address)
 
     case @tip.withdraw(msg.author.id, address, amount)
     when "insufficient balance"
-      return reply(msg, "**ERROR:** You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee}")
+      return reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee}")
+    when "invalid address"
+      return reply(msg, "**ERROR**: Please specify a valid #{@config.coinname_full} address")
+    when "internal address"
+      return reply(msg, "**ERROR**: Withdrawing to an internal address isn't permitted")
     when false
-      return reply(msg, "**ERROR:** Please try again later")
+      return reply(msg, "**ERROR**: Please try again later")
     when true
       reply(msg, "Successfully withdrew **#{amount} #{@config.coinname_short}** to **#{address}**")
     end
