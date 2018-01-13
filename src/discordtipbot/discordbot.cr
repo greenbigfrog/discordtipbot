@@ -59,7 +59,7 @@ class DiscordBot
 
     # Check if total user balance exceeds node balance every ~60 seconds in extra fiber
     spawn do
-      Discord.every(10.seconds) do
+      Discord.every(60.seconds) do
         node = @tip.node_balance
         next if node.nil?
 
@@ -71,6 +71,29 @@ class DiscordBot
           end
           @log.error("#{@config.coinname_short}: #{string}")
           exit
+        end
+      end
+    end
+
+    # receive wallet transactions and insert into coin_transactions
+    spawn do
+      server = HTTP::Server.new(6666) do |context|
+        next unless context.request.method == "POST"
+        @tip.insert_tx(context.request.query_params["tx"])
+      end
+      server.listen
+    end
+
+    # on launch check for deposits during down time
+
+    # check for confirmed deposits every 60 seconds
+    spawn do
+      Discord.every(60.seconds) do
+        users = @tip.check_deposits
+        next if users.nil?
+        next if users.empty?
+        users.each do |x|
+          @bot.create_message(@cache.resolve_dm_channel(x), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit")
         end
       end
     end

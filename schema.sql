@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS transactions, accounts, config;
+DROP TABLE IF EXISTS transactions, accounts, config, coin_transactions;
 
 CREATE TABLE accounts (
        userid bigint PRIMARY KEY,
@@ -28,6 +28,13 @@ CREATE TABLE config (
        mention boolean DEFAULT false,
        soak boolean DEFAULT false,
        rain boolean DEFAULT false,
+
+       created_time timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE coin_transactions (
+       txhash text PRIMARY KEY,
+       status text NOT NULL,
 
        created_time timestamptz NOT NULL DEFAULT now()
 )

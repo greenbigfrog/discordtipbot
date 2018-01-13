@@ -14,6 +14,7 @@ class Config
     rpc_url: String,
     rpc_username: String,
     rpc_password: String,
+    confirmations: Int64,
 
     prefix: String,
 

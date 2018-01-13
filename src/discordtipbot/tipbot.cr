@@ -124,9 +124,76 @@ class TipBot
     @coin_api.balance
   end
 
+  def insert_tx(txhash : String)
+    tx = @coin_api.get_transaction(txhash)
+    return unless tx.is_a?(Hash(String, JSON::Type))
+    details_array = tx["details"]
+    return unless details_array.is_a?(Array(JSON::Type))
+    return if details_array.nil?
+
+    details_array.each do |details|
+      return unless details.is_a?(Hash(String, JSON::Type))
+
+      if details["category"] == "receive"
+        @db.exec("INSERT INTO coin_transactions (txhash, status) SELECT $1, $2 WHERE NOT EXISTS (SELECT txhash FROM coin_transactions WHERE txhash=$1)", txhash, "new")
+      end
+    end
+  end
+
+  def check_deposits
+    txlist = @db.query_all("SELECT txhash FROM coin_transactions WHERE status=$1", "new", &.read(String))
+    return unless txlist.size > 0
+
+    users = Array(UInt64).new
+
+    txlist.each do |transaction|
+      tx = @coin_api.get_transaction(transaction)
+      next unless tx.is_a?(Hash(String, JSON::Type))
+
+      confirmations = tx["confirmations"]
+      next if confirmations.nil?
+      next unless confirmations.is_a?(Int64)
+      next unless confirmations >= @config.confirmations
+
+      details_array = tx["details"]
+      next unless details_array.is_a?(Array(JSON::Type))
+      next if details_array.nil?
+
+      details_array.each do |details|
+        next unless details.is_a?(Hash(String, JSON::Type))
+
+        next unless details["category"] == "receive"
+
+        query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", details["address"], &.read(Int64 | Nil))
+
+        next if update_coin_transaction(transaction, "never") if query.empty? 
+
+        userid = query[0]
+        next if userid.nil?
+
+        db = @db.transaction do
+          @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, 0, $2, $3)", "deposit (#{transaction})", userid.to_u64, details["amount"])
+          update_coin_transaction(transaction, "credited to #{userid}")
+        end
+        update_balance(userid.to_u64)
+
+        users << userid.to_u64 if db
+      end
+    end
+
+    return users
+  end
+
+  private def update_coin_transaction(transaction : String, memo : String)
+    @db.exec("UPDATE coin_transactions SET status=$1 WHERE txhash=$2", memo, transaction)
+  end
+
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
-    @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)) == [0]
+    if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)).empty?
+      @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) 
+      @log.debug("#{@config.coinname_short}: Added user #{user}")
+    end
   end
 
   private def update_balance(id : UInt64)

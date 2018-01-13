@@ -56,6 +56,10 @@ class CoinApi
     bal = info["balance"].as(Float64) || 0.to_f64
   end
 
+  def get_transaction(tx : String)
+    @rpc.get_transaction(tx)
+  end
+
   private def address_info(address : String)
     info = @rpc.validate_address(address)
     return unless info.is_a?(Hash(String, JSON::Type))
