@@ -39,6 +39,10 @@ class DiscordBot
         self.config(msg)
       when .starts_with? prefix + "terms"
         self.terms(msg)
+      when .starts_with? prefix + "blocks"
+        self.blocks(msg)
+      when .starts_with? prefix + "connections"
+        self.connections(msg)
       end
     end
 
@@ -355,5 +359,19 @@ class DiscordBot
   def terms(msg : Discord::Message)
     terms = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
     reply(msg, terms)
+  end
+
+  def blocks(msg : Discord::Message)
+    info = @tip.get_info
+    return unless info.is_a?(Hash(String, JSON::Type))
+
+    reply(msg, "Current Block Count (known to the node): **#{info["blocks"]}**")
+  end
+
+  def connections(msg : Discord::Message)
+    info = @tip.get_info
+    return unless info.is_a?(Hash(String, JSON::Type))
+
+    reply(msg, "The node has **#{info["connections"]} Connections**")
   end
 end
