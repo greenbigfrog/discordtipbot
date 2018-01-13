@@ -37,6 +37,8 @@ class DiscordBot
         self.help(msg)
       when .starts_with? prefix + "config"
         self.config(msg)
+      when .starts_with? prefix + "terms"
+        self.terms(msg)
       end
     end
 
@@ -348,5 +350,10 @@ class DiscordBot
     end
 
     reply(msg, "Successfully turned #{memo} #{cmd[2]}") if @tip.update_config(memo, status, guild_id(msg))
+  end
+
+  def terms(msg : Discord::Message)
+    terms = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
+    reply(msg, terms)
   end
 end
