@@ -112,6 +112,10 @@ class TipBot
     @db.exec("INSERT INTO config (serverid) SELECT $1 WHERE NOT EXISTS (SELECT serverid FROM config WHERE serverid = $1)", id)
   end
 
+  def db_balance
+    @db.query_one("SELECT SUM (balance) FROM accounts", &.read(Float64))
+  end
+
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
     @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user) if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)) == [0]
@@ -131,6 +135,6 @@ class TipBot
   end
 
   private def balance(id : UInt64)
-    @db.query_all("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64))[0] || 0.0
+    @db.query_one("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64)) || 0.0
   end
 end

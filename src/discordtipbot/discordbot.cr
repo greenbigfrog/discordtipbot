@@ -54,6 +54,25 @@ class DiscordBot
       contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string) unless @tip.get_config(guild.id, "contacted")
       @tip.update_config("contacted", true, guild.id) if contact
     end
+
+    # Check if total user balance exceeds node balance every ~60 seconds in extra fiber
+    spawn do
+      Discord.every(10.seconds) do
+        info = @tip.get_info
+        next unless info.is_a?(Hash(String, JSON::Type))
+
+        node = info["balance"].as(Float64)
+        users = @tip.db_balance.as(Float64)
+        if users > node
+          string = "**ALARM**: Total user balance exceeds node balance: **#{users} > #{node}**\n*Shutting bot down*"
+          @config.admins.each do |x|
+            @bot.create_message(@cache.resolve_dm_channel(x), string)
+          end
+          @log.error("#{@config.coinname_short}: #{string}")
+          exit
+        end
+      end
+    end
   end
 
   # Since there is no easy way, just to reply to a message
