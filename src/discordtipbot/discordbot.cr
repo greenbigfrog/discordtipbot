@@ -45,6 +45,8 @@ class DiscordBot
         self.connections(msg)
       when .starts_with? prefix + "admin"
         self.admin(msg)
+      when .starts_with? prefix + "active"
+        self.active(msg)
       end
     end
 
@@ -361,31 +363,8 @@ class DiscordBot
 
     @bot.trigger_typing_indicator(msg.channel_id)
 
-    msgs = Array(Discord::Message).new
-    channel = @bot.get_channel(msg.channel_id)
-    last_id = channel.last_message_id
-    before = Time.now - 10.minutes
-
-    loop do
-      new_msgs = @bot.get_channel_messages(msg.channel_id, before: last_id)
-      if new_msgs.size < 50
-        new_msgs.each { |x| msgs << x }
-        break
-      end
-      last_id = new_msgs.last.id
-      new_msgs.each { |x| msgs << x }
-      break if new_msgs.last.timestamp < before
-    end
-
-    msgs.reject!(&.author.bot)
-    msgs.reject! { |x| x.timestamp < before }
-    msgs.reject! { |x| x.author.id == msg.author.id }
-
-    authors = Array(UInt64).new
-    msgs.each { |x| authors << x.author.id }
-    authors.uniq!
-
-    return reply(msg, "**ERROR**: There is no one to rain on!") if authors.empty?
+    authors = active_users(msg)
+    return reply(msg, "**ERROR**: There is no one to rain on!") if authors.empty? || authors.nil?
 
     case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
@@ -403,6 +382,13 @@ class DiscordBot
       string = string.lchop(", ")
       reply(msg, "#{msg.author.username} rained **#{amount} #{@config.coinname_short}** onto #{string}")
     end
+  end
+
+  def active(msg : Discord::Message)
+    @bot.trigger_typing_indicator(msg.channel_id)
+    authors = active_users(msg)
+    return reply(msg, "No active users!") if authors.empty? || authors.nil?
+    reply(msg, "There are **#{authors.size}** active users ATM")
   end
 
   # the users balance
@@ -474,5 +460,32 @@ class DiscordBot
         reply(msg, "**#{cmd[2]}**'s Balance is: **#{bal}** #{@config.coinname_short}")
       end
     end
+  end
+
+  private def active_users(msg : Discord::Message)
+    msgs = Array(Discord::Message).new
+    channel = @bot.get_channel(msg.channel_id)
+    last_id = channel.last_message_id
+    before = Time.now - 10.minutes
+
+    loop do
+      new_msgs = @bot.get_channel_messages(msg.channel_id, before: last_id)
+      if new_msgs.size < 50
+        new_msgs.each { |x| msgs << x }
+        break
+      end
+      last_id = new_msgs.last.id
+      new_msgs.each { |x| msgs << x }
+      break if new_msgs.last.timestamp < before
+    end
+
+    msgs.reject!(&.author.bot)
+    msgs.reject! { |x| x.timestamp < before }
+    msgs.reject! { |x| x.author.id == msg.author.id }
+
+    authors = Array(UInt64).new
+    msgs.each { |x| authors << x.author.id }
+    authors.uniq!
+    return authors
   end
 end
