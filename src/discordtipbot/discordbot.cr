@@ -53,8 +53,14 @@ class DiscordBot
       @tip.add_server(guild.id)
       string = "Hey! Someone just added me to your guild (#{guild.name}). By default raining and soaking is disabled. Configure the bot using #{@config.prefix}config [rain/soak/mention] [on/off]. If you have any further questions, join the support guild at https://discord.gg/0whr1ddNztgG3vJU"
 
-      contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string) unless @tip.get_config(guild.id, "contacted")
-      @tip.update_config("contacted", true, guild.id) if contact
+      unless @tip.get_config(guild.id, "contacted")
+        begin
+          contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
+        rescue
+          @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
+        end
+        @tip.update_config("contacted", true, guild.id) if contact
+      end
     end
 
     # Check if total user balance exceeds node balance every ~60 seconds in extra fiber
@@ -117,7 +123,11 @@ class DiscordBot
   end
 
   private def dm_deposit(user : UInt64)
-    @bot.create_message(@cache.resolve_dm_channel(user), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit")
+    begin
+      @bot.create_message(@cache.resolve_dm_channel(user), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit")
+    rescue
+      @log.info("#{@config.coinname_short}: Failed to contact #{user} with deposit notification")
+    end
   end
 
   private def private?(msg : Discord::Message)
@@ -253,9 +263,14 @@ class DiscordBot
 
   # return deposit address
   def deposit(msg : Discord::Message)
-    return reply(msg, "This command doesn't work in public channels! Please use this command in a Direct Message") unless private?(msg)
-
-    reply(msg, "You're deposit address is: **#{@tip.get_address(msg.author.id)}**\nPlease keep in mind, that this address is for one time use only. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.")
+    notif = reply(msg, "Sent deposit address in a DM") unless private?(msg)
+    begin
+      @bot.create_message(@cache.resolve_dm_channel(msg.author.id), "Your deposit address is: **#{@tip.get_address(msg.author.id)}**\nPlease keep in mind, that this address is for one time use only. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take #{@config.confirmations} confirmations to get credited")
+    rescue
+      reply(msg, "Error sending deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
+      return unless notif.is_a?(Discord::Message)
+      @bot.delete_message(notif.channel_id, notif.id)
+    end
   end
 
   # send coins to all currently online users
