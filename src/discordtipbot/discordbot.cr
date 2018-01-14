@@ -1,5 +1,6 @@
 class DiscordBot
   USER_REGEX = /<@!?(?<id>\d+)>/
+  START_TIME = Time.now
 
   def initialize(@config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
@@ -31,7 +32,7 @@ class DiscordBot
         self.balance(msg)
       when .starts_with? prefix + "bal"
         self.balance(msg)
-      when prefix + "getinfo"
+      when .starts_with? prefix + "getinfo"
         self.getinfo(msg)
       when .starts_with? prefix + "help"
         self.help(msg)
@@ -47,6 +48,12 @@ class DiscordBot
         self.admin(msg)
       when .starts_with? prefix + "active"
         self.active(msg)
+      when .starts_with? prefix + "support"
+        self.support(msg)
+      when .starts_with? prefix + "invite"
+        self.invite(msg)
+      when .starts_with? prefix + "uptime"
+        self.uptime(msg)
       end
     end
 
@@ -186,7 +193,7 @@ class DiscordBot
 
   def help(msg : Discord::Message)
     cmds = ""
-    ["ping", "tip", "soak", "rain", "balance", "terms", "withdraw", "deposit"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
+    ["ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
 
     cmds = cmds.strip(',')
     cmds = cmds.strip
@@ -337,7 +344,7 @@ class DiscordBot
         targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
-      reply(msg, "#{msg.author.username} soaked #{amount} #{@config.coinname_short} onto #{string}")
+      reply(msg, "#{msg.author.username} soaked a total of #{amount} #{@config.coinname_short} onto #{string}")
     end
   end
 
@@ -380,7 +387,7 @@ class DiscordBot
         authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
-      reply(msg, "#{msg.author.username} rained **#{amount} #{@config.coinname_short}** onto #{string}")
+      reply(msg, "#{msg.author.username} rained a total of **#{amount} #{@config.coinname_short}** onto #{string}")
     end
   end
 
@@ -460,6 +467,18 @@ class DiscordBot
         reply(msg, "**#{cmd[2]}**'s Balance is: **#{bal}** #{@config.coinname_short}")
       end
     end
+  end
+
+  def invite(msg : Discord::Message)
+    reply(msg, "You can add this bot to your own guild using following URL: <https://discordapp.com/oauth2/authorize?&client_id=#{@config.discord_client_id}&scope=bot>")
+  end
+
+  def support(msg : Discord::Message)
+    reply(msg, "For support please visit <https://discord.me/tipbot>")
+  end
+
+  def uptime(msg : Discord::Message)
+    reply(msg, "Bot has been running for #{Time.now - START_TIME}")
   end
 
   private def active_users(msg : Discord::Message)
