@@ -11,10 +11,15 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - This reads the config file
 - It then launches a fiber for each bot
 
+## Dependencies
+- crystal
+- postgresql
+- wallets as you wish
+
 ## Installation
 
 - First make sure you've got [crystal](https://crystal-lang.org/) installed.
-- Install dependencies (`shards install`)
+- Install shards (`shards install`)
 - Install core wallet for each currency you plan on running
 - Add the RPC info to each wallets corresponding config file (`rpcuser` and `rpcpassword`)
 - Add `walletnotify=curl -X POST http://127.0.0.1:ABC/?tx=%s` to your wallets config file, replacing `ABC` with the walletnotify port you plan on using
