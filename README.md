@@ -1,30 +1,31 @@
 # discordtipbot
 
-TODO: Write a description here
+Highly configurable tip bot for the chat plattform discord. **DO NOT RUN THIS CODE UNLESS YOU KNOW WHAT YOU ARE DOING!**
+
+## Terms
+
+In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds.
 
 ## About
 - First we launch the main watcher at src/discordtipbot.cr
 - This reads the config file
-- It then forks a process for each bot
-- And in every of those processes it then launches src/discordtipbot/controller.cr which creates the actual tipbot
+- It then launches a fiber for each bot
 
 ## Installation
 
 - First make sure you've got [crystal](https://crystal-lang.org/) installed.
 - Install dependencies (`shards install`)
-- TODO: wallet setup
-- create the database for each of the currencies you plan on running on: `createdb dogecoin-testnet`
-- set the schema for the database by running: `psql -d dogecoin-testnet' -f schema.sql'`
-- Copy the sample config
-- Run bot `crystal run src/discordtipbot.cr -- config.json`
-
-## Usage
-
-TODO: Write usage instructions here
+- Install core wallet for each currency you plan on running
+- Add the RPC info to each wallets corresponding config file (`rpcuser` and `rpcpassword`)
+- Add `walletnotify=curl -X POST http://127.0.0.1:ABC/?tx=%s` to your wallets config file, replacing `ABC` with the walletnotify port you plan on using
+- Create the database for each of the currencies you plan on running on: `createdb dogecoin-testnet`
+- Set the schema for the database by running: `psql -d dogecoin-testnet -f schema.sql`
+- Copy the sample config and edit it
+- Run bots using `crystal run src/discordtipbot.cr -- config.json`
 
 ## Development
 
-TODO: Write development instructions here
+Preferably run your wallets in testnet mode by adding `testnet=1` to each wallets config file during development
 
 ## Contributing
 
