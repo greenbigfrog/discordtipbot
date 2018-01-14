@@ -178,10 +178,13 @@ class TipBot
           @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, 0, $2, $3)", "deposit (#{transaction})", userid.to_u64, details["amount"])
           update_coin_transaction(transaction, "credited to #{userid}")
         end
-        update_balance(userid.to_u64)
-        delete_deposit_address(userid.to_u64)
+        if db
+          update_balance(userid.to_u64)
+          delete_deposit_address(userid.to_u64)
 
-        users << userid.to_u64 if db
+          users << userid.to_u64
+          @log.debug("#{@config.coinname_short}: #{userid} deposited #{details["amount"]} #{@config.coinname_short} in TX #{transaction}")
+        end
       end
     end
 
@@ -215,10 +218,13 @@ class TipBot
       next unless exe.empty?
 
       db = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, 0, $2, $3)", "deposit (#{tx["txid"]})", userid.to_u64, tx["amount"])
-      update_balance(userid.to_u64)
-      delete_deposit_address(userid.to_u64)
+      if db
+        update_balance(userid.to_u64)
+        delete_deposit_address(userid.to_u64)
 
-      users << userid.to_u64 if db
+        users << userid.to_u64
+        @log.debug("#{@config.coinname_short}: #{userid} deposited #{tx["amount"]} #{@config.coinname_short} in TX #{tx["txid"]}")
+      end
     end
 
     return users
