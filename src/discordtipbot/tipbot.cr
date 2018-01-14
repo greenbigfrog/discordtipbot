@@ -14,16 +14,19 @@ class TipBot
     return "insufficient balance" if balance(from) < amount
 
     tx = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4);", memo, from, to, amount)
+
     if tx.rows_affected == 1
       @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
     else
       @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
       return "error"
     end
+
     update_balance(from)
     update_balance(to)
-    return "success"
+
     @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
+    return "success"
   end
 
   def withdraw(from : UInt64, address : String, amount : Float64)
@@ -165,9 +168,9 @@ class TipBot
         next unless details["category"] == "receive"
 
         query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", details["address"], &.read(Int64 | Nil))
+        next if query.nil?
 
-        next if update_coin_transaction(transaction, "never") if query.empty?
-
+        next if update_coin_transaction(transaction, "never") if query == [0]
         userid = query[0]
         next if userid.nil?
 
@@ -201,7 +204,9 @@ class TipBot
       next unless confirmations >= @config.confirmations
 
       query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", tx["address"], &.read(Int64 | Nil))
+      next if query.nil?
       next if query.empty?
+      next if query == [0]
 
       userid = query.first
       next if userid.nil?
@@ -229,7 +234,7 @@ class TipBot
 
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
-    if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)).empty?
+    if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)) == [0]
       @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user)
       @log.debug("#{@config.coinname_short}: Added user #{user}")
     end
