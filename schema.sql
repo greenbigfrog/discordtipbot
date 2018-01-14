@@ -1,4 +1,6 @@
+/*
 DROP TABLE IF EXISTS transactions, accounts, config, coin_transactions;
+*/
 
 CREATE TABLE accounts (
        userid bigint PRIMARY KEY,
