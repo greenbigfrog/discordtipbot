@@ -16,6 +16,8 @@ class Config
     rpc_password: String,
     confirmations: Int64,
 
+    walletnotify_port: Int32,
+
     prefix: String,
 
     coinname_full: String,

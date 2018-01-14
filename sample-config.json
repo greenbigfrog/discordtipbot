@@ -13,7 +13,9 @@
         "rpc_username": "testnet",
         "rpc_password": "hunter2",
         "confirmations": 2,
-        
+
+        "walletnotify_port": 6666,
+
         "prefix": "~",
     
         "coinname_full": "Dogecoin (Testnet)",

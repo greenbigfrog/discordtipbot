@@ -92,7 +92,7 @@ class DiscordBot
 
     # receive wallet transactions and insert into coin_transactions
     spawn do
-      server = HTTP::Server.new(6666) do |context|
+      server = HTTP::Server.new(@config.walletnotify_port) do |context|
         next unless context.request.method == "POST"
         @tip.insert_tx(context.request.query_params["tx"])
       end
