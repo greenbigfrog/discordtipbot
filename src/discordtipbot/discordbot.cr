@@ -400,7 +400,7 @@ class DiscordBot
 
   # the users balance
   def balance(msg : Discord::Message)
-    reply(msg, "Your balance is: #{@tip.get_balance(msg.author.id)} #{@config.coinname_short}")
+    reply(msg, "#{msg.author.username} has a confirmed balance of **#{@tip.get_balance(msg.author.id)} #{@config.coinname_short}**")
   end
 
   # Config command (available to admins and respective server owner)
