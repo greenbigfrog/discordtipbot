@@ -145,7 +145,7 @@ class TipBot
 
   def check_deposits
     txlist = @db.query_all("SELECT txhash FROM coin_transactions WHERE status=$1", "new", &.read(String))
-    return unless txlist.size > 0
+    return if txlist.empty?
 
     users = Array(UInt64).new
 
@@ -170,7 +170,13 @@ class TipBot
         query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", details["address"], &.read(Int64 | Nil))
         next if query.nil?
 
-        next if update_coin_transaction(transaction, "never") if query == [0]
+        update = update_coin_transaction(transaction, "never") if (query == [0] || query.empty?)
+        # only continue if update.nil? (No changes)
+        unless update.nil?
+          @log.debug("#{@config.coinname_short}: Invalid deposit at #{transaction}")
+          next
+        end
+
         userid = query[0]
         next if userid.nil?
 
@@ -191,7 +197,7 @@ class TipBot
     return users
   end
 
-  def check_history_deposits
+  def insert_history_deposits
     txlist = @coin_api.list_transactions(1000)
     return unless txlist.is_a?(Array(JSON::Type))
     return unless txlist.size > 0
@@ -201,33 +207,16 @@ class TipBot
     txlist.each do |tx|
       next unless tx.is_a?(Hash(String, JSON::Type))
 
-      confirmations = tx["confirmations"]
-      next if confirmations.nil?
-      next unless confirmations.is_a?(Int64)
-      next unless confirmations >= @config.confirmations
+      category = tx["category"]
+      next if category.nil?
+      next unless category == "receive"
 
-      query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", tx["address"], &.read(Int64 | Nil))
-      next if query.nil?
-      next if query.empty?
-      next if query == [0]
-
-      userid = query.first
-      next if userid.nil?
-
+      # check if tx already in coin_transactions
       exe = @db.query_all("SELECT txhash FROM coin_transactions WHERE txhash=$1", tx["txid"], &.read(String | Nil))
-      next unless exe.empty?
+      next unless exe.empty? || exe == [0]
 
-      db = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, 0, $2, $3)", "deposit (#{tx["txid"]})", userid.to_u64, tx["amount"])
-      if db
-        update_balance(userid.to_u64)
-        delete_deposit_address(userid.to_u64)
-
-        users << userid.to_u64
-        @log.debug("#{@config.coinname_short}: #{userid} deposited #{tx["amount"]} #{@config.coinname_short} in TX #{tx["txid"]}")
-      end
+      insert_tx(tx["txid"].to_s)
     end
-
-    return users
   end
 
   private def delete_deposit_address(user : UInt64)

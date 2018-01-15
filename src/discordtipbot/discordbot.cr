@@ -99,14 +99,9 @@ class DiscordBot
       server.listen
     end
 
-    # on launch check for deposits during down time
+    # on launch check for deposits and insert them into coin_transactions during down time
     spawn do
-      users = @tip.check_history_deposits
-      next if users.nil?
-      next if users.empty?
-      users.each do |x|
-        dm_deposit(x)
-      end
+      @tip.insert_history_deposits
     end
 
     # check for confirmed deposits every 60 seconds
