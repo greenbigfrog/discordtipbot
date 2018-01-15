@@ -189,7 +189,7 @@ class DiscordBot
 
   def help(msg : Discord::Message)
     cmds = ""
-    ["ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
+    ["ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "invite"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
 
     cmds = cmds.strip(',')
     cmds = cmds.strip
@@ -270,7 +270,12 @@ class DiscordBot
   def deposit(msg : Discord::Message)
     notif = reply(msg, "Sent deposit address in a DM") unless private?(msg)
     begin
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id), "Your deposit address is: **#{@tip.get_address(msg.author.id)}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*")
+      address = @tip.get_address(msg.author.id)
+      embed = Discord::Embed.new(
+        footer: Discord::EmbedFooter.new("I love you! ❤"),
+        image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{@config.uri_scheme}:#{address}")
+      )
+      @bot.create_message(@cache.resolve_dm_channel(msg.author.id), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
       reply(msg, "Error sending deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
@@ -341,7 +346,11 @@ class DiscordBot
         targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
+<<<<<<< HEAD
       reply(msg, "#{msg.author.username} soaked a total of **#{amount} #{@config.coinname_short}** (#{each_amount} #{@config.coinname_short} each) onto #{string}")
+=======
+      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount} #{@config.coinname_short}** onto #{string}")
+>>>>>>> c0f326507d2a1d9c683bef93769e93524b697702
     end
   end
 
@@ -385,7 +394,11 @@ class DiscordBot
         authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
+<<<<<<< HEAD
       reply(msg, "#{msg.author.username} rained a total of **#{amount} #{@config.coinname_short}** (#{each_amount} #{@config.coinname_short} each) onto #{string}")
+=======
+      reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** onto #{string}")
+>>>>>>> c0f326507d2a1d9c683bef93769e93524b697702
     end
   end
 
@@ -405,7 +418,7 @@ class DiscordBot
   def config(msg : Discord::Message)
     reply(msg, "Since it's hard to identify which server you want to config if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
 
-    reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
+    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
 
     cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
     # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
