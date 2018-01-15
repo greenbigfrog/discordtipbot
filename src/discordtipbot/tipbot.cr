@@ -70,7 +70,17 @@ class TipBot
     address = @db.query_one("SELECT address FROM accounts WHERE userid=$1", user, &.read(String | Nil))
     if address.nil?
       address = @coin_api.new_address
-      @db.exec("UPDATE accounts SET address=$1 WHERE userid=$2", address, user)
+
+      sql = <<-SQL
+      UPDATE accounts
+      SET address = ( CASE
+                        WHEN address IS NULL THEN $1
+                        ELSE ''
+                      END )
+      WHERE userid = $2
+      SQL
+
+      @db.exec(sql, address, user)
       @log.debug("#{@config.coinname_short}: New address for #{user}: #{address}")
     end
     return address
