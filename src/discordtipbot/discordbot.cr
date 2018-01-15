@@ -189,7 +189,7 @@ class DiscordBot
 
   def help(msg : Discord::Message)
     cmds = ""
-    ["ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
+    ["ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "invite"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
 
     cmds = cmds.strip(',')
     cmds = cmds.strip
@@ -340,7 +340,7 @@ class DiscordBot
         targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
-      reply(msg, "#{msg.author.username} soaked a total of #{amount} #{@config.coinname_short} onto #{string}")
+      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount} #{@config.coinname_short}** onto #{string}")
     end
   end
 
@@ -383,7 +383,7 @@ class DiscordBot
         authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
-      reply(msg, "#{msg.author.username} rained a total of **#{amount} #{@config.coinname_short}** onto #{string}")
+      reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** onto #{string}")
     end
   end
 
@@ -403,7 +403,7 @@ class DiscordBot
   def config(msg : Discord::Message)
     reply(msg, "Since it's hard to identify which server you want to config if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
 
-    reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
+    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
 
     cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
     # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
