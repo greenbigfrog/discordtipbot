@@ -23,6 +23,7 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - Install core wallet for each currency you plan on running
 - Add the RPC info to each wallets corresponding config file (`rpcuser` and `rpcpassword`)
 - Add `walletnotify=curl -X POST http://127.0.0.1:ABC/?tx=%s` to your wallets config file, replacing `ABC` with the walletnotify port you plan on using
+- It's recommendable to run your node as a full node, but to limit the connections to ~30, since else you might run into performance issues (`maxconnections=30`)
 - Create the database for each of the currencies you plan on running on: `createdb dogecoin-testnet`
 - Set the schema for the database by running: `psql -d dogecoin-testnet -f schema.sql`
 - Copy the sample config and edit it
