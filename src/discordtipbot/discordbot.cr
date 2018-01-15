@@ -346,11 +346,7 @@ class DiscordBot
         targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
-<<<<<<< HEAD
-      reply(msg, "#{msg.author.username} soaked a total of **#{amount} #{@config.coinname_short}** (#{each_amount} #{@config.coinname_short} each) onto #{string}")
-=======
-      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount} #{@config.coinname_short}** onto #{string}")
->>>>>>> c0f326507d2a1d9c683bef93769e93524b697702
+      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount} #{@config.coinname_short}** (#{each_amount} #{@config.coinname_short} each) onto #{string}")
     end
   end
 
@@ -394,11 +390,7 @@ class DiscordBot
         authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
       end
       string = string.lchop(", ")
-<<<<<<< HEAD
-      reply(msg, "#{msg.author.username} rained a total of **#{amount} #{@config.coinname_short}** (#{each_amount} #{@config.coinname_short} each) onto #{string}")
-=======
-      reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** onto #{string}")
->>>>>>> c0f326507d2a1d9c683bef93769e93524b697702
+      reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** (#{each_amount} #{@config.coinname_short} each) onto #{string}")
     end
   end
 
