@@ -16,7 +16,7 @@ class CoinApi
   end
 
   def get_info
-    @rpc.getinfo
+    @rpc.get_info
   end
 
   def withdraw(address : String, amount : Float64, comment : String)
