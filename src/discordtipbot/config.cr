@@ -23,6 +23,8 @@ class Config
     coinname_full: String,
     coinname_short: String,
 
+    uri_scheme: String,
+
     txfee: Float64,
 
     min_tip: Float64,
