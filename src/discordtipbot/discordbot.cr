@@ -106,7 +106,7 @@ class DiscordBot
 
     # check for confirmed deposits every 60 seconds
     spawn do
-      Discord.every(60.seconds) do
+      Discord.every(30.seconds) do
         users = @tip.check_deposits
         next if users.nil?
         next if users.empty?
