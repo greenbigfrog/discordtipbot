@@ -1,6 +1,7 @@
 class DiscordBot
   USER_REGEX = /<@!?(?<id>\d+)>/
   START_TIME = Time.now
+  TERMS = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
 
   def initialize(@config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
@@ -128,7 +129,7 @@ class DiscordBot
 
   private def dm_deposit(user : UInt64)
     begin
-      @bot.create_message(@cache.resolve_dm_channel(user), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit")
+      @bot.create_message(@cache.resolve_dm_channel(user), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit!\n*#{TERMS}")
     rescue
       @log.info("#{@config.coinname_short}: Failed to contact #{user} with deposit notification")
     end
@@ -269,8 +270,7 @@ class DiscordBot
   def deposit(msg : Discord::Message)
     notif = reply(msg, "Sent deposit address in a DM") unless private?(msg)
     begin
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id), "Your deposit address is: **#{@tip.get_address(msg.author.id)}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited")
-      terms(msg)
+      @bot.create_message(@cache.resolve_dm_channel(msg.author.id), "Your deposit address is: **#{@tip.get_address(msg.author.id)}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*")
     rescue
       reply(msg, "Error sending deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
@@ -423,8 +423,7 @@ class DiscordBot
   end
 
   def terms(msg : Discord::Message)
-    terms = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
-    reply(msg, terms)
+    reply(msg, TERMS)
   end
 
   def blocks(msg : Discord::Message)
