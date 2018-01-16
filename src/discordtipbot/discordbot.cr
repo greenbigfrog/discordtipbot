@@ -61,7 +61,7 @@ class DiscordBot
     # Add server to config, if not existent
     @bot.on_guild_create do |guild|
       @tip.add_server(guild.id)
-      string = "Hey! Someone just added me to your guild (#{guild.name}). By default raining and soaking is disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, join the support guild at https://discord.gg/0whr1ddNztgG3vJU"
+      string = "Hey! Someone just added me to your guild (#{guild.name}). By default raining and soaking is disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at https://discord.me/tipbot"
 
       unless @tip.get_config(guild.id, "contacted")
         begin
@@ -171,7 +171,7 @@ class DiscordBot
 
   # respond getinfo RPC
   def getinfo(msg : Discord::Message)
-    return reply(msg, "**ERROR**: This is a admin only command!") unless @config.admins.includes?(msg.author.id)
+    return reply(msg, "**ERROR**: This is an admin only command!") unless @config.admins.includes?(msg.author.id)
     return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
 
     info = @tip.get_info
@@ -287,7 +287,7 @@ class DiscordBot
   def soak(msg : Discord::Message)
     return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private?(msg)
 
-    return reply(msg, "The owner of this server disabled soaks. Contact them and ask them to enable it. They should have gotten an DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
+    return reply(msg, "The owner of this server disabled ~soak. Contact them and ask them to enable it. They should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
 
     cmd_usage = "#{@config.prefix}soak [amount]"
 
@@ -354,7 +354,7 @@ class DiscordBot
   def rain(msg : Discord::Message)
     return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
 
-    return reply(msg, "The owner of this server disabled rains. Contact them and ask them to enable it. They should have gotten an DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
+    return reply(msg, "The owner of this server disabled ~rain. Contact them and ask them to enable it. They should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
 
     cmd_usage = "#{@config.prefix}rain [amount]"
 
@@ -373,11 +373,11 @@ class DiscordBot
     @bot.trigger_typing_indicator(msg.channel_id)
 
     authors = active_users(msg)
-    return reply(msg, "**ERROR**: There is no one to rain on!") if authors.empty? || authors.nil?
+    return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.empty? || authors.nil?
 
     case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient Balance")
+      reply(msg, "**ERROR**: Insufficient balance")
     when false
       reply(msg, "**ERROR**: Please try again later")
     when true
@@ -408,7 +408,7 @@ class DiscordBot
 
   # Config command (available to admins and respective server owner)
   def config(msg : Discord::Message)
-    reply(msg, "Since it's hard to identify which server you want to config if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
+    reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please use them in the respective server") if private?(msg)
 
     return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
 
@@ -466,7 +466,7 @@ class DiscordBot
     if cmd.size == 3
       if cmd[1] == "balance"
         bal = @tip.get_balance(cmd[2].to_u64)
-        reply(msg, "**#{cmd[2]}**'s Balance is: **#{bal}** #{@config.coinname_short}")
+        reply(msg, "**#{cmd[2]}**'s balance is: **#{bal}** #{@config.coinname_short}")
       end
     end
   end
