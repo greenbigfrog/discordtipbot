@@ -127,12 +127,11 @@ class DiscordBot
     end
   end
 
-  private def dm_deposit(user : UInt64)
-    begin
-      @bot.create_message(@cache.resolve_dm_channel(user), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit!\n*#{TERMS}")
-    rescue
-      @log.info("#{@config.coinname_short}: Failed to contact #{user} with deposit notification")
-    end
+  private def dm_deposit(userid : UInt64)
+    @bot.create_message(@cache.resolve_dm_channel(userid), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit!\n*#{TERMS}")
+  rescue ex
+    user = @cache.resolve_user(userid)
+    @log.warn("#{@config.coinname_short}: Failed to contact #{userid} (#{user.username}##{user.discriminator}}) with deposit notification (Exception: #{ex.inspect_with_backtrace})")
   end
 
   private def private?(msg : Discord::Message)
