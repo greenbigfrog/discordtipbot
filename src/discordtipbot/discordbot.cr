@@ -402,7 +402,9 @@ class DiscordBot
     @bot.trigger_typing_indicator(msg.channel_id)
     authors = active_users(msg)
     return reply(msg, "No active users!") if authors.empty? || authors.nil?
-    reply(msg, "There are **#{authors.size}** active users ATM")
+
+    singular = authors.size == 1
+    reply(msg, "There #{singular ? "is" : "are"} **#{authors.size}** active user#{singular ? "" : "s"} ATM")
   end
 
   # the users balance
