@@ -58,6 +58,10 @@ class DiscordBot
       end
     end
 
+    @bot.on_ready do
+      @log.info("#{@config.coinname_short}: #{@config.coinname_full} bot received READY")
+    end
+
     # Add server to config, if not existent
     @bot.on_guild_create do |guild|
       @tip.add_server(guild.id)
@@ -158,7 +162,6 @@ class DiscordBot
 
   def run
     @bot.run
-    @log.info("#{@config.coinname_short}: Started #{@config.coinname_full} bot")
   end
 
   # All helper methods for handling discord commands below
