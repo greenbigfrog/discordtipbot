@@ -498,13 +498,14 @@ class DiscordBot
       break if new_msgs.last.timestamp < before
     end
 
-    msgs.reject!(&.author.bot)
-    msgs.reject! { |x| x.timestamp < before }
-    msgs.reject! { |x| x.author.id == msg.author.id }
+    authors = Set(UInt64).new
 
-    authors = Array(UInt64).new
-    msgs.each { |x| authors << x.author.id }
-    authors.uniq!
-    return authors
+    msgs.each do |x|
+      next if x.author.bot
+      next if x.timestamp < before
+      authors.add(x.author.id)
+    end
+
+    authors.delete(msg.author.id)
   end
 end
