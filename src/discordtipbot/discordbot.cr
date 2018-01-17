@@ -220,12 +220,14 @@ class DiscordBot
   end
 
   def help(msg : Discord::Message)
-    cmds = ""
-    ["ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "invite"].each { |x| cmds = cmds + ", `" + @config.prefix + x + '`' }
+    cmds = {"ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "invite"}
+    string = String.build do |str|
+      cmds.each { |x| str << "`" + @config.prefix + x + "`, " }
+    end
 
-    cmds = cmds.strip(',')
-    cmds = cmds.strip
-    reply(msg, "Currently the following commands are available: #{cmds}")
+    string = string.rchop(", ")
+
+    reply(msg, "Currently the following commands are available: #{string}")
   end
 
   # transfer from user to user
