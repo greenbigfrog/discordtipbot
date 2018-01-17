@@ -206,12 +206,12 @@ class DiscordBot
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
     cmd = msg.content.split(" ")
 
-    return reply(msg, "Error! Usage: #{cmd_usage}") unless cmd.size > 2
+    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
 
     match = USER_REGEX.match(cmd[1])
     id = match["id"].try &.to_u64 if match
 
-    err = "Error: Please specify the user you want to tip! #{cmd_usage}"
+    err = "**ERROR**: Please specify the user you want to tip! #{cmd_usage}"
     return reply(msg, err) unless id
     begin
       to = @cache.resolve_user(id)
@@ -224,15 +224,15 @@ class DiscordBot
     return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id
 
     amount = amount(msg, cmd[2])
-    return reply(msg, "Error: Please specify a valid amount! #{cmd_usage}") unless amount
+    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "Error: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
+    return reply(msg, "**ERROR**: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
 
     case @tip.transfer(from: msg.author.id, to: id, amount: amount, memo: "tip")
     when "success"
       return reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
     when "insufficient balance"
-      return reply(msg, "Insufficient balance")
+      return reply(msg, "**ERROR**: Insufficient balance")
     when "error"
       return reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     end
@@ -279,7 +279,7 @@ class DiscordBot
       )
       @bot.create_message(@cache.resolve_dm_channel(msg.author.id), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
-      reply(msg, "Error sending deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
+      reply(msg, "**ERROR**: Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
       @bot.delete_message(notif.channel_id, notif.id)
     end
@@ -301,7 +301,7 @@ class DiscordBot
     amount = amount(msg, cmd[1])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**You have to soak at least #{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
+    return reply(msg, "**ERROR**: You have to soak at least **#{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
 
     return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
 
