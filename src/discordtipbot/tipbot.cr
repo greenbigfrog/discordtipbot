@@ -50,7 +50,7 @@ class TipBot
     return true
   end
 
-  def multi_transfer(from : UInt64, users : Array(UInt64), total : Float64, memo : String)
+  def multi_transfer(from : UInt64, users : Set(UInt64) | Array(UInt64), total : Float64, memo : String)
     @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
