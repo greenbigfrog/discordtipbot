@@ -459,14 +459,13 @@ class DiscordBot
       node = @tip.node_balance
       return if node.nil?
       unclaimed = node - @tip.db_balance
-      reply(msg, "Unclaimed coins: **#{unclaimed}** #{@config.coinname_short}")
+      return reply(msg, "Unclaimed coins: **#{unclaimed}** #{@config.coinname_short}")
     end
 
-    if cmd.size == 3
-      if cmd[1] == "balance"
-        bal = @tip.get_balance(cmd[2].to_u64)
-        reply(msg, "**#{cmd[2]}**'s balance is: **#{bal}** #{@config.coinname_short}")
-      end
+    if cmd[1]? == "balance"
+      return reply(msg, "**ERROR**: You forgot to supply an ID to check balance of") unless cmd[2]?
+      bal = @tip.get_balance(cmd[2].to_u64)
+      reply(msg, "**#{cmd[2]}**'s balance is: **#{bal}** #{@config.coinname_short}")
     end
   end
 
