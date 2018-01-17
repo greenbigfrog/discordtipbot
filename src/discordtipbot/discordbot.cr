@@ -397,6 +397,8 @@ class DiscordBot
   end
 
   def active(msg : Discord::Message)
+    return reply(msg, "You cannot use this command in a private channel!") if private?(msg)
+
     @bot.trigger_typing_indicator(msg.channel_id)
     authors = active_users(msg)
     return reply(msg, "No active users!") if authors.empty? || authors.nil?
