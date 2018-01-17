@@ -190,6 +190,10 @@ class DiscordBot
     end
   end
 
+  private def trigger_typing(msg : Discord::Message)
+    @bot.trigger_typing_indicator(msg.channel_id)
+  end
+
   def run
     @bot.run
   end
@@ -337,7 +341,7 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
 
-    @bot.trigger_typing_indicator(msg.channel_id)
+    trigger_typing(msg)
 
     users = Array(UInt64).new
     last_id = 0_u64
@@ -399,7 +403,7 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
 
-    @bot.trigger_typing_indicator(msg.channel_id)
+    trigger_typing(msg)
 
     authors = active_users(msg)
     return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.empty? || authors.nil?
@@ -429,7 +433,8 @@ class DiscordBot
   def active(msg : Discord::Message)
     return reply(msg, "You cannot use this command in a private channel!") if private?(msg)
 
-    @bot.trigger_typing_indicator(msg.channel_id)
+    trigger_typing(msg)
+
     authors = active_users(msg)
     return reply(msg, "No active users!") if authors.empty? || authors.nil?
 
