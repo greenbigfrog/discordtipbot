@@ -339,15 +339,10 @@ class DiscordBot
     when false
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
-      string = ""
       amount_each = amount / targets.size
 
-      if @tip.get_config(guild_id(msg), "mention")
-        targets.each { |x| string = string + ", <@#{x}>" }
-      else
-        targets.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
-      end
-      string = string.lchop(", ")
+      string = build_user_string(get_config_mention(msg), targets)
+
       reply(msg, "**#{msg.author.username}** soaked a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end
   end
@@ -383,17 +378,27 @@ class DiscordBot
     when false
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
-      string = ""
       amount_each = amount / authors.size
 
-      if @tip.get_config(guild_id(msg), "mention")
-        authors.each { |x| string = string + ", <@#{x}>" }
-      else
-        authors.each { |x| string = string + ", #{@cache.resolve_user(x).username}" }
-      end
-      string = string.lchop(", ")
+      string = build_user_string(get_config_mention(msg), authors)
+
       reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end
+  end
+
+  private def build_user_string(mention : Bool, users : Set(UInt64) | Array(UInt64))
+    string = String.build do |str|
+      if mention
+        users.each { |x| str << "<@#{x}>, " }
+      else
+        users.each { |x| str << "#{@cache.resolve_user(x).username}, " }
+      end
+    end
+    string.rchop(", ")
+  end
+
+  private def get_config_mention(msg)
+    @tip.get_config(guild_id(msg), "mention") || false
   end
 
   def active(msg : Discord::Message)
