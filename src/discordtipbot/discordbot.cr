@@ -1,7 +1,7 @@
 class DiscordBot
   USER_REGEX = /<@!?(?<id>\d+)>/
   START_TIME = Time.now
-  TERMS = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
+  TERMS      = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
 
   def initialize(@config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
