@@ -1,4 +1,5 @@
 language: crystal
 script:
   - crystal spec
-  - crystal tool format --check
+  - crystal tool format --check src
+  - crystal tool format --check spec
