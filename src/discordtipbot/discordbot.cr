@@ -145,7 +145,7 @@ class DiscordBot
   # Since there is no easy way, just to reply to a message
   private def reply(payload : Discord::Message, msg : String)
     if msg.size > 2000
-      msgs = split(msg, ' ')
+      msgs = split(msg)
       msgs.each { |x| @bot.create_message(payload.channel_id, x) }
     else
       @bot.create_message(payload.channel_id, msg)
