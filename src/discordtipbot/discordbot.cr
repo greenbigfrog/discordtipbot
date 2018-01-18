@@ -1,4 +1,8 @@
+require "./utilities"
+
 class DiscordBot
+  include Utilities
+
   USER_REGEX = /<@!?(?<id>\d+)>/
   START_TIME = Time.now
   TERMS      = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
@@ -140,11 +144,14 @@ class DiscordBot
 
   # Since there is no easy way, just to reply to a message
   private def reply(payload : Discord::Message, msg : String)
-    begin
+    if msg.size > 2000
+      msgs = split(msg)
+      msgs.each { |x| @bot.create_message(payload.channel_id, x) }
+    else
       @bot.create_message(payload.channel_id, msg)
-    rescue
-      @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
     end
+  rescue
+    @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
   end
 
   private def dm_deposit(userid : UInt64)
@@ -402,19 +409,8 @@ class DiscordBot
     end
   end
 
-  private def build_user_string(mention : Bool, users : Set(UInt64) | Array(UInt64))
-    string = String.build do |str|
-      if mention
-        users.each { |x| str << "<@#{x}>, " }
-      else
-        users.each { |x| str << "#{@cache.resolve_user(x).username}, " }
-      end
-    end
-    string.rchop(", ")
-  end
-
   private def get_config_mention(msg : Discord::Message)
-    get_config(msg, "mention")
+    @tip.get_config(guild_id(msg), "mention") || false
   end
 
   private def get_config(msg : Discord::Message, memo : String)
