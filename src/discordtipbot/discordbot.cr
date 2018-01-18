@@ -521,8 +521,10 @@ class DiscordBot
 
   def stats(msg : Discord::Message)
     guilds = @cache.guilds.size
-    users = @cache.users.size
-    reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users")
+    cached_users = @cache.users.size
+    users = @cache.guilds.values.map(&.member_count).sum
+
+    reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)")
   end
 
   private def active_users(msg : Discord::Message)
