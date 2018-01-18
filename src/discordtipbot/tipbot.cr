@@ -102,13 +102,15 @@ class TipBot
   def get_config(server : UInt64, memo : String)
     case memo
     when "soak"
-      @db.query_one("SELECT soak FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+      @db.query_one("SELECT soak FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
     when "mention"
-      @db.query_one("SELECT mention FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+      @db.query_one("SELECT mention FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
     when "rain"
-      @db.query_one("SELECT rain FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+      @db.query_one("SELECT rain FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
     when "contacted"
-      @db.query_one("SELECT contacted FROM config WHERE serverid = $1", server, &.read(Bool | Nil))
+      @db.query_one("SELECT contacted FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
+    else
+      false
     end
   end
 
