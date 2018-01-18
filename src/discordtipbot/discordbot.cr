@@ -144,16 +144,14 @@ class DiscordBot
 
   # Since there is no easy way, just to reply to a message
   private def reply(payload : Discord::Message, msg : String)
-    begin
-      if msg.size > 2000
-        msgs = split(msg, ' ')
-        msgs.each { |x| @bot.create_message(payload.channel_id, x) }
-      else
-        @bot.create_message(payload.channel_id, msg)
-      end
-    rescue
-      @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
+    if msg.size > 2000
+      msgs = split(msg, ' ')
+      msgs.each { |x| @bot.create_message(payload.channel_id, x) }
+    else
+      @bot.create_message(payload.channel_id, msg)
     end
+  rescue
+    @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
   end
 
   private def dm_deposit(userid : UInt64)
