@@ -107,6 +107,7 @@ class DiscordBot
     # on launch check for deposits and insert them into coin_transactions during down time
     spawn do
       @tip.insert_history_deposits
+      @log.info("#{@config.coinname_short}: Checked for deposits during down time")
     end
 
     # check for confirmed deposits every 60 seconds
@@ -117,6 +118,17 @@ class DiscordBot
         next if users.empty?
         users.each do |x|
           dm_deposit(x)
+        end
+      end
+    end
+
+    # warn users that the tipbot shouldn't be used as wallet if their balance exceeds @config.high_balance
+    spawn do
+      Discord.every(6.hours) do
+        users = @tip.get_high_balance(@config.high_balance)
+
+        users.each do |x|
+          @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your balance exceeds #{@config.high_balance} #{@config.coinname_short}. You should consider withdrawing some coins! You should not use this bot as your wallet!")
         end
       end
     end
