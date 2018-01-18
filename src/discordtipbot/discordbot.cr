@@ -398,7 +398,7 @@ class DiscordBot
   end
 
   private def get_config_mention(msg)
-    @tip.get_config(guild_id(msg), "mention") || false
+    @tip.get_config(guild_id(msg), "mention")
   end
 
   def active(msg : Discord::Message)
