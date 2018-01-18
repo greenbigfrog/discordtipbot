@@ -55,6 +55,8 @@ class DiscordBot
         self.invite(msg)
       when .starts_with? prefix + "uptime"
         self.uptime(msg)
+      when .starts_with? prefix + "checkconfig"
+        self.check_config(msg)
       end
     end
 
@@ -397,8 +399,12 @@ class DiscordBot
     string.rchop(", ")
   end
 
-  private def get_config_mention(msg)
-    @tip.get_config(guild_id(msg), "mention") || false
+  private def get_config_mention(msg : Discord::Message)
+    get_config(msg, "mention")
+  end
+
+  private def get_config(msg : Discord::Message, memo : String)
+    @tip.get_config(guild_id(msg), memo)
   end
 
   def active(msg : Discord::Message)
@@ -438,6 +444,22 @@ class DiscordBot
     end
 
     reply(msg, "Successfully turned #{memo} #{cmd[2]}") if @tip.update_config(memo, status, guild_id(msg))
+  end
+
+  def check_config(msg : Discord::Message)
+    string = String.build do |str|
+      unless private?(msg)
+        mention = get_config(msg, "mention")
+        rain = get_config(msg, "rain")
+        soak = get_config(msg, "soak")
+        str << "Mentioning: #{mention}\nRaining: #{rain}\nSoaking: #{soak}\n"
+      end
+      str << "Minimum tip: #{@config.min_tip}\n"
+      str << "Minimum rain: #{@config.min_rain_total}\n"
+      str << "Minimum soak: #{@config.min_soak_total}"
+    end
+
+    reply(msg, string)
   end
 
   def terms(msg : Discord::Message)
