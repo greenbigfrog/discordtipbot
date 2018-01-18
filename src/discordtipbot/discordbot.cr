@@ -57,6 +57,8 @@ class DiscordBot
         self.uptime(msg)
       when .starts_with? prefix + "checkconfig"
         self.check_config(msg)
+      when .starts_with? prefix + "stats"
+        self.stats(msg)
       end
     end
 
@@ -515,6 +517,12 @@ class DiscordBot
 
   def uptime(msg : Discord::Message)
     reply(msg, "Bot has been running for #{Time.now - START_TIME}")
+  end
+
+  def stats(msg : Discord::Message)
+    guilds = @cache.guilds.size
+    users = @cache.users.size
+    reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users")
   end
 
   private def active_users(msg : Discord::Message)
