@@ -1,4 +1,8 @@
+require "./utilities"
+
 class DiscordBot
+  include Utilities
+
   USER_REGEX = /<@!?(?<id>\d+)>/
   START_TIME = Time.now
   TERMS      = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
@@ -136,31 +140,6 @@ class DiscordBot
         end
       end
     end
-  end
-
-  private def split(msg : String, message_break : String | Char, max_length : Int32 = 2000)
-    msgs = Array(String).new
-
-    # Break up the message into parts which are less than max_length characters each
-    while (msg.size > max_length)
-      # Calculate where to break the message and then record it
-      first_break = msg[0, max_length].rindex(message_break) || max_length
-      msgs << msg[0, first_break]
-
-      # Find the index of the next space after the first_break
-      next_break = msg.index(message_break, first_break).try { |v| v + 1 } || 0
-
-      # If the next space is more than max_length away just record it as the break first_break.
-      # FIXME: This will cause problems if a word is longer than max_length as it will shorten
-      #          the word because it will not fit into a single message.
-      next_break = first_break if next_break < first_break || next_break > first_break + max_length
-
-      # Split the message at this next space to prepare it for the following iteration
-      msg = msg[next_break, msg.size - next_break]
-    end
-    msgs << msg
-
-    msgs
   end
 
   # Since there is no easy way, just to reply to a message
@@ -432,19 +411,8 @@ class DiscordBot
     end
   end
 
-  private def build_user_string(mention : Bool, users : Set(UInt64) | Array(UInt64))
-    string = String.build do |str|
-      if mention
-        users.each { |x| str << "<@#{x}>, " }
-      else
-        users.each { |x| str << "#{@cache.resolve_user(x).username}, " }
-      end
-    end
-    string.rchop(", ")
-  end
-
   private def get_config_mention(msg : Discord::Message)
-    get_config(msg, "mention")
+    @tip.get_config(guild_id(msg), "mention") || false
   end
 
   private def get_config(msg : Discord::Message, memo : String)
