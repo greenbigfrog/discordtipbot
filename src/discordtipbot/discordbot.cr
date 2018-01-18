@@ -452,11 +452,13 @@ class DiscordBot
         mention = get_config(msg, "mention")
         rain = get_config(msg, "rain")
         soak = get_config(msg, "soak")
-        str << "Mentioning: #{mention}\nRaining: #{rain}\nSoaking: #{soak}\n"
+        str.puts "Mentioning: #{mention}"
+        str.puts "Raining: #{rain}"
+        str.puts "Soaking: #{soak}"
       end
-      str << "Minimum tip: #{@config.min_tip}\n"
-      str << "Minimum rain: #{@config.min_rain_total}\n"
-      str << "Minimum soak: #{@config.min_soak_total}"
+      str.puts "Minimum tip: #{@config.min_tip}"
+      str.puts "Minimum rain: #{@config.min_rain_total}"
+      str.puts "Minimum soak: #{@config.min_soak_total}"
     end
 
     reply(msg, string)
