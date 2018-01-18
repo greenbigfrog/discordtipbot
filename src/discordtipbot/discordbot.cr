@@ -66,9 +66,9 @@ class DiscordBot
         self.invite(msg)
       when .starts_with? "uptime"
         self.uptime(msg)
-      when .starts_with? prefix + "checkconfig"
+      when .starts_with? "checkconfig"
         self.check_config(msg)
-      when .starts_with? prefix + "stats"
+      when .starts_with? "stats"
         self.stats(msg)
       end
     end
