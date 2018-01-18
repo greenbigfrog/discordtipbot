@@ -70,6 +70,8 @@ class DiscordBot
         self.check_config(msg)
       when .starts_with? "stats"
         self.stats(msg)
+      when .starts_with? "lucky"
+        self.lucky(msg, cmd)
       end
     end
 
@@ -426,6 +428,39 @@ class DiscordBot
 
   private def get_config(msg : Discord::Message, memo : String)
     @tip.get_config(guild_id(msg), memo)
+  end
+
+  def lucky(msg : Discord::Message, cmd_string : String)
+    return reply(msg, "**ERROR**: This command doesn't work in DMs") if private?(msg)
+
+    cmd_usage = "#{@config.prefix}lucky [amount]"
+
+    # cmd[0]: command, cmd[1]: amount"
+    cmd = cmd_string.split(" ")
+
+    return reply(msg, cmd_usage) unless cmd.size > 1
+
+    amount = amount(msg, cmd[1])
+    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
+
+    return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_tip} #{@config.coinname_short}") unless amount >= @config.min_tip
+
+    trigger_typing(msg)
+
+    users = active_users(msg).to_a
+
+    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users.size == 1
+
+    user = users.sample
+
+    case @tip.transfer(from: msg.author.id, to: user, amount: amount, memo: "lucky")
+    when "success"
+      reply(msg, "#{msg.author.username} luckily rained **#{amount} #{@config.coinname_short}** onto **<@#{user}>**")
+    when "insufficient balance"
+      reply(msg, "**ERROR**: Insufficient balance")
+    when "error"
+      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+    end
   end
 
   def active(msg : Discord::Message)
