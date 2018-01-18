@@ -31,6 +31,8 @@
         "min_rain_total": 5.0,
         "min_withdraw": 1.0,
 
+        "high_balance": 5000,
+
         "admins": [163607982473609216]
-  }
+    }
 ]

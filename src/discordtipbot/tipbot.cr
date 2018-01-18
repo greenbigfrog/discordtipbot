@@ -231,6 +231,10 @@ class TipBot
     end
   end
 
+  def get_high_balance(high_balance : Int32)
+    @db.query_all("SELECT userid FROM accounts WHERE balance > $1", high_balance, as: Int64)
+  end
+
   private def delete_deposit_address(user : UInt64)
     @db.exec("UPDATE accounts SET address=null WHERE userid=$1", user)
   end

@@ -33,6 +33,8 @@ class Config
     min_rain_total: Float64,
     min_withdraw: Float64,
 
+    high_balance: Int32,
+
     admins: Array(UInt64)
   )
 end
