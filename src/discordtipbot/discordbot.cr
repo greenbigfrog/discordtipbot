@@ -14,54 +14,61 @@ class DiscordBot
     @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
 
-    prefix = @config.prefix
+    bot_id = @cache.resolve_current_user.id
+    prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
     @bot.on_message_create do |msg|
-      next if msg.author.id == @cache.resolve_current_user.id
-      case msg.content
-      when prefix + "ping"
+      next if msg.author.id == bot_id
+
+      next unless match = msg.content.match(prefix_regex)
+      cmd = match.named_captures["cmd"]
+      next unless cmd
+
+      # If a command expects input pass in parsed command
+      case cmd
+      when .starts_with? "ping"
         self.ping(msg)
-      when .starts_with? prefix + "tip"
-        self.tip(msg)
-      when .starts_with? prefix + "withdraw"
-        self.withdraw(msg)
-      when .starts_with? prefix + "deposit"
+      when .starts_with? "tip"
+        self.tip(msg, cmd)
+      when .starts_with? "withdraw"
+        self.withdraw(msg, cmd)
+      when .starts_with? "deposit"
         self.deposit(msg)
-      when .starts_with? prefix + "address"
+      when .starts_with? "address"
         self.deposit(msg)
-      when .starts_with? prefix + "soak"
-        self.soak(msg)
-      when .starts_with? prefix + "rain"
-        self.rain(msg)
-      when .starts_with? prefix + "balance"
+      when .starts_with? "soak"
+        self.soak(msg, cmd)
+      when .starts_with? "rain"
+        self.rain(msg, cmd)
+      when .starts_with? "balance"
         self.balance(msg)
-      when .starts_with? prefix + "bal"
+      when .starts_with? "bal"
         self.balance(msg)
-      when .starts_with? prefix + "getinfo"
+      when .starts_with? "getinfo"
         self.getinfo(msg)
-      when .starts_with? prefix + "help"
+      when .starts_with? "help"
         self.help(msg)
-      when .starts_with? prefix + "config"
-        self.config(msg)
-      when .starts_with? prefix + "terms"
+      when .starts_with? "config"
+        self.config(msg, cmd)
+      when .starts_with? "terms"
         self.terms(msg)
-      when .starts_with? prefix + "blocks"
+      when .starts_with? "blocks"
         self.blocks(msg)
-      when .starts_with? prefix + "connections"
+      when .starts_with? "connections"
         self.connections(msg)
-      when .starts_with? prefix + "admin"
-        self.admin(msg)
-      when .starts_with? prefix + "active"
+      when .starts_with? "admin"
+        self.admin(msg, cmd)
+      when .starts_with? "active"
         self.active(msg)
-      when .starts_with? prefix + "support"
+      when .starts_with? "support"
         self.support(msg)
-      when .starts_with? prefix + "invite"
+      when .starts_with? "invite"
         self.invite(msg)
-      when .starts_with? prefix + "uptime"
+      when .starts_with? "uptime"
         self.uptime(msg)
-      when .starts_with? prefix + "checkconfig"
+      when .starts_with? "checkconfig"
         self.check_config(msg)
-      when .starts_with? prefix + "stats"
+      when .starts_with? "stats"
         self.stats(msg)
       end
     end
@@ -222,12 +229,12 @@ class DiscordBot
   end
 
   # transfer from user to user
-  def tip(msg : Discord::Message)
+  def tip(msg : Discord::Message, cmd_string : String)
     return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
 
     cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
-    cmd = msg.content.split(" ")
+    cmd = cmd_string.split(" ")
 
     return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
 
@@ -262,11 +269,11 @@ class DiscordBot
   end
 
   # withdraw amount to address
-  def withdraw(msg : Discord::Message)
+  def withdraw(msg : Discord::Message, cmd_string : String)
     cmd_usage = "#{@config.prefix}withdraw [address] [amount]"
 
     # cmd[0]: command, cmd[1]: address, cmd[2]: amount
-    cmd = msg.content.split(" ")
+    cmd = cmd_string.split(" ")
 
     return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
 
@@ -309,7 +316,7 @@ class DiscordBot
   end
 
   # send coins to all currently online users
-  def soak(msg : Discord::Message)
+  def soak(msg : Discord::Message, cmd_string : String)
     return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private?(msg)
 
     return reply(msg, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
@@ -317,7 +324,7 @@ class DiscordBot
     cmd_usage = "#{@config.prefix}soak [amount]"
 
     # cmd[0]: command, cmd[1]: amount
-    cmd = msg.content.split(" ")
+    cmd = cmd_string.split(" ")
 
     return reply(msg, cmd_usage) unless cmd.size > 1
 
@@ -371,7 +378,7 @@ class DiscordBot
   end
 
   # split amount between people who recently sent a message
-  def rain(msg : Discord::Message)
+  def rain(msg : Discord::Message, cmd_string : String)
     return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
 
     return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
@@ -379,7 +386,7 @@ class DiscordBot
     cmd_usage = "#{@config.prefix}rain [amount]"
 
     # cmd[0]: command, cmd[1]: amount
-    cmd = msg.content.split(" ")
+    cmd = cmd_string.split(" ")
 
     return reply(msg, cmd_usage) unless cmd.size > 1
 
@@ -434,14 +441,14 @@ class DiscordBot
   end
 
   # Config command (available to admins and respective server owner)
-  def config(msg : Discord::Message)
+  def config(msg : Discord::Message, cmd_string : String)
     reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
 
     return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
 
     cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
     # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
-    cmd = msg.content.split(" ")
+    cmd = cmd_string.split(" ")
 
     return reply(msg, cmd_usage) unless cmd.size == 3
     return reply(msg, cmd_usage) unless {"rain", "soak", "mention"}.includes?(cmd[1]) && {"on", "off"}.includes?(cmd[2])
@@ -492,12 +499,12 @@ class DiscordBot
     reply(msg, "The node has **#{info["connections"]} Connections**")
   end
 
-  def admin(msg : Discord::Message)
+  def admin(msg : Discord::Message, cmd_string : String)
     return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(msg.author.id)
     return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg)
 
-    cmd = msg.content.split(" ")
     # cmd[0] = command, cmd[1] = type, cmd [2] = user
+    cmd = cmd_string.split(" ")
 
     reply(msg, "Current total user balances: **#{@tip.db_balance}**") if cmd.size == 1
 
