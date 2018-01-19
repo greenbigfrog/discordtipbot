@@ -590,7 +590,7 @@ class DiscordBot
     id = msg.author.id
     return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
 
-    @log.error("#{@config.coinname_short}: Shutdown requested by #{id}")
+    @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
     exit
   end
 
