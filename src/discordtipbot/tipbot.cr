@@ -2,7 +2,7 @@ class TipBot
   @db : DB::Database
 
   def initialize(@config : Config, @log : Logger)
-    @db = DB.open(@config.database_url)
+    @db = DB.open(@config.database_url + "?max_pool_size=10")
     @coin_api = CoinApi.new(@config, @log)
   end
 
