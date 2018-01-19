@@ -268,11 +268,11 @@ class DiscordBot
 
     case @tip.transfer(from: msg.author.id, to: id, amount: amount, memo: "tip")
     when "success"
-      return reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
+      reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
     when "insufficient balance"
-      return reply(msg, "**ERROR**: Insufficient balance")
+      reply(msg, "**ERROR**: Insufficient balance")
     when "error"
-      return reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     end
   end
 
@@ -294,13 +294,13 @@ class DiscordBot
 
     case @tip.withdraw(msg.author.id, address, amount)
     when "insufficient balance"
-      return reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee}")
+      reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee}")
     when "invalid address"
-      return reply(msg, "**ERROR**: Please specify a valid #{@config.coinname_full} address")
+      reply(msg, "**ERROR**: Please specify a valid #{@config.coinname_full} address")
     when "internal address"
-      return reply(msg, "**ERROR**: Withdrawing to an internal address isn't permitted")
+      reply(msg, "**ERROR**: Withdrawing to an internal address isn't permitted")
     when false
-      return reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
       reply(msg, "Successfully withdrew **#{amount} #{@config.coinname_short}** to **#{address}**")
     end
@@ -373,7 +373,7 @@ class DiscordBot
 
     case @tip.multi_transfer(from: msg.author.id, users: targets, total: amount, memo: "soak")
     when "insufficient balance"
-      return reply(msg, "**ERROR**: Insufficient balance")
+      reply(msg, "**ERROR**: Insufficient balance")
     when false
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
