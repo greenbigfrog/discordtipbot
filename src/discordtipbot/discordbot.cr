@@ -72,6 +72,8 @@ class DiscordBot
         self.stats(msg)
       when .starts_with? "lucky"
         self.lucky(msg, cmd)
+      when .starts_with? "exit"
+        self.exit(msg)
       end
     end
 
@@ -582,6 +584,14 @@ class DiscordBot
     users = @cache.guilds.values.map(&.member_count).sum
 
     reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)")
+  end
+
+  def exit(msg : Discord::Message)
+    id = msg.author.id
+    return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
+
+    @log.error("#{@config.coinname_short}: Shutdown requested by #{id}")
+    exit
   end
 
   private def active_users(msg : Discord::Message)
