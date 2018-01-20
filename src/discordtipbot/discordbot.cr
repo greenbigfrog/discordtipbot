@@ -550,7 +550,7 @@ class DiscordBot
     # cmd[0] = command, cmd[1] = type, cmd [2] = user
     cmd = cmd_string.split(" ")
 
-    reply(msg, "Current total user balances: **#{@tip.db_balance}**") if cmd.size == 1
+    return reply(msg, "Current total user balances: **#{@tip.db_balance}**") if cmd.size == 1
 
     if cmd[1] == "unclaimed"
       node = @tip.node_balance
