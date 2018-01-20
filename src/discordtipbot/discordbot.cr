@@ -189,7 +189,10 @@ class DiscordBot
       amount = @tip.get_balance(msg.author.id)
     else
       if m = /(?<amount>^[0-9,\.]+)/.match(string)
-        amount = m["amount"].try &.to_f64
+        amount = m["amount"]
+        return unless amount
+        return if amount.count('.') > 1
+        amount.to_f64
       end
     end
   end
