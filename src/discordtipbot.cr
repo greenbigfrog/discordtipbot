@@ -2,7 +2,10 @@ require "./discordtipbot/*"
 
 require "logger"
 require "pg"
+require "pg/pg_ext/big_decimal"
 require "discordcr"
+require "big"
+require "big/json"
 
 unless ENV["TIPBOT_ENV"]? == "test"
   puts "No Config File specified! Exiting!" if ARGV.size == 0

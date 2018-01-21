@@ -6,7 +6,7 @@ class TipBot
     @coin_api = CoinApi.new(@config, @log)
   end
 
-  def transfer(from : UInt64, to : UInt64, amount : Float64, memo : String)
+  def transfer(from : UInt64, to : UInt64, amount : BigDecimal, memo : String)
     @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
     ensure_user(from)
     ensure_user(to)
@@ -29,7 +29,7 @@ class TipBot
     return "success"
   end
 
-  def withdraw(from : UInt64, address : String, amount : Float64)
+  def withdraw(from : UInt64, address : String, amount : BigDecimal)
     @log.debug("#{@config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
     ensure_user(from)
     return "insufficient balance" if balance(from) < amount + @config.txfee
@@ -50,7 +50,7 @@ class TipBot
     return true
   end
 
-  def multi_transfer(from : UInt64, users : Set(UInt64) | Array(UInt64), total : Float64, memo : String)
+  def multi_transfer(from : UInt64, users : Set(UInt64) | Array(UInt64), total : BigDecimal, memo : String)
     @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
@@ -132,7 +132,7 @@ class TipBot
   end
 
   def db_balance
-    @db.query_one("SELECT SUM (balance) FROM accounts", &.read(Float64))
+    @db.query_one("SELECT SUM (balance) FROM accounts", &.read(BigDecimal))
   end
 
   def node_balance
@@ -141,13 +141,13 @@ class TipBot
 
   def insert_tx(txhash : String)
     tx = @coin_api.get_transaction(txhash)
-    return unless tx.is_a?(Hash(String, JSON::Type))
+    return unless tx.is_a?(Hash(String, JSON::Any))
     details_array = tx["details"]
-    return unless details_array.is_a?(Array(JSON::Type))
+    return unless details_array.is_a?(Array(JSON::Any))
     return if details_array.nil?
 
     details_array.each do |details|
-      return unless details.is_a?(Hash(String, JSON::Type))
+      return unless details.is_a?(Hash(String, JSON::Any))
 
       if details["category"] == "receive"
         @db.exec("INSERT INTO coin_transactions (txhash, status) SELECT $1, $2 WHERE NOT EXISTS (SELECT txhash FROM coin_transactions WHERE txhash=$1)", txhash, "new")
@@ -163,7 +163,7 @@ class TipBot
 
     txlist.each do |transaction|
       tx = @coin_api.get_transaction(transaction)
-      next unless tx.is_a?(Hash(String, JSON::Type))
+      next unless tx.is_a?(Hash(String, JSON::Any))
 
       confirmations = tx["confirmations"]
       next if confirmations.nil?
@@ -171,11 +171,11 @@ class TipBot
       next unless confirmations >= @config.confirmations
 
       details_array = tx["details"]
-      next unless details_array.is_a?(Array(JSON::Type))
+      next unless details_array.is_a?(Array(JSON::Any))
       next if details_array.nil?
 
       details_array.each do |details|
-        next unless details.is_a?(Hash(String, JSON::Type))
+        next unless details.is_a?(Hash(String, JSON::Any))
 
         next unless details["category"] == "receive"
 
@@ -210,14 +210,14 @@ class TipBot
   end
 
   def insert_history_deposits
-    txlist = @coin_api.list_transactions(1000)
-    return unless txlist.is_a?(Array(JSON::Type))
+    txlist = @coin_api.list_transactions(10)
+    return unless txlist.is_a?(Array(JSON::Any))
     return unless txlist.size > 0
 
     users = Array(UInt64).new
 
     txlist.each do |tx|
-      next unless tx.is_a?(Hash(String, JSON::Type))
+      next unless tx.is_a?(Hash(String, JSON::Any))
 
       category = tx["category"]
       next if category.nil?
@@ -265,6 +265,6 @@ class TipBot
   end
 
   private def balance(id : UInt64)
-    @db.query_one("SELECT balance FROM accounts WHERE userid=$1", id, &.read(Float64)) || 0.0
+    @db.query_one("SELECT balance FROM accounts WHERE userid=$1", id, &.read(BigDecimal)) || BigDecimal.new("0")
   end
 end

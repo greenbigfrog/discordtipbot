@@ -19,9 +19,9 @@ class CoinApi
     @rpc.get_info
   end
 
-  def withdraw(address : String, amount : Float64, comment : String)
+  def withdraw(address : String, amount : BigDecimal, comment : String)
     if @type == "rpc"
-      @rpc.send_to_address(address, amount, comment)
+      @rpc.send_to_address(address, amount.to_f64, comment)
     end
   end
 
@@ -49,11 +49,11 @@ class CoinApi
     a["ismine"]
   end
 
-  def balance : Float64 | Nil
+  def balance : BigDecimal
     info = get_info
-    return unless info.is_a?(Hash(String, JSON::Type))
+    raise "There was an error getting the balance of the node" unless info.is_a?(Hash(String, JSON::Any))
 
-    bal = info["balance"].as(Float64) || 0.to_f64
+    BigDecimal.new(info["balance"].to_s) || BigDecimal.new("0")
   end
 
   def get_transaction(tx : String)
@@ -62,7 +62,7 @@ class CoinApi
 
   private def address_info(address : String)
     info = @rpc.validate_address(address)
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
     info
   end
 end

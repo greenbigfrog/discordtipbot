@@ -25,13 +25,13 @@ class Config
 
     uri_scheme: String,
 
-    txfee: Float64,
+    txfee: BigDecimal,
 
-    min_tip: Float64,
-    min_soak: Float64,
-    min_soak_total: Float64,
-    min_rain_total: Float64,
-    min_withdraw: Float64,
+    min_tip: BigDecimal,
+    min_soak: BigDecimal,
+    min_soak_total: BigDecimal,
+    min_rain_total: BigDecimal,
+    min_withdraw: BigDecimal,
 
     high_balance: Int32,
 
