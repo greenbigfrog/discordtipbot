@@ -12,13 +12,14 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - It then launches a fiber for each bot
 
 ## Dependencies
-- crystal
+- crystal (installed from my fork: https://github.com/greenbigfrog/crystal/tree/bigdecimal (it's latest release with some patches applied to improve functionality of BigDecimal))
 - postgresql
 - wallets as you wish
 
 ## Installation
 
 - First make sure you've got [crystal](https://crystal-lang.org/) installed.
+- clone the repo
 - Install shards (`shards install`)
 - Install core wallet for each currency you plan on running
 - Add the RPC info to each wallets corresponding config file (`rpcuser` and `rpcpassword`)
