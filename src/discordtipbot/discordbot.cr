@@ -102,7 +102,8 @@ class DiscordBot
         node = @tip.node_balance
         next if node.nil?
 
-        users = @tip.db_balance.as(Float64)
+        # TODO does this work?
+        users = @tip.db_balance
         if users > node
           string = "**ALARM**: Total user balance exceeds node balance: **#{users} > #{node}**\n*Shutting bot down*"
           @config.admins.each do |x|
@@ -184,12 +185,13 @@ class DiscordBot
     channel(msg).guild_id.as(UInt64)
   end
 
-  private def amount(msg : Discord::Message, string)
+  private def amount(msg : Discord::Message, string) : BigDecimal?
     if string == "all"
       amount = @tip.get_balance(msg.author.id)
-    else
-      if m = /(?<amount>^[0-9,\.]+)/.match(string)
-        amount = m["amount"].try &.to_f64
+    elsif m = /(?<amount>^[0-9,\.]+)/.match(string)
+      begin
+        BigDecimal.new(m["amount"]).round(8)
+      rescue
       end
     end
   end
@@ -215,7 +217,7 @@ class DiscordBot
     return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
 
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
 
     balance = info["balance"]
     blocks = info["blocks"]
@@ -531,14 +533,14 @@ class DiscordBot
 
   def blocks(msg : Discord::Message)
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
 
     reply(msg, "Current Block Count (known to the node): **#{info["blocks"]}**")
   end
 
   def connections(msg : Discord::Message)
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
 
     reply(msg, "The node has **#{info["connections"]} Connections**")
   end
