@@ -8,18 +8,19 @@ targets:
   discordtipbot:
     main: src/discordtipbot.cr
 
-
 crystal: 0.20.5
 
 license: MIT
 
 dependencies:
   pg:
-    github: will/crystal-pg
-    branch: master
+    github: greenbigfrog/crystal-pg
+    branch: personal
   discordcr:
     github: greenbigfrog/discordcr
     branch: type-fix
   bitcoin_rpc:
     github: greenbigfrog/bitcoin_rpc
+    branch: master
+    # branch: latest-crystal
 
