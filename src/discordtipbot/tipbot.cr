@@ -13,7 +13,8 @@ class TipBot
 
     return "insufficient balance" if balance(from) < amount
 
-    tx = @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4);", memo, from, to, amount)
+    sql = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4)"
+    tx = @db.exec(sql, memo, from, to, amount)
 
     if tx.rows_affected == 1
       @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
@@ -67,7 +68,7 @@ class TipBot
     @log.debug("#{@config.coinname_short}: Attempting to get deposit address for #{user}")
     ensure_user(user)
 
-    address = @db.query_one("SELECT address FROM accounts WHERE userid=$1", user, &.read(String | Nil))
+    address = @db.query_one("SELECT address FROM accounts WHERE userid=$1", user, as: String?)
     if address.nil?
       address = @coin_api.new_address
 
@@ -102,13 +103,13 @@ class TipBot
   def get_config(server : UInt64, memo : String)
     case memo
     when "soak"
-      @db.query_one("SELECT soak FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
+      @db.query_one("SELECT soak FROM config WHERE serverid = $1", server, as: Bool?) || false
     when "mention"
-      @db.query_one("SELECT mention FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
+      @db.query_one("SELECT mention FROM config WHERE serverid = $1", server, as: Bool?) || false
     when "rain"
-      @db.query_one("SELECT rain FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
+      @db.query_one("SELECT rain FROM config WHERE serverid = $1", server, as: Bool?) || false
     when "contacted"
-      @db.query_one("SELECT contacted FROM config WHERE serverid = $1", server, &.read(Bool | Nil)) || false
+      @db.query_one("SELECT contacted FROM config WHERE serverid = $1", server, as: Bool?) || false
     else
       false
     end
@@ -132,7 +133,7 @@ class TipBot
   end
 
   def db_balance
-    @db.query_one("SELECT SUM (balance) FROM accounts", &.read(BigDecimal))
+    @db.query_one("SELECT SUM (balance) FROM accounts", as: BigDecimal)
   end
 
   def node_balance
@@ -156,7 +157,7 @@ class TipBot
   end
 
   def check_deposits
-    txlist = @db.query_all("SELECT txhash FROM coin_transactions WHERE status=$1", "new", &.read(String))
+    txlist = @db.query_all("SELECT txhash FROM coin_transactions WHERE status=$1", "new", as: String)
     return if txlist.empty?
 
     users = Array(UInt64).new
@@ -179,7 +180,7 @@ class TipBot
 
         next unless details["category"] == "receive"
 
-        query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", details["address"], &.read(Int64 | Nil))
+        query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", details["address"], as: Int64?)
         next if query.nil?
 
         update = update_coin_transaction(transaction, "never") if (query == [0] || query.empty?)
@@ -224,7 +225,7 @@ class TipBot
       next unless category == "receive"
 
       # check if tx already in coin_transactions
-      exe = @db.query_all("SELECT txhash FROM coin_transactions WHERE txhash=$1", tx["txid"], &.read(String | Nil))
+      exe = @db.query_all("SELECT txhash FROM coin_transactions WHERE txhash=$1", tx["txid"], as: String?)
       next unless exe.empty? || exe == [0]
 
       insert_tx(tx["txid"].to_s)
@@ -245,7 +246,7 @@ class TipBot
 
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
-    if @db.query_all("SELECT count(*) FROM accounts WHERE userid = $1", user, &.read(Int64)) == [0]
+    unless @db.query_one?("SELECT 1 FROM accounts WHERE userid = $1", user, as: Int32?)
       @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user)
       @log.debug("#{@config.coinname_short}: Added user #{user}")
     end
@@ -265,6 +266,6 @@ class TipBot
   end
 
   private def balance(id : UInt64)
-    @db.query_one("SELECT balance FROM accounts WHERE userid=$1", id, &.read(BigDecimal)) || BigDecimal.new("0")
+    @db.query_one("SELECT balance FROM accounts WHERE userid=$1", id, as: BigDecimal)
   end
 end
