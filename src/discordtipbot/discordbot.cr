@@ -191,7 +191,7 @@ class DiscordBot
     elsif m = /(?<amount>^[0-9,\.]+)/.match(string)
       begin
         BigDecimal.new(m["amount"]).round(8)
-      rescue
+      rescue InvalidBigDecimalException
       end
     end
   end
