@@ -46,7 +46,7 @@ class CoinApi
 
   def balance : BigDecimal
     info = get_info
-    raise "There was an error getting the balance of the node" unless info.is_a?(Hash(String, JSON::Any))
+    raise "There was an error getting the balance of the node" unless info.is_a?(Hash(String, JSON::Type))
 
     BigDecimal.new(info["balance"].to_s) || BigDecimal.new("0")
   end
