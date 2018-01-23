@@ -142,13 +142,13 @@ class TipBot
 
   def insert_tx(txhash : String)
     tx = @coin_api.get_transaction(txhash)
-    return unless tx.is_a?(Hash(String, JSON::Any))
+    return unless tx.is_a?(Hash(String, JSON::Type))
     details_array = tx["details"]
-    return unless details_array.is_a?(Array(JSON::Any))
+    return unless details_array.is_a?(Array(JSON::Type))
     return if details_array.nil?
 
     details_array.each do |details|
-      return unless details.is_a?(Hash(String, JSON::Any))
+      return unless details.is_a?(Hash(String, JSON::Type))
 
       if details["category"] == "receive"
         @db.exec("INSERT INTO coin_transactions (txhash, status) SELECT $1, $2 WHERE NOT EXISTS (SELECT txhash FROM coin_transactions WHERE txhash=$1)", txhash, "new")
@@ -164,7 +164,7 @@ class TipBot
 
     txlist.each do |transaction|
       tx = @coin_api.get_transaction(transaction)
-      next unless tx.is_a?(Hash(String, JSON::Any))
+      next unless tx.is_a?(Hash(String, JSON::Type))
 
       confirmations = tx["confirmations"]
       next if confirmations.nil?
@@ -172,11 +172,11 @@ class TipBot
       next unless confirmations >= @config.confirmations
 
       details_array = tx["details"]
-      next unless details_array.is_a?(Array(JSON::Any))
+      next unless details_array.is_a?(Array(JSON::Type))
       next if details_array.nil?
 
       details_array.each do |details|
-        next unless details.is_a?(Hash(String, JSON::Any))
+        next unless details.is_a?(Hash(String, JSON::Type))
 
         next unless details["category"] == "receive"
 
@@ -212,13 +212,13 @@ class TipBot
 
   def insert_history_deposits
     txlist = @coin_api.list_transactions(10)
-    return unless txlist.is_a?(Array(JSON::Any))
+    return unless txlist.is_a?(Array(JSON::Type))
     return unless txlist.size > 0
 
     users = Array(UInt64).new
 
     txlist.each do |tx|
-      next unless tx.is_a?(Hash(String, JSON::Any))
+      next unless tx.is_a?(Hash(String, JSON::Type))
 
       category = tx["category"]
       next if category.nil?
