@@ -211,7 +211,7 @@ class TipBot
   end
 
   def insert_history_deposits
-    txlist = @coin_api.list_transactions(10)
+    txlist = @coin_api.list_transactions(1000)
     return unless txlist.is_a?(Array(JSON::Type))
     return unless txlist.size > 0
 
