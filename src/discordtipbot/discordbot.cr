@@ -449,7 +449,7 @@ class DiscordBot
     when false
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
-      amount_each = amount / targets.size
+      amount_each = BigDecimal.new(amount / targets.size).round(8)
 
       string = build_user_string(get_config_mention(msg), targets)
 
@@ -486,7 +486,7 @@ class DiscordBot
     when false
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
-      amount_each = amount / authors.size
+      amount_each = BigDecimal.new(amount / authors.size).round(8)
 
       string = build_user_string(get_config_mention(msg), authors)
 
