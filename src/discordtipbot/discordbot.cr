@@ -81,18 +81,31 @@ class DiscordBot
       @log.info("#{@config.coinname_short}: #{@config.coinname_full} bot received READY")
     end
 
-    # Add server to config, if not existent
+    # Send guild to channel to check config etc
+    on_guild_create = Channel(Discord::Gateway::GuildCreatePayload).new
     @bot.on_guild_create do |guild|
-      @tip.add_server(guild.id)
-      string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at https://discord.gg/EJUTGtC"
+      on_guild_create.send(guild)
+    end
 
-      unless @tip.get_config(guild.id, "contacted")
-        begin
-          contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
-        rescue
-          @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
+    # At a slower speed check if guild owner has been contacted etc
+    spawn do
+      loop do
+        guild = on_guild_create.receive
+
+        @tip.add_server(guild.id)
+
+        string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at https://discord.gg/EJUTGtC"
+
+        unless @tip.get_config(guild.id, "contacted")
+          begin
+            contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
+          rescue
+            @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
+          end
+          @tip.update_config("contacted", true, guild.id) if contact
         end
-        @tip.update_config("contacted", true, guild.id) if contact
+
+        sleep 2
       end
     end
 
