@@ -140,6 +140,14 @@ class TipBot
     @coin_api.balance
   end
 
+  def withdrawal_sum
+    @db.query_one("SELECT SUM (amount) FROM transactions WHERE memo LIKE 'withdrawal:%'", as: BigDecimal)
+  end
+
+  def deposit_sum
+    @db.query_one("SELECT SUM (amount) FROM transactions WHERE memo LIKE 'deposit%'", as: BigDecimal)
+  end
+
   def insert_tx(txhash : String)
     tx = @coin_api.get_transaction(txhash)
     return unless tx.is_a?(Hash(String, JSON::Type))
