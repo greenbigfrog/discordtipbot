@@ -217,7 +217,7 @@ class DiscordBot
     return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
 
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Any))
+    return unless info.is_a?(Hash(String, JSON::Type))
 
     balance = info["balance"]
     blocks = info["blocks"]
@@ -533,14 +533,14 @@ class DiscordBot
 
   def blocks(msg : Discord::Message)
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Any))
+    return unless info.is_a?(Hash(String, JSON::Type))
 
     reply(msg, "Current Block Count (known to the node): **#{info["blocks"]}**")
   end
 
   def connections(msg : Discord::Message)
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Any))
+    return unless info.is_a?(Hash(String, JSON::Type))
 
     reply(msg, "The node has **#{info["connections"]} Connections**")
   end
