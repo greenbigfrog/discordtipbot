@@ -557,7 +557,8 @@ class DiscordBot
     if cmd[1] == "unclaimed"
       node = @tip.node_balance
       return if node.nil?
-      unclaimed = node - @tip.db_balance
+      unclaimed = @tip.db_balance - (@tip.deposit_sum - @tip.withdrawal_sum)
+
       return reply(msg, "Unclaimed coins: **#{unclaimed}** #{@config.coinname_short}")
     end
 
