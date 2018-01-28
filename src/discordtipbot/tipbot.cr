@@ -13,21 +13,30 @@ class TipBot
 
     return "insufficient balance" if balance(from) < amount
 
-    sql = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4)"
-    tx = @db.exec(sql, memo, from, to, amount)
+    @db.transaction do |tx|
+      begin
+        sql = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4)"
+        transaction = tx.connection.exec(sql, memo, from, to, amount)
 
-    if tx.rows_affected == 1
-      @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
-    else
-      @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
-      return "error"
+        if transaction.rows_affected == 1
+          @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
+        else
+          @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
+          return "error"
+        end
+
+        update_balance(from, tx.connection)
+        update_balance(to, tx.connection)
+
+        @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
+      rescue ex : PQ::PQError
+        @log.error(ex)
+        tx.rollback
+        @log.error("#{@config.coinname_short}: PQError during transfer #{memo} from #{from} to #{to}")
+        return "error"
+      end
     end
-
-    update_balance(from)
-    update_balance(to)
-
-    @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
-    return "success"
+    "success"
   end
 
   def withdraw(from : UInt64, address : String, amount : BigDecimal)
@@ -39,16 +48,25 @@ class TipBot
 
     return "internal address" if @coin_api.internal?(address)
 
-    if tx = @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
-      memo = "withdrawal: #{address}; #{tx}"
-      @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)
-      @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address} in TX #{tx}")
-    else
-      @log.error("#{@config.coinname_short}: Failed to withdraw!")
-      return false
+    @db.transaction do |tx|
+      begin
+        if withdrawal = @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
+          memo = "withdrawal: #{address}; #{withdrawal}"
+          @db.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)
+          @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address} in TX #{withdrawal}")
+        else
+          @log.error("#{@config.coinname_short}: Failed to withdraw!")
+          return false
+        end
+        update_balance(from, tx.connection)
+      rescue ex : PQ::PQError
+        tx.rollback
+        @log.error(ex)
+        @log.error("#{@config.coinname_short}: PQError while attempting to withdraw #{amount} #{@config.coinname_short} to #{address} for #{from}")
+        return false
+      end
     end
-    update_balance(from)
-    return true
+    true
   end
 
   def multi_transfer(from : UInt64, users : Set(UInt64) | Array(UInt64), total : BigDecimal, memo : String)
@@ -56,12 +74,11 @@ class TipBot
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
     return "insufficient balance" if balance(from) < total
-    return @db.transaction do |tx|
-      users.each do |x|
-        self.transfer(from, x, (total/users.size), memo)
-      end
-      @log.debug("#{@config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
+    users.each do |x|
+      return false unless self.transfer(from, x, (total/users.size), memo) == "success"
     end
+    @log.debug("#{@config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
+    true
   end
 
   def get_address(user : UInt64)
@@ -260,7 +277,7 @@ class TipBot
     end
   end
 
-  private def update_balance(id : UInt64)
+  private def update_balance(id : UInt64, tx : DB::Connection? = nil)
     sql = <<-SQL
     UPDATE accounts SET balance=(
       SELECT (
@@ -269,8 +286,11 @@ class TipBot
       ) AS sum)
     WHERE userid=$1;
     SQL
-
-    @db.exec(sql, id)
+    if tx
+      tx.exec(sql, id)
+    else
+      @db.exec(sql, id)
+    end
   end
 
   private def balance(id : UInt64)
