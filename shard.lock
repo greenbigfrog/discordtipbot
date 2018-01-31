@@ -2,7 +2,7 @@ version: 1.0
 shards:
   bitcoin_rpc:
     github: greenbigfrog/bitcoin_rpc
-    commit: bf76f161bd5d7673eb60ead70ce44861822b9130
+    commit: 517b372c703a550ea421c21b52bfbefeafe76b42
 
   db:
     github: crystal-lang/crystal-db
@@ -14,5 +14,5 @@ shards:
 
   pg:
     github: greenbigfrog/crystal-pg
-    commit: fea0303a73a2480a041fc7ca806d923bc811a15e
+    commit: 5e6ba102dd36ffe8662b99c738e7f237dd4b7f28
 
