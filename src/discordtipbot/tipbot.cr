@@ -42,7 +42,8 @@ class TipBot
   def withdraw(from : UInt64, address : String, amount : BigDecimal)
     @log.debug("#{@config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
     ensure_user(from)
-    return "insufficient balance" if balance(from) < amount + @config.txfee
+    # TODO add sending of coins into extra part of bot (process)
+    return "insufficient balance" if balance(from) < amount + (@config.txfee + 1)
 
     return "invalid address" unless @coin_api.validate_address(address)
 
