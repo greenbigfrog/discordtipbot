@@ -5,7 +5,7 @@ class DiscordBot
 
   USER_REGEX = /<@!?(?<id>\d+)>/
   START_TIME = Time.now
-  TERMS      = "In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds."
+  TERMS      = "In no event shall this bot or it's dev be responsible for any loss, theft or misdirection of funds."
 
   def initialize(@config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
@@ -298,7 +298,7 @@ class DiscordBot
 
     case @tip.withdraw(msg.author.id, address, amount)
     when "insufficient balance"
-      reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee}")
+      reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee} #{@config.coinname_short}")
     when "invalid address"
       reply(msg, "**ERROR**: Please specify a valid #{@config.coinname_full} address")
     when "internal address"
