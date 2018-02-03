@@ -455,7 +455,7 @@ class DiscordBot
 
     users = active_users(msg).to_a
 
-    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users.size == 1
+    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users.size > 0
 
     user = users.sample
 
