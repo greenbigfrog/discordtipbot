@@ -20,9 +20,14 @@ class DiscordBot
     @bot.on_message_create do |msg|
       next if msg.author.id == bot_id
 
-      next unless match = msg.content.match(prefix_regex)
-      cmd = match.named_captures["cmd"]
-      next unless cmd
+      content = msg.content
+
+      if private?(msg)
+        content = @config.prefix + content unless content.match(prefix_regex)
+      end
+
+      next unless match = content.match(prefix_regex)
+      next unless cmd = match.named_captures["cmd"]
 
       # If a command expects input pass in parsed command
       case cmd
