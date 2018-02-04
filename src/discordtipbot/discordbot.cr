@@ -114,10 +114,10 @@ class DiscordBot
         node = @tip.node_balance
         next if node.nil?
 
-        # TODO does this work?
-        users = @tip.db_balance
-        if users > node
-          string = "**ALARM**: Total user balance exceeds node balance: **#{users} > #{node}**\n*Shutting bot down*"
+        users = @tip.deposit_sum - @tip.withdrawal_sum
+
+        if node < @tip.db_balance || node < users
+          string = "**ALARM**: Total user balance exceeds node balance\n*Shutting bot down*"
           @config.admins.each do |x|
             @bot.create_message(@cache.resolve_dm_channel(x), string)
           end
@@ -573,7 +573,7 @@ class DiscordBot
     if cmd[1] == "unclaimed"
       node = @tip.node_balance
       return if node.nil?
-      unclaimed = @tip.db_balance - (@tip.deposit_sum - @tip.withdrawal_sum)
+      unclaimed = node - (@tip.deposit_sum - @tip.withdrawal_sum)
 
       return reply(msg, "Unclaimed coins: **#{unclaimed}** #{@config.coinname_short}")
     end
