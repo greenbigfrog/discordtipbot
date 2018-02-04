@@ -152,6 +152,14 @@ class DiscordBot
         end
       end
     end
+
+    # Make use of the status to display info
+    spawn do
+      sleep 2
+      Discord.every(10.seconds) do
+        update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
+      end
+    end
   end
 
   # Since there is no easy way, just to reply to a message
@@ -164,6 +172,10 @@ class DiscordBot
     end
   rescue
     @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
+  end
+
+  private def update_game(name : String)
+    @bot.status_update("online", Discord::GamePlaying.new(name, 0_i64))
   end
 
   private def dm_deposit(userid : UInt64)
