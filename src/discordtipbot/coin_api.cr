@@ -45,10 +45,9 @@ class CoinApi
   end
 
   def balance : BigDecimal
-    info = get_info
-    raise "There was an error getting the balance of the node" unless info.is_a?(Hash(String, JSON::Type))
+    bal = @rpc.get_balance("*", 0)
 
-    BigDecimal.new(info["balance"].to_s) || BigDecimal.new("0")
+    BigDecimal.new(bal.to_s) || BigDecimal.new(0)
   end
 
   def get_transaction(tx : String)
