@@ -15,7 +15,7 @@ license: MIT
 dependencies:
   pg:
     github: greenbigfrog/crystal-pg
-    branch: personal
+    branch: add-bigdecimal
   discordcr:
     github: greenbigfrog/discordcr
     branch: type-fix

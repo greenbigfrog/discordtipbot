@@ -14,5 +14,5 @@ shards:
 
   pg:
     github: greenbigfrog/crystal-pg
-    commit: 5e6ba102dd36ffe8662b99c738e7f237dd4b7f28
+    commit: 4f81c1a43cf56f48c8cca1e835eba43026fec98a
 
