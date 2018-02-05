@@ -79,6 +79,13 @@ class DiscordBot
 
     @bot.on_ready do
       @log.info("#{@config.coinname_short}: #{@config.coinname_full} bot received READY")
+
+      # Make use of the status to display info
+      spawn do
+        Discord.every(1.minutes) do
+          update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
+        end
+      end
     end
 
     # Add server to config, if not existent
@@ -150,14 +157,6 @@ class DiscordBot
         users.each do |x|
           @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your balance exceeds #{@config.high_balance} #{@config.coinname_short}. You should consider withdrawing some coins! You should not use this bot as your wallet!")
         end
-      end
-    end
-
-    # Make use of the status to display info
-    spawn do
-      sleep 2
-      Discord.every(10.seconds) do
-        update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
       end
     end
   end
