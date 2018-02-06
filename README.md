@@ -12,7 +12,7 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - It then launches a fiber for each bot
 
 ## Dependencies
-- crystal (installed from my fork: https://github.com/greenbigfrog/crystal/tree/bigdecimal (it's latest release with some patches applied to improve functionality of BigDecimal))
+- crystal
 - postgresql
 - wallets as you wish
 
