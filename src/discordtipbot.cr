@@ -1,3 +1,4 @@
+require "./core_extensions/*"
 require "./discordtipbot/*"
 
 require "logger"
