@@ -13,6 +13,7 @@ class DiscordBot
     @cache = Discord::Cache.new(@bot)
     @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
+    @active_users_cache = ActivityCache.new(10.minutes)
 
     bot_id = @cache.resolve_current_user.id
     prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
@@ -93,6 +94,11 @@ class DiscordBot
       end
     end
 
+    # Add user to active_users_cache on new message unless bot user
+    @bot.on_message_create do |msg|
+      @active_users_cache.touch(msg.channel_id, msg.author.id, msg.timestamp.to_utc) unless msg.author.bot
+    end
+
     # Add server to config, if not existent
     @bot.on_guild_create do |guild|
       @tip.add_server(guild.id)
@@ -162,6 +168,13 @@ class DiscordBot
         users.each do |x|
           @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your balance exceeds #{@config.high_balance} #{@config.coinname_short}. You should consider withdrawing some coins! You should not use this bot as your wallet!")
         end
+      end
+    end
+
+    # periodically clean up the user activity cache
+    spawn do
+      Discord.every(60.minutes) do
+        @active_users_cache.prune
       end
     end
   end
@@ -425,10 +438,8 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
 
-    trigger_typing(msg)
-
     authors = active_users(msg)
-    return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.empty? || authors.nil?
+    return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.nil? || authors.empty?
 
     case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
@@ -467,11 +478,9 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_tip} #{@config.coinname_short}") unless amount >= @config.min_tip
 
-    trigger_typing(msg)
+    users = active_users(msg)
 
-    users = active_users(msg).to_a
-
-    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users.size > 0
+    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users && (users = users.to_a).size > 0
 
     user = users.sample
 
@@ -488,10 +497,8 @@ class DiscordBot
   def active(msg : Discord::Message)
     return reply(msg, "You cannot use this command in a private channel!") if private?(msg)
 
-    trigger_typing(msg)
-
     authors = active_users(msg)
-    return reply(msg, "No active users!") if authors.empty? || authors.nil?
+    return reply(msg, "No active users!") if authors.nil? || authors.empty?
 
     singular = authors.size == 1
     reply(msg, "There #{singular ? "is" : "are"} **#{authors.size}** active user#{singular ? "" : "s"} ATM")
@@ -614,6 +621,17 @@ class DiscordBot
   end
 
   private def active_users(msg : Discord::Message)
+    cache_users(msg) if Time.now - START_TIME < 10.minutes
+
+    authors = @active_users_cache.resolve_to_id(msg.channel_id)
+    return unless authors
+    authors.delete(msg.author.id)
+    authors
+  end
+
+  private def cache_users(msg : Discord::Message)
+    trigger_typing(msg)
+
     msgs = Array(Discord::Message).new
     channel = @bot.get_channel(msg.channel_id)
     last_id = channel.last_message_id
@@ -630,14 +648,9 @@ class DiscordBot
       break if new_msgs.last.timestamp < before
     end
 
-    authors = Set(UInt64).new
-
     msgs.each do |x|
       next if x.author.bot
-      next if x.timestamp < before
-      authors.add(x.author.id)
+      @active_users_cache.add_if_youngest(x.channel_id, x.author.id, x.timestamp.to_utc)
     end
-
-    authors.delete(msg.author.id)
   end
 end
