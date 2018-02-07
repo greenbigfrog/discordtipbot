@@ -2,7 +2,6 @@ language: crystal
 env:
   - TIPBOT_ENV=test
 script:
-  # TODO enable travis again after next crystal release
-  # - crystal spec
+  - crystal spec
   - crystal tool format --check src
   - crystal tool format --check spec
