@@ -273,7 +273,10 @@ class DiscordBot
 
   # respond with pong
   def ping(msg : Discord::Message)
-    reply(msg, "pong")
+    m = reply(msg, "Pong!")
+    return unless m.is_a?(Discord::Message)
+    time = Time.utc_now - msg.timestamp
+    @bot.edit_message(m.channel_id, m.id, "Pong! *Time taken: #{time.total_milliseconds} ms.*")
   end
 
   # respond getinfo RPC
