@@ -84,6 +84,8 @@ class DiscordBot
         self.lucky(msg, cmd)
       when .starts_with? "exit"
         self.exit(msg)
+      when .starts_with? "statistics"
+        self.statistics(msg)
       end
     end
 
@@ -684,6 +686,21 @@ class DiscordBot
 
     @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
     exit
+  end
+
+  def statistics(msg : Discord::Message)
+    stats = Statistics.get(@tip.db)
+    string = String.build do |io|
+      io.puts "*Currently the users of this bot have:*"
+      io.puts "Transfered a total of **#{stats.total} #{@config.coinname_short}** in #{stats.transactions} transactions"
+      io.puts
+      io.puts "Of these **#{stats.tips} #{@config.coinname_short}** were tips,"
+      io.puts "**#{stats.rains} #{@config.coinname_short}** were rains and"
+      io.puts "**#{stats.soaks} #{@config.coinname_short}** were soaks."
+      io.puts "*Last updated at #{Statistics.last}*"
+    end
+
+    reply(msg, string)
   end
 
   private def active_users(msg : Discord::Message)
