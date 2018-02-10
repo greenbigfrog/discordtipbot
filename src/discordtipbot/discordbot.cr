@@ -17,6 +17,7 @@ class DiscordBot
     @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)
+    @statistics = Statistics.new(@tip.db)
 
     bot_id = @cache.resolve_current_user.id
     prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
@@ -83,6 +84,8 @@ class DiscordBot
         self.lucky(msg, cmd)
       when .starts_with? "exit"
         self.exit(msg)
+      when .starts_with? "statistics"
+        self.statistics(msg)
       end
     end
 
@@ -654,6 +657,21 @@ class DiscordBot
 
     @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
     exit
+  end
+
+  def statistics(msg : Discord::Message)
+    @statistics.update
+    string = String.build do |io|
+      io.puts "*Currently the users of this bot have:*"
+      io.puts "Transfered a total of **#{@statistics.total} #{@config.coinname_short}** in #{@statistics.transactions} transactions"
+      io.puts
+      io.puts "Of these **#{@statistics.tips} #{@config.coinname_short}** were tips,"
+      io.puts "**#{@statistics.rains} #{@config.coinname_short}** were rains and"
+      io.puts "**#{@statistics.soaks} #{@config.coinname_short}** were soaks."
+      io.puts "*Last updated at #{@statistics.last}*"
+    end
+
+    reply(msg, string)
   end
 
   private def active_users(msg : Discord::Message)
