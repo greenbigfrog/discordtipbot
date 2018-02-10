@@ -28,4 +28,3 @@ class Statistics
     update_statistics
   end
 end
-
