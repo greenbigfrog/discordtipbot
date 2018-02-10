@@ -1,22 +1,16 @@
 class Statistics
   @db : DB::Database
   @ttl : Time::Span
-  @transactions : Int64?
-  @total : BigDecimal?
-  @tips : BigDecimal?
-  @soaks : BigDecimal?
-  @rains : BigDecimal?
 
-  getter transactions
-  getter total
-  getter tips
-  getter soaks
-  getter rains
-  getter last
+  getter transactions : Int64?
+  getter total : BigDecimal?
+  getter tips : BigDecimal?
+  getter soaks : BigDecimal?
+  getter rains : BigDecimal?
+  getter last = Time.utc_now
 
   def initialize(@db)
     @ttl = 1.minutes
-    @last = Time.utc_now
     update_statistics
   end
 
