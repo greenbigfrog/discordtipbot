@@ -7,6 +7,9 @@ class DiscordBot
   START_TIME = Time.now
   TERMS      = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
 
+  @unavailable_guilds = Set(UInt64).new
+  @available_guilds = Set(UInt64).new
+
   def initialize(@config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
     @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
@@ -99,21 +102,6 @@ class DiscordBot
       @active_users_cache.touch(msg.channel_id, msg.author.id, msg.timestamp.to_utc) unless msg.author.bot
     end
 
-    # Add server to config, if not existent
-    @bot.on_guild_create do |guild|
-      @tip.add_server(guild.id)
-      string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at http://tipbot.gbf.re"
-
-      unless @tip.get_config(guild.id, "contacted")
-        begin
-          contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
-        rescue
-          @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
-        end
-        @tip.update_config("contacted", true, guild.id) if contact
-      end
-    end
-
     # Check if total user balance exceeds node balance every ~60 seconds in extra fiber
     spawn do
       Discord.every(60.seconds) do
@@ -130,6 +118,38 @@ class DiscordBot
           @log.error("#{@config.coinname_short}: #{string}")
           exit
         end
+      end
+    end
+
+    # Handle new guilds and owner notifying etc
+    @streaming = false
+
+    @bot.on_ready do |payload|
+      # Only fire on first READY, or if ID cache was cleared
+      next unless @unavailable_guilds.empty? && @available_guilds.empty?
+      @streaming = true
+      @unavailable_guilds.concat payload.guilds.map(&.id)
+    end
+
+    @bot.on_guild_create do |payload|
+      if @streaming
+        @available_guilds.add payload.id
+
+        # Done streaming
+        if @available_guilds == @unavailable_guilds
+          # Process guilds at a rate
+          @cache.guilds.each do |_id, guild|
+            handle_new_guild(guild)
+            sleep 0.1
+          end
+
+          # Any guild after this is new, not streaming anymore
+          @streaming = false
+          @log.debug("#{@config.coinname_short}: Done streaming/Cacheing guilds after #{Time.now - START_TIME}")
+        end
+      else
+        # Brand new guild
+        handle_new_guild(payload)
       end
     end
 
@@ -177,6 +197,20 @@ class DiscordBot
       Discord.every(60.minutes) do
         @active_users_cache.prune
       end
+    end
+  end
+
+  private def handle_new_guild(guild : Discord::Guild | Discord::Gateway::GuildCreatePayload)
+    @tip.add_server(guild.id)
+
+    unless @tip.get_config(guild.id, "contacted")
+      string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at http://tipbot.gbf.re"
+      begin
+        contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
+      rescue
+        @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
+      end
+      @tip.update_config("contacted", true, guild.id) if contact
     end
   end
 
