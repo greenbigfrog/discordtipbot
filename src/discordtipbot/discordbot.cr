@@ -17,7 +17,6 @@ class DiscordBot
     @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)
-    @statistics = Statistics.new(@tip.db)
 
     bot_id = @cache.resolve_current_user.id
     prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
@@ -660,15 +659,15 @@ class DiscordBot
   end
 
   def statistics(msg : Discord::Message)
-    @statistics.update
+    stats = Statistics.get(@tip.db)
     string = String.build do |io|
       io.puts "*Currently the users of this bot have:*"
-      io.puts "Transfered a total of **#{@statistics.total} #{@config.coinname_short}** in #{@statistics.transactions} transactions"
+      io.puts "Transfered a total of **#{stats.total} #{@config.coinname_short}** in #{stats.transactions} transactions"
       io.puts
-      io.puts "Of these **#{@statistics.tips} #{@config.coinname_short}** were tips,"
-      io.puts "**#{@statistics.rains} #{@config.coinname_short}** were rains and"
-      io.puts "**#{@statistics.soaks} #{@config.coinname_short}** were soaks."
-      io.puts "*Last updated at #{@statistics.last}*"
+      io.puts "Of these **#{stats.tips} #{@config.coinname_short}** were tips,"
+      io.puts "**#{stats.rains} #{@config.coinname_short}** were rains and"
+      io.puts "**#{stats.soaks} #{@config.coinname_short}** were soaks."
+      io.puts "*Last updated at #{stats.last}*"
     end
 
     reply(msg, string)

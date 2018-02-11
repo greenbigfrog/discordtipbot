@@ -1,30 +1,43 @@
-class Statistics
-  @db : DB::Database
-  @ttl : Time::Span
+struct Statistics
+  DB.mapping({
+    transactions: {
+      type: Int64,
+      key:  "transaction_count",
+    },
+    total: {
+      type: BigDecimal,
+      key:  "transaction_sum",
+    },
+    tips: {
+      type: BigDecimal,
+      key:  "tip_sum",
+    },
+    soaks: {
+      type: BigDecimal,
+      key:  "soak_sum",
+    },
+    rains: {
+      type: BigDecimal,
+      key:  "rain_sum",
+    },
+  })
 
-  getter transactions : Int64?
-  getter total : BigDecimal?
-  getter tips : BigDecimal?
-  getter soaks : BigDecimal?
-  getter rains : BigDecimal?
-  getter last = Time.utc_now
+  @@ttl : Time::Span = 1.minutes
 
-  def initialize(@db)
-    @ttl = 1.minutes
-    update_statistics
+  @@last = Time.utc_now
+
+  def self.get(db : DB::Database)
+    update(db)
+    Statistics.from_rs(db.query("SELECT * FROM statistics")).last
   end
 
-  private def update_statistics
-    @transactions = @db.query_one("SELECT SUM(1) FROM transactions", as: Int64)
-    @total = @db.query_one("SELECT SUM(amount) FROM transactions", as: BigDecimal)
-    @tips = @db.query_one("SELECT SUM(amount) FROM transactions WHERE memo='tip'", as: BigDecimal)
-    @soaks = @db.query_one("SELECT SUM(amount) FROM transactions WHERE memo='soak'", as: BigDecimal)
-    @rains = @db.query_one("SELECT SUM(amount) FROM transactions WHERE memo='rain'", as: BigDecimal)
-    @last = Time.utc_now
+  def self.update(db : DB::Database)
+    return unless Time.utc_now > @@last + @@ttl
+    db.exec("REFRESH MATERIALIZED VIEW statistics")
+    @@last = Time.utc_now
   end
 
-  def update
-    return unless Time.utc_now > @last + @ttl
-    update_statistics
+  def last
+    @@last
   end
 end
