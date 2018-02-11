@@ -550,7 +550,7 @@ class DiscordBot
 
 		people = amount(msg, cmd[2]) #number of people to get lucky.
 		users = active_users(msg)
-		return reply(msg, "**ERROR**: There arent that many people!") unless users && (users = users.to_a).size > people
+		return reply(msg, "**ERROR**: There arent that many people!") unless (users = users.to_a).size > people
 
     return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_tip
 
