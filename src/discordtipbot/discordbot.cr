@@ -549,7 +549,9 @@ class DiscordBot
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     people = amount(msg, cmd[2]) # number of people to get lucky.
+
     users = active_users(msg)
+
     return reply(msg, "**ERROR**: There arent that many people!") unless (users = users.to_a).size > people
 
     return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_tip
@@ -560,6 +562,7 @@ class DiscordBot
 
     while x < people
       recipiant[x] = users.sample
+      x++
     end
 
     case @tip.multi_transfer(from: msg.author.id, users: recipiant, amount: amount, memo: "lucky")
