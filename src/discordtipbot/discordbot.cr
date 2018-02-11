@@ -81,6 +81,8 @@ class DiscordBot
         self.stats(msg)
       when .starts_with? "lucky"
         self.lucky(msg, cmd)
+			when .starts_with? "grouplucky"
+				self.grouplucky(msg, cmd)
       when .starts_with? "exit"
         self.exit(msg)
       end
@@ -502,7 +504,7 @@ class DiscordBot
     @tip.get_config(guild_id(msg), memo)
   end
 
-  def lucky(msg : Discord::Message, cmd_string : String)
+	def lucky(msg : Discord::Message, cmd_string : String)
     return reply(msg, "**ERROR**: This command doesn't work in DMs") if private?(msg)
 
     cmd_usage = "#{@config.prefix}lucky [amount]"
@@ -531,6 +533,43 @@ class DiscordBot
     when "error"
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     end
+  end
+
+	def grouplucky(msg : Discord::Message, cmd_string : String)
+    return reply(msg, "**ERROR**: This command doesn't work in DMs") if private?(msg)
+
+    cmd_usage = "#{@config.prefix}lucky [amount]"
+
+    # cmd[0]: command, cmd[1]: amount"
+    cmd = cmd_string.split(" ")
+
+    return reply(msg, cmd_usage) unless cmd.size > 1
+
+    amount = amount(msg, cmd[1])
+    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
+
+		people = amount(msg, cmd[2]) #number of people to get lucky.
+		users = active_users(msg)
+		return reply(msg, "**ERROR**: There arent that many people!") unless users && (users = users.to_a).size > people
+
+    return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_tip
+
+
+    user1 = users.sample
+
+		recipiant = [users.sample, users.sample]
+
+		recipiant[1] = users.sample if recipiant[1] === recipiant[0]
+
+
+    case @tip.multi_transfer(from: msg.author.id, users: user, amount: amount, memo: "lucky")
+	    when "success"
+	        reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
+	    when "insufficient balance"
+	      reply(msg, "**ERROR**: Insufficient balance")
+	    when "error"
+	      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+	  end
   end
 
   def active(msg : Discord::Message)
