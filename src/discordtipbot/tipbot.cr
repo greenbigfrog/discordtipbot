@@ -74,9 +74,12 @@ class TipBot
     @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
-    return "insufficient balance" if balance(from) < total
+    balance = balance(from)
+    amount = BigDecimal.new(total / users.size).round(8)
+    return "insufficient balance" if balance < total || amount * users.size > balance
+
     users.each do |x|
-      return false unless self.transfer(from, x, (total/users.size), memo) == "success"
+      return false unless self.transfer(from, x, amount, memo) == "success"
     end
     @log.debug("#{@config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
     true

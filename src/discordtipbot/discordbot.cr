@@ -453,7 +453,7 @@ class DiscordBot
 
       string = build_user_string(get_config_mention(msg), targets)
 
-      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
+      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount_each * targets.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end
   end
 
@@ -490,7 +490,7 @@ class DiscordBot
 
       string = build_user_string(get_config_mention(msg), authors)
 
-      reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
+      reply(msg, "**#{msg.author.username}** rained a total of **#{amount_each * authors.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end
   end
 
