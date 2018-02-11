@@ -42,8 +42,7 @@ class TipBot
   def withdraw(from : UInt64, address : String, amount : BigDecimal)
     @log.debug("#{@config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
     ensure_user(from)
-    # TODO add sending of coins into extra part of bot (process)
-    return "insufficient balance" if balance(from) < amount + (@config.txfee + 1)
+    return "insufficient balance" if balance(from) < amount + @config.txfee
 
     return "invalid address" unless @coin_api.validate_address(address)
 
@@ -51,21 +50,11 @@ class TipBot
 
     @db.transaction do |tx|
       begin
-        begin
-          withdrawal = @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
-        rescue ex
-          @log.warn("#{@config.coinname_short}: Error withdrawing => #{ex}")
-          return false
-        end
+        memo = "withdrawal: #{address}"
+        @log.debug("#{@config.coinname_short}: Added withdrawal of #{amount} from #{from} to #{address} to queue")
 
-        if withdrawal
-          memo = "withdrawal: #{address}; #{withdrawal}"
-          tx.connection.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)
-          @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address} in TX #{withdrawal}")
-        else
-          @log.error("#{@config.coinname_short}: Failed to withdraw!")
-          return false
-        end
+        tx.connection.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)
+        tx.connection.exec("INSERT INTO withdrawals(from_id, amount, address) VALUES ($1, $2, $3)", from, amount, address)
         update_balance(from, tx.connection)
       rescue ex : PQ::PQError
         tx.rollback
@@ -75,6 +64,25 @@ class TipBot
       end
     end
     true
+  end
+
+  def process_pending_withdrawals
+    record = {id: Int32, from_id: Int64, address: String, amount: BigDecimal}
+    pending = @db.query_all("SELECT id, from_id, address, amount FROM withdrawals WHERE status = 'pending'", as: record)
+    users = Set(UInt64).new
+    pending.each do |x|
+      begin
+        @coin_api.withdraw(x[:address], x[:amount], "Withdrawal for #{x[:from_id]}")
+      rescue ex
+        @log.error(ex)
+        @log.error("#{@config.coinname_short}: Something went wrong while processing withdrawals")
+        next
+      end
+      @db.exec("UPDATE withdrawals SET status = 'processed' WHERE id = $1", x[:id])
+      @log.debug("#{@config.coinname_short}: Processed withdrawal of #{x[:amount]} for #{x[:from_id]} to #{x[:address]}")
+      users << x[:from_id].to_u64
+    end
+    users
   end
 
   def multi_transfer(from : UInt64, users : Set(UInt64) | Array(UInt64), total : BigDecimal, memo : String)

@@ -190,6 +190,18 @@ class DiscordBot
       end
     end
 
+    # Check for pending withdrawals every X seconds
+    spawn do
+      Discord.every(30.seconds) do
+        users = @tip.process_pending_withdrawals
+        users.each do |x|
+          begin
+            @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your withdrawal just got processed" + Emoji::Check)
+          end
+        end
+      end
+    end
+
     # warn users that the tipbot shouldn't be used as wallet if their balance exceeds @config.high_balance
     spawn do
       Discord.every(6.hours) do
@@ -385,7 +397,7 @@ class DiscordBot
     when false
       reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
-      reply(msg, "Successfully withdrew **#{amount} #{@config.coinname_short}** to **#{address}**")
+      reply(msg, "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::Cursor)
     end
   end
 
