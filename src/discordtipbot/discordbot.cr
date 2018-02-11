@@ -557,12 +557,17 @@ class DiscordBot
 
     user1 = users.sample
 
-		recipiant = [users.sample, users.sample]
+    recipiant = Array.new(people, string)
+
+
+		while x < people
+      recipiant.[x] = users.sample
+    end
 
 		recipiant[1] = users.sample if recipiant[1] === recipiant[0]
 
 
-    case @tip.multi_transfer(from: msg.author.id, users: user, amount: amount, memo: "lucky")
+    case @tip.multi_transfer(from: msg.author.id, users: recipiant, amount: amount, memo: "lucky")
 	    when "success"
 	        reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
 	    when "insufficient balance"
