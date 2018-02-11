@@ -560,9 +560,10 @@ class DiscordBot
 
     recipiant = Array.new(people, string)
 
+    x = 0
     while x < people
       recipiant[x] = users.sample
-      x++
+      x += 1
     end
 
     case @tip.multi_transfer(from: msg.author.id, users: recipiant, amount: amount, memo: "lucky")
