@@ -17,6 +17,7 @@ class DiscordBot
     @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)
+    @presence_cache = PresenceCache.new
 
     bot_id = @cache.resolve_current_user.id
     prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
@@ -151,6 +152,14 @@ class DiscordBot
         # Brand new guild
         handle_new_guild(payload)
       end
+    end
+
+    @bot.on_guild_create do |payload|
+      @presence_cache.handle_presence(payload.presences)
+    end
+
+    @bot.on_presence_update do |presence|
+      @presence_cache.handle_presence(presence)
     end
 
     # receive wallet transactions and insert into coin_transactions
@@ -426,12 +435,12 @@ class DiscordBot
       last_id = new_users.last.user.id
       new_users.reject!(&.user.bot)
       new_users.each do |x|
+        next unless @presence_cache.online?(x.user.id)
         users << x.user.id unless x.user.id == msg.author.id
         @cache.cache(x.user)
       end
     end
 
-    # TODO only soak online people
     # TODO only soak people that can view the channel
 
     return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
