@@ -51,7 +51,14 @@ class TipBot
 
     @db.transaction do |tx|
       begin
-        if withdrawal = @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
+        begin
+          withdrawal = @coin_api.withdraw(address, amount, "Withdrawal for #{from}")
+        rescue ex
+          @log.warn("#{@config.coinname_short}: Error withdrawing => #{ex}")
+          return false
+        end
+
+        if withdrawal
           memo = "withdrawal: #{address}; #{withdrawal}"
           tx.connection.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)
           @log.debug("#{@config.coinname_short}: Withdrew #{amount} from #{from} to #{address} in TX #{withdrawal}")
