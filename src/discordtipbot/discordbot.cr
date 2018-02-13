@@ -81,8 +81,8 @@ class DiscordBot
         self.stats(msg)
       when .starts_with? "lucky"
         self.lucky(msg, cmd)
-      when .starts_with? "grouplucky"
-        self.grouplucky(msg, cmd)
+      when .starts_with? "glucky"
+        self.glucky(msg, cmd)
       when .starts_with? "exit"
         self.exit(msg)
       end
@@ -535,7 +535,7 @@ class DiscordBot
     end
   end
 
-  def grouplucky(msg : Discord::Message, cmd_string : String)
+  def glucky(msg : Discord::Message, cmd_string : String)
     return reply(msg, "**ERROR**: This command doesn't work in DMs") if private?(msg)
 
     cmd_usage = "#{@config.prefix}lucky [amount]"
@@ -543,31 +543,28 @@ class DiscordBot
     # cmd[0]: command, cmd[1]: amount"
     cmd = cmd_string.split(" ")
 
-    return reply(msg, cmd_usage) unless cmd.size > 1
+    return reply(msg, cmd_usage) unless cmd.size > 2
 
     amount = amount(msg, cmd[1])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
-    people = amount(msg, cmd[2]) # number of people to get lucky.
+    people = cmd[2].to_i # Number of people to give money to.
+    return reply(msg, "**ERROR**: The number of people should be a number. obviously.") unless people
 
-    users = active_users(msg)
+    users = active_users(msg) # Array of active users.
 
-    return reply(msg, "**ERROR**: There arent that many people!") unless (users = users.to_a).size > people
+    amount_each = amount/people
+
+    return reply(msg, "**ERROR**: There arent that many people!") unless users && (users = users.to_a).size > people
 
     return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_tip
 
-    user1 = users.sample
+    recipeant = users.sample(people)
 
-    recipiant = Array.new(people, string)
-
-    x = 0
-    while x < people
-      recipiant[x] = users.sample
-      x += 1
-    end
-
-    case @tip.multi_transfer(from: msg.author.id, users: recipiant, amount: amount, memo: "lucky")
+    case @tip.multi_transfer(from: msg.author.id, users: recipeant, total: amount, memo: "lucky")
     when "success"
+      string = build_user_string(get_config_mention(msg), recipeant) # Is this the right useage? # Makes list of recipeants into a string.
+
       reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     when "insufficient balance"
       reply(msg, "**ERROR**: Insufficient balance")
