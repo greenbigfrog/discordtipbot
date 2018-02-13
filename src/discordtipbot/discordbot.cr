@@ -333,6 +333,8 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id
 
+    return reply(msg, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
+
     amount = amount(msg, cmd[2])
     return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
@@ -433,6 +435,8 @@ class DiscordBot
 
     # TODO only soak online people
     # TODO only soak people that can view the channel
+
+    users = users - @config.ignored_users.to_a
 
     return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
 
@@ -665,7 +669,7 @@ class DiscordBot
     authors = @active_users_cache.resolve_to_id(msg.channel_id)
     return unless authors
     authors.delete(msg.author.id)
-    authors
+    authors - @config.ignored_users.to_a
   end
 
   private def cache_users(msg : Discord::Message)

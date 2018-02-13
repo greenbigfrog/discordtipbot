@@ -35,6 +35,7 @@ class Config
 
     high_balance: Int32,
 
-    admins: Array(UInt64)
+    admins: Array(UInt64),
+    ignored_users: Set(UInt64)
   )
 end
