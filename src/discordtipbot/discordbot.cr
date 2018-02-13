@@ -374,6 +374,8 @@ class DiscordBot
     amount = amount(msg, cmd[2])
     return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
+    amount = amount - @config.txfee if cmd[2] == "all"
+
     return reply(msg, "**ERROR**: You have to withdraw at least #{@config.min_withdraw}") if amount <= @config.min_withdraw
 
     address = cmd[1]
