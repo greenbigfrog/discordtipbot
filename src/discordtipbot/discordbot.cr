@@ -540,7 +540,7 @@ class DiscordBot
 
     cmd_usage = "#{@config.prefix}lucky [amount]"
 
-    # cmd[0]: command, cmd[1]: amount"
+    # cmd[0]: command, cmd[1]: amount, cmd[2]: people"
     cmd = cmd_string.split(" ")
 
     return reply(msg, cmd_usage) unless cmd.size > 2
@@ -548,14 +548,10 @@ class DiscordBot
     amount = amount(msg, cmd[1])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
-    people = cmd[2].to_i # Number of people to give money to.
+    people = cmd[2].to_i? # Number of people to give money to.
     return reply(msg, "**ERROR**: The number of people should be a number. obviously.") unless people
 
-    users = active_users(msg) # Array of active users.
-
-    amount_each = amount/people
-
-    return reply(msg, "**ERROR**: There arent that many people!") unless users && (users = users.to_a).size > people
+    users = active_users(msg)
 
     amount_each = amount/people
 
@@ -563,11 +559,11 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_tip
 
-    recipeant = users.sample(people)
+    recipient = users.sample(people)
 
-    case @tip.multi_transfer(from: msg.author.id, users: recipeant, total: amount, memo: "lucky")
+    case @tip.multi_transfer(from: msg.author.id, users: recipient, total: amount, memo: "lucky")
     when "success"
-      string = build_user_string(get_config_mention(msg), recipeant) # Is this the right useage? # Makes list of recipeants into a string.
+      string = build_user_string(get_config_mention(msg), recipient) # Is this the right useage? # Makes list of recipients into a string.
 
       reply(msg, "**#{msg.author.username}** rained a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     when "insufficient balance"
