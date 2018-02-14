@@ -551,7 +551,7 @@ class DiscordBot
     people = cmd[2].to_i # Number of people to give money to.
     return reply(msg, "**ERROR**: The number of people should be a number. obviously.") unless people
 
-    users = active_users(msg)   # Array of active users.
+    users = active_users(msg) # Array of active users.
 
     amount_each = amount/people
 
