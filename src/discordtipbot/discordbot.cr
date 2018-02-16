@@ -543,7 +543,7 @@ class DiscordBot
     # cmd[0]: command, cmd[1]: amount, cmd[2]: people"
     cmd = cmd_string.split(" ")
 
-    return reply(msg, cmd_usage) unless cmd.size >= 2
+    return reply(msg, cmd_usage) unless cmd.size > 2
 
     amount = amount(msg, cmd[1])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
@@ -555,7 +555,7 @@ class DiscordBot
 
     amount_each = amount/people
 
-    return reply(msg, "**ERROR**: There arent that many people!") unless users && (users = users.to_a).size > people
+    return reply(msg, "**ERROR**: There arent that many people!") unless users && (users = users.to_a).size >= people
 
     return reply(msg, "**ERROR**: You have to group lucky at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_tip
 
@@ -563,10 +563,9 @@ class DiscordBot
 
     case @tip.multi_transfer(from: msg.author.id, users: recipient, total: amount, memo: "lucky")
     when "success"
-      string = build_user_string(get_config_mention(msg), recipient) 
-      
+      string = build_user_string(get_config_mention(msg), recipient)
+
       reply(msg, "**#{msg.author.username}** luckied a total of **#{amount} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
-      
     when "insufficient balance"
       reply(msg, "**ERROR**: Insufficient balance")
     when "error"
