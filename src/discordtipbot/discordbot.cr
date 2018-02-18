@@ -276,6 +276,12 @@ class DiscordBot
   private def amount(msg : Discord::Message, string) : BigDecimal?
     if string == "all"
       @tip.get_balance(msg.author.id)
+    elsif string == "half"
+      BigDecimal.new(@tip.get_balance(msg.author.id) / 2).round(8)
+    elsif string == "rand"
+      BigDecimal.new(Random.rand(1..6))
+    elsif string == "bigrand"
+      BigDecimal.new(Random.rand(1..42))
     elsif m = /(?<amount>^[0-9,\.]+)/.match(string)
       begin
         return nil unless string == m["amount"]
