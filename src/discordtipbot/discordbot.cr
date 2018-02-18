@@ -20,7 +20,7 @@ class DiscordBot
     @presence_cache = PresenceCache.new
 
     bot_id = @cache.resolve_current_user.id
-    prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
+    @prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
     @bot.on_message_create do |msg|
       next if msg.author.id == bot_id
@@ -28,10 +28,10 @@ class DiscordBot
       content = msg.content
 
       if private?(msg)
-        content = @config.prefix + content unless content.match(prefix_regex)
+        content = @config.prefix + content unless content.match(@prefix_regex)
       end
 
-      next unless match = content.match(prefix_regex)
+      next unless match = content.match(@prefix_regex)
       next unless cmd = match.named_captures["cmd"]
 
       # If a command expects input pass in parsed command
@@ -102,6 +102,7 @@ class DiscordBot
 
     # Add user to active_users_cache on new message unless bot user
     @bot.on_message_create do |msg|
+      next if msg.content.match @prefix_regex
       @active_users_cache.touch(msg.channel_id, msg.author.id, msg.timestamp.to_utc) unless msg.author.bot
     end
 
@@ -733,6 +734,7 @@ class DiscordBot
 
     msgs.each do |x|
       next if x.author.bot
+      next if x.content.match @prefix_regex
       @active_users_cache.add_if_youngest(x.channel_id, x.author.id, x.timestamp.to_utc)
     end
   end
