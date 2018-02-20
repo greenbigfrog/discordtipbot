@@ -163,6 +163,8 @@ class DiscordBot
 
     @bot.on_presence_update do |presence|
       @presence_cache.handle_presence(presence)
+
+      @cache.cache(Discord::User.new(presence.user)) if presence.user.full?
     end
 
     # receive wallet transactions and insert into coin_transactions
