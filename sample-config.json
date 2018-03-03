@@ -34,6 +34,9 @@
         "high_balance": 5000,
 
         "admins": [163607982473609216],
-        "ignored_users": [406841964542164993]
+        "ignored_users": [406841964542164993],
+
+        "webhook_id": 4195342590705921,
+        "webhook_token": "GO8zaR_WdfghhdfgkhkkfshksyCPfZVRnyAD"
     }
 ]

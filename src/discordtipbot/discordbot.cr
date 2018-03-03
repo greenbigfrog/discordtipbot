@@ -153,6 +153,18 @@ class DiscordBot
         end
       else
         # Brand new guild
+        owner = @cache.resolve_user(payload.owner_id)
+        embed = Discord::Embed.new(
+          title: payload.name,
+          thumbnail: Discord::EmbedThumbnail.new("https://cdn.discordapp.com/icons/#{payload.id}/#{payload.icon}.png"),
+          colour: 0x00ff00_u32,
+          timestamp: Time.now,
+          fields: [
+            Discord::EmbedField.new(name: "Owner", value: "#{owner.username}##{owner.discriminator}; <@#{owner.id}>"),
+            Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s)
+          ]
+        )
+        @bot.execute_webhook(@config.webhook_id, @config.webhook_token, embeds: [embed])
         handle_new_guild(payload)
       end
     end

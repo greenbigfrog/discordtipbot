@@ -36,6 +36,9 @@ class Config
     high_balance: Int32,
 
     admins: Array(UInt64),
-    ignored_users: Set(UInt64)
+    ignored_users: Set(UInt64),
+
+    webhook_id: UInt64,
+    webhook_token: String
   )
 end
