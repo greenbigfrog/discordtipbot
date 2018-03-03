@@ -94,6 +94,7 @@ class DiscordBot
 
       # Make use of the status to display info
       spawn do
+        sleep 10
         Discord.every(1.minutes) do
           update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
         end
@@ -161,7 +162,7 @@ class DiscordBot
           timestamp: Time.now,
           fields: [
             Discord::EmbedField.new(name: "Owner", value: "#{owner.username}##{owner.discriminator}; <@#{owner.id}>"),
-            Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s)
+            Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s),
           ]
         )
         @bot.execute_webhook(@config.webhook_id, @config.webhook_token, embeds: [embed])
