@@ -86,6 +86,8 @@ class DiscordBot
         self.exit(msg)
       when .starts_with? "statistics"
         self.statistics(msg)
+      when .starts_with? "donate"
+        self.donate(msg, cmd)
       end
     end
 
@@ -392,6 +394,30 @@ class DiscordBot
       reply(msg, "**ERROR**: Insufficient balance")
     when "error"
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+    end
+  end
+
+  # Basically just tip greenbigfrog internally
+  def donate(msg : Discord::Message, cmd_string : String)
+    cmd_usage = "`#{@config.prefix}donate [amount] [message]`"
+    # cmd[0]: trigger, cmd[1]: amount, cmd[2]: message
+    cmd = cmd_string.split(" ")
+
+    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 1
+
+    amount = amount(msg, cmd[1])
+    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
+
+    return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip
+
+    case @tip.transfer(from: msg.author.id, to: 163607982473609216_u64, amount: amount, memo: "donation")
+    when "success"
+      reply(msg, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
+      # Post webhook
+    when "insufficient balance"
+      reply(msg, "**ERROR**: Insufficient balance")
+    when "error"
+      reply(msg, "**ERROR**: Please try again later")
     end
   end
 
