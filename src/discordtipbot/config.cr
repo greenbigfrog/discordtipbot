@@ -37,6 +37,7 @@ class Config
 
     admins: Array(UInt64),
     ignored_users: Set(UInt64),
+    whitelisted_bots: Set(UInt64),
 
     webhook_id: UInt64,
     webhook_token: String

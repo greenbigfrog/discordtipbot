@@ -35,6 +35,7 @@
 
         "admins": [163607982473609216],
         "ignored_users": [406841964542164993],
+        "whitelisted_bots": [267488402868273153],
 
         "webhook_id": 4195342590705921,
         "webhook_token": "GO8zaR_WdfghhdfgkhkkfshksyCPfZVRnyAD"

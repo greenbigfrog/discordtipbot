@@ -377,7 +377,7 @@ class DiscordBot
       return reply(msg, err)
     end
 
-    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if to.bot
+    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if bot(to)
 
     return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id
 
@@ -801,5 +801,13 @@ class DiscordBot
 
   private def post_embed_to_webhook(embed : Discord::Embed)
     @bot.execute_webhook(@config.webhook_id, @config.webhook_token, embeds: [embed])
+  end
+
+  private def bot(user : Discord::User)
+    bot_status = user.bot
+    if bot_status
+      return false if @config.whitelisted_bots.includes?(user.id)
+    end
+    bot_status
   end
 end
