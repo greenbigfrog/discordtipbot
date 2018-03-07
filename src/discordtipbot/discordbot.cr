@@ -414,7 +414,19 @@ class DiscordBot
     case @tip.transfer(from: msg.author.id, to: 163607982473609216_u64, amount: amount, memo: "donation")
     when "success"
       reply(msg, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
-      # Post webhook
+
+      fields = [Discord::EmbedField.new(name: "Amount", value: "#{amount} #{@config.coinname_short}"),
+                Discord::EmbedField.new(name: "User", value: "#{msg.author.username}##{msg.author.discriminator}; <@#{msg.author.id}>")]
+      fields << Discord::EmbedField.new(name: "Message", value: cmd[2]) if cmd[2]?
+
+      embed = Discord::Embed.new(
+        title: "Donation",
+        thumbnail: Discord::EmbedThumbnail.new("https://cdn.discordapp.com/avatars/#{msg.author.id}/#{msg.author.avatar}.png"),
+        colour: 0x6600ff_u32,
+        timestamp: Time.now,
+        fields: fields
+      )
+      post_embed_to_webhook(embed)
     when "insufficient balance"
       reply(msg, "**ERROR**: Insufficient balance")
     when "error"
