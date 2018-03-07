@@ -167,7 +167,8 @@ class DiscordBot
             Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s),
           ]
         )
-        @bot.execute_webhook(@config.webhook_id, @config.webhook_token, embeds: [embed])
+        post_embed_to_webhook(embed)
+
         handle_new_guild(payload)
       end
     end
@@ -784,5 +785,9 @@ class DiscordBot
       next if x.content.match @prefix_regex
       @active_users_cache.add_if_youngest(x.channel_id, x.author.id, x.timestamp.to_utc)
     end
+  end
+
+  private def post_embed_to_webhook(embed : Discord::Embed)
+    @bot.execute_webhook(@config.webhook_id, @config.webhook_token, embeds: [embed])
   end
 end
