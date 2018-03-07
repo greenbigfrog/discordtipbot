@@ -401,7 +401,7 @@ class DiscordBot
   # Basically just tip greenbigfrog internally
   def donate(msg : Discord::Message, cmd_string : String)
     cmd_usage = "`#{@config.prefix}donate [amount] [message]`"
-    # cmd[0]: trigger, cmd[1]: amount, cmd[2]: message
+    # cmd[0]: trigger, cmd[1]: amount, cmd[2..size]: message
     cmd = cmd_string.split(" ")
 
     return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 1
@@ -417,7 +417,7 @@ class DiscordBot
 
       fields = [Discord::EmbedField.new(name: "Amount", value: "#{amount} #{@config.coinname_short}"),
                 Discord::EmbedField.new(name: "User", value: "#{msg.author.username}##{msg.author.discriminator}; <@#{msg.author.id}>")]
-      fields << Discord::EmbedField.new(name: "Message", value: cmd[2]) if cmd[2]?
+      fields << Discord::EmbedField.new(name: "Message", value: cmd[2..cmd.size].join(" ")) if cmd[2]?
 
       embed = Discord::Embed.new(
         title: "Donation",
