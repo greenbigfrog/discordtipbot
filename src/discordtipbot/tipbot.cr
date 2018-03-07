@@ -94,7 +94,7 @@ class TipBot
     return "insufficient balance" if balance < total || amount * users.size > balance
 
     users.each do |x|
-      return false unless self.transfer(from, x, amount, memo) == "success"
+      return false unless self.transfer(from, x, amount, memo)
     end
     @log.debug("#{@config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
     true
