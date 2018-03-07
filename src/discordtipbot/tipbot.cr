@@ -36,7 +36,7 @@ class TipBot
         return "error"
       end
     end
-    "success"
+    true
   end
 
   def withdraw(from : UInt64, address : String, amount : BigDecimal)

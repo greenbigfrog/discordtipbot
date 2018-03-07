@@ -389,7 +389,7 @@ class DiscordBot
     return reply(msg, "**ERROR**: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
 
     case @tip.transfer(from: msg.author.id, to: id, amount: amount, memo: "tip")
-    when "success"
+    when true
       reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
     when "insufficient balance"
       reply(msg, "**ERROR**: Insufficient balance")
@@ -412,7 +412,7 @@ class DiscordBot
     return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip
 
     case @tip.transfer(from: msg.author.id, to: 163607982473609216_u64, amount: amount, memo: "donation")
-    when "success"
+    when true
       reply(msg, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
 
       fields = [Discord::EmbedField.new(name: "Amount", value: "#{amount} #{@config.coinname_short}"),
@@ -614,7 +614,7 @@ class DiscordBot
     user = users.sample
 
     case @tip.transfer(from: msg.author.id, to: user, amount: amount, memo: "lucky")
-    when "success"
+    when true
       reply(msg, "#{msg.author.username} luckily rained **#{amount} #{@config.coinname_short}** onto **<@#{user}>**")
     when "insufficient balance"
       reply(msg, "**ERROR**: Insufficient balance")
