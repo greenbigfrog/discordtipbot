@@ -1,5 +1,24 @@
 require "json"
 
+class Webhook
+  REGEX = /^https:\/\/discordapp\.com\/api\/webhooks\/(?<id>\d+)\/(?<token>\w+)/
+
+  getter id : UInt64
+  getter token : String
+
+  def initialize(sth : String)
+    m = sth.match(REGEX)
+    @id = m.not_nil!["id"].to_u64
+    @token = m.not_nil!["token"]
+  end
+end
+
+module Webhook::Converter
+  def self.from_json(value : JSON::PullParser) : Webhook
+    Webhook.new(value.read_string)
+  end
+end
+
 class Config
   JSON.mapping(
     database_url: String,
@@ -39,7 +58,7 @@ class Config
     ignored_users: Set(UInt64),
     whitelisted_bots: Set(UInt64),
 
-    webhook_id: UInt64,
-    webhook_token: String
+    general_webhook: {type: Webhook, converter: Webhook::Converter},
+    admin_webhook: {type: Webhook, converter: Webhook::Converter}
   )
 end

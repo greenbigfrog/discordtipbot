@@ -37,7 +37,7 @@
         "ignored_users": [406841964542164993],
         "whitelisted_bots": [267488402868273153],
 
-        "webhook_id": 4195342590705921,
-        "webhook_token": "GO8zaR_WdfghhdfgkhkkfshksyCPfZVRnyAD"
+        "general_webhook": "https://discordapp.com/api/webhooks/41951539049/GO8zaR_WGCjX",
+        "admin_webhook": "https://discordapp.com/api/webhooks/42175236265/lkj7aode0pvuzW_PmDDo"
     }
 ]
