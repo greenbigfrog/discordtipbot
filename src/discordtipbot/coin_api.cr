@@ -44,8 +44,8 @@ class CoinApi
     a["ismine"]
   end
 
-  def balance : BigDecimal
-    bal = @rpc.get_balance("*", 0)
+  def balance(confirmations = 0) : BigDecimal
+    bal = @rpc.get_balance("*", confirmations)
 
     BigDecimal.new(bal.to_s) || BigDecimal.new(0)
   end
