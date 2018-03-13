@@ -401,7 +401,7 @@ class DiscordBot
     amount = amount(msg, cmd[1])
     return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip
+    return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[1] == "all"
 
     case @tip.transfer(from: msg.author.id, to: 163607982473609216_u64, amount: amount, memo: "donation")
     when true
