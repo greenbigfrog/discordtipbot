@@ -553,9 +553,11 @@ class DiscordBot
 
     users = active_users(msg)
 
-    amount_each = amount/people
+    return reply(msg, "**ERROR**: There aren't any people to give your money to!") unless users && (users = users.to_a).size > 0
 
-    return lucky(msg, cmd_string) unless users && (users = users.to_a).size >= people
+    amount_each = amount / people
+
+    return rain(msg, cmd_string) unless users && (users = users.to_a).size >= people
 
     return reply(msg, "**ERROR**: You have to group lucky at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_tip
 
