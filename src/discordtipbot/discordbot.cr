@@ -553,7 +553,7 @@ class DiscordBot
 
     users = active_users(msg)
 
-    return reply(msg, "**ERROR**: There aren't any people to give your money to!") unless users && (users = users.to_a).size > 0
+    return reply(msg, "**ERROR**: There isn't anybody to glucky on!") unless users && (users = users.to_a).size > 0
 
     amount_each = amount / people
 
