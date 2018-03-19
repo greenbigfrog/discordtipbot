@@ -19,6 +19,7 @@ class DiscordBot
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)
     @presence_cache = PresenceCache.new
+    @webhook = Discord::Client.new("")
 
     bot_id = @cache.resolve_current_user.id
     @prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
@@ -874,7 +875,7 @@ class DiscordBot
   end
 
   private def post_embed_to_webhook(embed : Discord::Embed, webhook : Webhook)
-    @bot.execute_webhook(webhook.id, webhook.token, embeds: [embed])
+    @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
   end
 
   private def bot(user : Discord::User)
