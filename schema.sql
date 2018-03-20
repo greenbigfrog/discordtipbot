@@ -35,7 +35,7 @@ CREATE TABLE config (
 );
 
 CREATE TABLE coin_transactions (
-       txhash text PRIMARY KEY,
+       txhash text PRIMARY KEY UNIQUE,
        status text NOT NULL,
 
        created_time timestamptz NOT NULL DEFAULT now()
