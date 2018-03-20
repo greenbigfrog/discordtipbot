@@ -199,7 +199,7 @@ class TipBot
   end
 
   def add_server(id : UInt64)
-    @db.exec("INSERT INTO config (serverid) SELECT $1 WHERE NOT EXISTS (SELECT serverid FROM config WHERE serverid = $1)", id)
+    @db.exec("INSERT INTO config (serverid) VALUES($1) ON CONFLICT DO NOTHING", id)
   end
 
   def db_balance
