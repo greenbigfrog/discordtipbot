@@ -379,10 +379,7 @@ class TipBot
 
   private def ensure_user(user : UInt64)
     @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
-    unless @db.query_one?("SELECT 1 FROM accounts WHERE userid = $1", user, as: Int32?)
-      @db.exec("INSERT INTO accounts(userid) VALUES ($1)", user)
-      @log.debug("#{@config.coinname_short}: Added user #{user}")
-    end
+    @db.exec("INSERT INTO accounts(userid) VALUES ($1) ON CONFLICT DO NOTHING", user)
   end
 
   private def update_balance(id : UInt64, tx : DB::Connection? = nil)
