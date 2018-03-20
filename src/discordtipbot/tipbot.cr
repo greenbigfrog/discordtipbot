@@ -241,7 +241,7 @@ class TipBot
       return unless details.is_a?(Hash(String, JSON::Type))
 
       if details["category"] == "receive"
-        @db.exec("INSERT INTO coin_transactions (txhash, status) SELECT $1, $2 WHERE NOT EXISTS (SELECT txhash FROM coin_transactions WHERE txhash=$1)", txhash, "new")
+        @db.exec("INSERT INTO coin_transactions (txhash, status) VALUES($1, $2) ON CONFLICT DO NOTHING", txhash, "new")
       end
     end
   end
