@@ -1,7 +1,7 @@
 require "json"
 
 class Webhook
-  REGEX = /^https:\/\/discordapp\.com\/api\/webhooks\/(?<id>\d+)\/(?<token>\w+)/
+  REGEX = /^https:\/\/discordapp\.com\/api\/webhooks\/(?<id>\d+)\/(?<token>\S+)/
 
   getter id : UInt64
   getter token : String
