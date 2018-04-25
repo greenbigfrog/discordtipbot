@@ -160,9 +160,7 @@ class DiscordBot
             Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s),
           ]
         )
-        post_embed_to_webhook(embed, @config.general_webhook)
-
-        handle_new_guild(payload)
+        post_embed_to_webhook(embed, @config.general_webhook) if handle_new_guild(payload)
       end
     end
 
@@ -246,7 +244,9 @@ class DiscordBot
         @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
       end
       @tip.update_config("contacted", true, guild.id) if contact
+      return true
     end
+    false
   end
 
   # Since there is no easy way, just to reply to a message
