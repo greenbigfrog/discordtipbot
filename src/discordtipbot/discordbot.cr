@@ -524,7 +524,7 @@ class DiscordBot
     return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
 
     if (users.size * @config.min_soak) > @config.min_soak_total
-      targets = users.sample((@config.min_soak_total / @config.min_soak).to_i32)
+      targets = users.sample((amount / @config.min_soak).to_i32)
     else
       targets = users
     end
