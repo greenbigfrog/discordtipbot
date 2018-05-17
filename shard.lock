@@ -10,7 +10,7 @@ shards:
 
   discordcr:
     github: greenbigfrog/discordcr
-    commit: a0327d97721714658b6d1a98c4df07d743d3aa4b
+    commit: 8f696ddd1da51fc1c011144cbeac99ad89154c1f
 
   pg:
     github: greenbigfrog/crystal-pg
