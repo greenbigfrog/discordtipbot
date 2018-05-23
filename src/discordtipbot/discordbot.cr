@@ -5,7 +5,7 @@ class DiscordBot
 
   USER_REGEX = /<@!?(?<id>\d+)>/
   START_TIME = Time.now
-  TERMS      = "In no event shall this bot, it's dev, or other contributors be responsible for any loss, theft or misdirection of funds. Remember to double check all deposits and withdrawlas!"
+  TERMS      = "In no event shall this bot, it's dev, or other contributors be responsible for any loss, theft or misdirection of funds. Remember to double check all deposits and withdrawals!"
   ZWS        = "​" # There is a zero width space stored here
 
   @unavailable_guilds = Set(UInt64).new
