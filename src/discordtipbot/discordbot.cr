@@ -273,7 +273,7 @@ class DiscordBot
   end
 
   private def private?(msg : Discord::Message)
-    channel(msg).type == 1
+    channel(msg).type == Discord::ChannelType::DM
   end
 
   private def channel(msg : Discord::Message) : Discord::Channel
