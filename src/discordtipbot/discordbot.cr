@@ -74,6 +74,8 @@ class DiscordBot
         self.active(msg)
       when .starts_with? "support"
         self.support(msg)
+      when .starts_with? "github"
+        self.github(msg)
       when .starts_with? "invite"
         self.invite(msg)
       when .starts_with? "uptime"
@@ -339,7 +341,7 @@ class DiscordBot
   end
 
   def help(msg : Discord::Message)
-    cmds = {"ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "invite"}
+    cmds = {"ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "github", "invite"}
     string = String.build do |str|
       cmds.each { |x| str << "`" + @config.prefix + x + "`, " }
     end
@@ -724,6 +726,10 @@ class DiscordBot
 
   def support(msg : Discord::Message)
     reply(msg, "For support please visit <http://tipbot.gbf.re>")
+  end
+
+  def github(msg : Discord::Message)
+    reply(msg, "To contribute to the development of the tipbot visit <https://github.com/greenbigfrog/discordtipbot/>")
   end
 
   def uptime(msg : Discord::Message)
