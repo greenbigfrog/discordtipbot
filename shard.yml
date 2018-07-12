@@ -22,5 +22,3 @@ dependencies:
   bitcoin_rpc:
     github: greenbigfrog/bitcoin_rpc
     branch: master
-    # branch: latest-crystal
-
