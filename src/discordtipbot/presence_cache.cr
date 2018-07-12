@@ -3,11 +3,11 @@ class PresenceCache
   getter users : Set(UInt64) = Set(UInt64).new
 
   def delete(user : Discord::PartialUser)
-    users.delete(user.id)
+    users.delete(user.id.to_u64)
   end
 
   def add(user : Discord::PartialUser)
-    users.add(user.id)
+    users.add(user.id.to_u64)
   end
 
   def online?(user : UInt64)

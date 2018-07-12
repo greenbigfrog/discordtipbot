@@ -7,7 +7,7 @@ require "big/json"
 
 require "./discordtipbot/*"
 
-require "./core_extensions/*"
+# require "./core_extensions/*"
 
 unless ENV["TIPBOT_ENV"]? == "test"
   puts "No Config File specified! Exiting!" if ARGV.size == 0

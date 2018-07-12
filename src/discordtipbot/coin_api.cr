@@ -56,7 +56,7 @@ class CoinApi
 
   private def address_info(address : String)
     info = @rpc.validate_address(address)
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
     info
   end
 end

@@ -25,7 +25,7 @@ class DiscordBot
     @prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
     @bot.on_message_create do |msg|
-      next if msg.author.id == bot_id
+      next if msg.author.id.to_u64 == bot_id
 
       content = msg.content
 
@@ -112,7 +112,7 @@ class DiscordBot
     # Add user to active_users_cache on new message unless bot user
     @bot.on_message_create do |msg|
       next if msg.content.match @prefix_regex
-      @active_users_cache.touch(msg.channel_id, msg.author.id, msg.timestamp.to_utc) unless msg.author.bot
+      @active_users_cache.touch(msg.channel_id.to_u64, msg.author.id.to_u64, msg.timestamp.to_utc) unless msg.author.bot
     end
 
     # Check if it's time to send off (or on) site
@@ -130,12 +130,12 @@ class DiscordBot
       # Only fire on first READY, or if ID cache was cleared
       next unless @unavailable_guilds.empty? && @available_guilds.empty?
       @streaming = true
-      @unavailable_guilds.concat payload.guilds.map(&.id)
+      @unavailable_guilds.concat payload.guilds.map(&.id.to_u64)
     end
 
     @bot.on_guild_create do |payload|
       if @streaming
-        @available_guilds.add payload.id
+        @available_guilds.add payload.id.to_u64
 
         # Done streaming
         if @available_guilds == @unavailable_guilds
@@ -178,10 +178,11 @@ class DiscordBot
 
     # receive wallet transactions and insert into coin_transactions
     spawn do
-      server = HTTP::Server.new(@config.walletnotify_port) do |context|
+      server = HTTP::Server.new do |context|
         next unless context.request.method == "POST"
         @tip.insert_tx(context.request.query_params["tx"])
       end
+      server.bind_tcp(@config.walletnotify_port)
       server.listen
     end
 
@@ -236,16 +237,16 @@ class DiscordBot
   end
 
   private def handle_new_guild(guild : Discord::Guild | Discord::Gateway::GuildCreatePayload)
-    @tip.add_server(guild.id)
+    @tip.add_server(guild.id.to_u64)
 
-    unless @tip.get_config(guild.id, "contacted")
+    unless @tip.get_config(guild.id.to_u64, "contacted")
       string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at http://tipbot.gbf.re"
       begin
         contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
       rescue
         @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
       end
-      @tip.update_config("contacted", true, guild.id) if contact
+      @tip.update_config("contacted", true, guild.id.to_u64) if contact
       return true
     end
     false
@@ -255,9 +256,9 @@ class DiscordBot
   private def reply(payload : Discord::Message, msg : String)
     if msg.size > 2000
       msgs = split(msg)
-      msgs.each { |x| @bot.create_message(payload.channel_id, x) }
+      msgs.each { |x| @bot.create_message(payload.channel_id.to_u64, x) }
     else
-      @bot.create_message(payload.channel_id, msg)
+      @bot.create_message(payload.channel_id.to_u64, msg)
     end
   rescue
     @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
@@ -283,14 +284,17 @@ class DiscordBot
   end
 
   private def guild_id(msg : Discord::Message)
-    channel(msg).guild_id.as(UInt64)
+    id = channel(msg).guild_id
+    # If it's a DM channel, it won't have an Guild ID. Else it should.
+    raise "Somehow we tried getting the Guild ID of a DM" unless id
+    id.to_u64
   end
 
   private def amount(msg : Discord::Message, string) : BigDecimal?
     if string == "all"
-      @tip.get_balance(msg.author.id)
+      @tip.get_balance(msg.author.id.to_u64)
     elsif string == "half"
-      BigDecimal.new(@tip.get_balance(msg.author.id) / 2).round(8)
+      BigDecimal.new(@tip.get_balance(msg.author.id.to_u64) / 2).round(8)
     elsif string == "rand"
       BigDecimal.new(Random.rand(1..6))
     elsif string == "bigrand"
@@ -324,11 +328,11 @@ class DiscordBot
 
   # respond getinfo RPC
   def getinfo(msg : Discord::Message)
-    return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(msg.author.id)
+    return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(msg.author.id.to_u64)
     return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
 
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
 
     balance = info["balance"]
     blocks = info["blocks"]
@@ -374,7 +378,7 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if bot(to)
 
-    return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id
+    return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id.to_u64
 
     return reply(msg, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
 
@@ -383,7 +387,7 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
 
-    case @tip.transfer(from: msg.author.id, to: id, amount: amount, memo: "tip")
+    case @tip.transfer(from: msg.author.id.to_u64, to: id, amount: amount, memo: "tip")
     when true
       reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
     when "insufficient balance"
@@ -406,17 +410,17 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[1] == "all"
 
-    case @tip.transfer(from: msg.author.id, to: 163607982473609216_u64, amount: amount, memo: "donation")
+    case @tip.transfer(from: msg.author.id.to_u64, to: 163607982473609216_u64, amount: amount, memo: "donation")
     when true
       reply(msg, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
 
       fields = [Discord::EmbedField.new(name: "Amount", value: "#{amount} #{@config.coinname_short}"),
-                Discord::EmbedField.new(name: "User", value: "#{msg.author.username}##{msg.author.discriminator}; <@#{msg.author.id}>")]
+                Discord::EmbedField.new(name: "User", value: "#{msg.author.username}##{msg.author.discriminator}; <@#{msg.author.id.to_u64}>")]
       fields << Discord::EmbedField.new(name: "Message", value: cmd[2..cmd.size].join(" ")) if cmd[2]?
 
       embed = Discord::Embed.new(
         title: "Donation",
-        thumbnail: Discord::EmbedThumbnail.new("https://cdn.discordapp.com/avatars/#{msg.author.id}/#{msg.author.avatar}.png"),
+        thumbnail: Discord::EmbedThumbnail.new("https://cdn.discordapp.com/avatars/#{msg.author.id.to_u64}/#{msg.author.avatar}.png"),
         colour: 0x6600ff_u32,
         timestamp: Time.now,
         fields: fields
@@ -447,7 +451,7 @@ class DiscordBot
 
     address = cmd[1]
 
-    case @tip.withdraw(msg.author.id, address, amount)
+    case @tip.withdraw(msg.author.id.to_u64, address, amount)
     when "insufficient balance"
       reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee} #{@config.coinname_short}")
     when "invalid address"
@@ -469,12 +473,12 @@ class DiscordBot
   def deposit(msg : Discord::Message)
     notif = reply(msg, "Sent deposit address in a DM") unless private?(msg)
     begin
-      address = @tip.get_address(msg.author.id)
+      address = @tip.get_address(msg.author.id.to_u64)
       embed = Discord::Embed.new(
         footer: Discord::EmbedFooter.new("I love you! ❤"),
         image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{@config.uri_scheme}:#{address}")
       )
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
+      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
       reply(msg, "**ERROR**: Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
@@ -513,8 +517,8 @@ class DiscordBot
       last_id = new_users.last.user.id
       new_users.reject!(&.user.bot)
       new_users.each do |x|
-        next unless @presence_cache.online?(x.user.id)
-        users << x.user.id unless x.user.id == msg.author.id
+        next unless @presence_cache.online?(x.user.id.to_u64)
+        users << x.user.id.to_u64 unless x.user.id.to_u64 == msg.author.id.to_u64
         @cache.cache(x.user)
       end
     end
@@ -532,7 +536,7 @@ class DiscordBot
     end
     targets.reject! { |x| x == nil }
 
-    case @tip.multi_transfer(from: msg.author.id, users: targets, total: amount, memo: "soak")
+    case @tip.multi_transfer(from: msg.author.id.to_u64, users: targets, total: amount, memo: "soak")
     when "insufficient balance"
       reply(msg, "**ERROR**: Insufficient balance")
     when false
@@ -569,7 +573,7 @@ class DiscordBot
     authors = active_users(msg)
     return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.nil? || authors.empty?
 
-    case @tip.multi_transfer(from: msg.author.id, users: authors, total: amount, memo: "rain")
+    case @tip.multi_transfer(from: msg.author.id.to_u64, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
       reply(msg, "**ERROR**: Insufficient balance")
     when false
@@ -612,7 +616,7 @@ class DiscordBot
 
     user = users.sample
 
-    case @tip.transfer(from: msg.author.id, to: user, amount: amount, memo: "lucky")
+    case @tip.transfer(from: msg.author.id.to_u64, to: user, amount: amount, memo: "lucky")
     when true
       reply(msg, "#{msg.author.username} luckily rained **#{amount} #{@config.coinname_short}** onto **<@#{user}>**")
     when "insufficient balance"
@@ -634,14 +638,14 @@ class DiscordBot
 
   # the users balance
   def balance(msg : Discord::Message)
-    reply(msg, "#{msg.author.username} has a confirmed balance of **#{@tip.get_balance(msg.author.id)} #{@config.coinname_short}**")
+    reply(msg, "#{msg.author.username} has a confirmed balance of **#{@tip.get_balance(msg.author.id.to_u64)} #{@config.coinname_short}**")
   end
 
   # Config command (available to admins and respective server owner)
   def config(msg : Discord::Message, cmd_string : String)
     reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
 
-    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id)
+    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id.to_u64)
 
     cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
     # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
@@ -684,20 +688,20 @@ class DiscordBot
 
   def blocks(msg : Discord::Message)
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
 
     reply(msg, "Current Block Count (known to the node): **#{info["blocks"]}**")
   end
 
   def connections(msg : Discord::Message)
     info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Type))
+    return unless info.is_a?(Hash(String, JSON::Any))
 
     reply(msg, "The node has **#{info["connections"]} Connections**")
   end
 
   def admin(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(msg.author.id)
+    return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(msg.author.id.to_u64)
     return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg)
 
     # cmd[0] = command, cmd[1] = type, cmd [2] = user
@@ -745,7 +749,7 @@ class DiscordBot
   end
 
   def exit(msg : Discord::Message)
-    id = msg.author.id
+    id = msg.author.id.to_u64
     return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
 
     @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
@@ -768,9 +772,9 @@ class DiscordBot
   end
 
   def offsite(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg) unless msg.channel_id == 421752342262579201
+    return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg) unless msg.channel_id.to_u64 == 421752342262579201
 
-    id = msg.author.id
+    id = msg.author.id.to_u64
     return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(id)
 
     cmd_usage = String.build do |io|
@@ -809,7 +813,7 @@ class DiscordBot
         reply(msg, "Something went horribly wrong.")
       end
     when .starts_with?("bal")
-      reply(msg, "Your current offsite balance is **#{@tip.get_offsite_balance(msg.author.id)} #{@config.coinname_short}**\n*(This does not include unconfirmed transactions)*")
+      reply(msg, "Your current offsite balance is **#{@tip.get_offsite_balance(msg.author.id.to_u64)} #{@config.coinname_short}**\n*(This does not include unconfirmed transactions)*")
     when "info"
       fields = Array(Discord::EmbedField).new
 
@@ -848,9 +852,9 @@ class DiscordBot
   private def active_users(msg : Discord::Message)
     cache_users(msg) if Time.now - START_TIME < 10.minutes
 
-    authors = @active_users_cache.resolve_to_id(msg.channel_id)
+    authors = @active_users_cache.resolve_to_id(msg.channel_id.to_u64)
     return unless authors
-    authors.delete(msg.author.id)
+    authors.delete(msg.author.id.to_u64)
     authors - @config.ignored_users.to_a
   end
 
@@ -876,7 +880,7 @@ class DiscordBot
     msgs.each do |x|
       next if x.author.bot
       next if x.content.match @prefix_regex
-      @active_users_cache.add_if_youngest(x.channel_id, x.author.id, x.timestamp.to_utc)
+      @active_users_cache.add_if_youngest(x.channel_id.to_u64, x.author.id.to_u64, x.timestamp.to_utc)
     end
   end
 
