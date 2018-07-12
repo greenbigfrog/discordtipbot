@@ -219,11 +219,13 @@ class DiscordBot
 
     # warn users that the tipbot shouldn't be used as wallet if their balance exceeds @config.high_balance
     spawn do
-      Discord.every(6.hours) do
-        users = @tip.get_high_balance(@config.high_balance)
+      Discord.every(1.hours) do
+        if Set{6, 18}.includes?(Time.now.hour)
+          users = @tip.get_high_balance(@config.high_balance)
 
-        users.each do |x|
-          @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your balance exceeds #{@config.high_balance} #{@config.coinname_short}. You should consider withdrawing some coins! You should not use this bot as your wallet!")
+          users.each do |x|
+            @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your balance exceeds #{@config.high_balance} #{@config.coinname_short}. You should consider withdrawing some coins! You should not use this bot as your wallet!")
+          end
         end
       end
     end
