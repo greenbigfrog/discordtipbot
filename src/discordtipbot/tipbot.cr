@@ -47,6 +47,7 @@ class TipBot
     return "invalid address" unless @coin_api.validate_address(address)
 
     return "internal address" if @coin_api.internal?(address)
+    puts "b"
 
     @db.transaction do |tx|
       begin
@@ -231,13 +232,14 @@ class TipBot
   end
 
   def insert_tx(txhash : String)
-    tx = @coin_api.get_transaction(txhash)
+    tx = @coin_api.get_transaction(txhash).as_h
     return unless tx.is_a?(Hash(String, JSON::Any))
-    details_array = tx["details"]
+    details_array = tx["details"].as_a
     return unless details_array.is_a?(Array(JSON::Any))
     return if details_array.nil?
 
     details_array.each do |details|
+      details = details.as_h
       return unless details.is_a?(Hash(String, JSON::Any))
 
       if details["category"] == "receive"
@@ -253,28 +255,24 @@ class TipBot
     users = Array(UInt64).new
 
     txlist.each do |transaction|
-      tx = @coin_api.get_transaction(transaction)
+      tx = @coin_api.get_transaction(transaction).as_h
       next unless tx.is_a?(Hash(String, JSON::Any))
 
-      confirmations = tx["confirmations"]
-      next if confirmations.nil?
-      next unless confirmations.is_a?(Int64)
+      confirmations = tx["confirmations"].as_i
       next unless confirmations >= @config.confirmations
 
-      details_array = tx["details"]
+      details_array = tx["details"].as_a
       next unless details_array.is_a?(Array(JSON::Any))
-      next if details_array.nil?
 
       details_array.each do |details|
+	details = details.as_h
         next unless details.is_a?(Hash(String, JSON::Any))
 
         next unless details["category"] == "receive"
 
-        address = details["address"]
-        next unless address.is_a?(String)
+        address = details["address"].as_s
 
-        amount = details["amount"]
-        next unless amount.is_a?(Float64)
+        amount = details["amount"].as_f
         amount = BigDecimal.new(amount)
 
         query = @db.query_all("SELECT userid FROM accounts WHERE address=$1", address, as: Int64?)
@@ -322,13 +320,15 @@ class TipBot
   end
 
   def insert_history_deposits
-    txlist = @coin_api.list_transactions(1000)
+    txlist = @coin_api.list_transactions(1000).as_a
+
     return unless txlist.is_a?(Array(JSON::Any))
     return unless txlist.size > 0
 
     users = Array(UInt64).new
 
     txlist.each do |tx|
+      tx = tx.as_h
       next unless tx.is_a?(Hash(String, JSON::Any))
 
       category = tx["category"]

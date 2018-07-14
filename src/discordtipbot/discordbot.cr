@@ -333,7 +333,7 @@ class DiscordBot
     return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(msg.author.id.to_u64)
     return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
 
-    info = @tip.get_info
+    info = @tip.get_info.as_h
     return unless info.is_a?(Hash(String, JSON::Any))
 
     balance = info["balance"]

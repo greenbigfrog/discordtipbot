@@ -35,13 +35,13 @@ class CoinApi
   def validate_address(address : String)
     a = address_info(address)
     return unless a
-    a["isvalid"]
+    a["isvalid"].as_bool
   end
 
   def internal?(address : String)
     a = address_info(address)
     return unless a
-    a["ismine"]
+    a["ismine"].as_bool
   end
 
   def balance(confirmations = 0) : BigDecimal
@@ -55,7 +55,7 @@ class CoinApi
   end
 
   private def address_info(address : String)
-    info = @rpc.validate_address(address)
+    info = @rpc.validate_address(address).as_h
     return unless info.is_a?(Hash(String, JSON::Any))
     info
   end
