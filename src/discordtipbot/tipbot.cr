@@ -265,7 +265,7 @@ class TipBot
       next unless details_array.is_a?(Array(JSON::Any))
 
       details_array.each do |details|
-	details = details.as_h
+        details = details.as_h
         next unless details.is_a?(Hash(String, JSON::Any))
 
         next unless details["category"] == "receive"
