@@ -243,7 +243,7 @@ class DiscordBot
     @tip.add_server(guild.id.to_u64)
 
     unless @tip.get_config(guild.id.to_u64, "contacted")
-      string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at http://tipbot.gbf.re"
+      string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, run the `#{@config.prefix}support` command."
       begin
         contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
       rescue
