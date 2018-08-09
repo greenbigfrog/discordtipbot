@@ -1,3 +1,4 @@
+require "uri"
 require "./utilities"
 
 class DiscordBot
@@ -464,7 +465,7 @@ class DiscordBot
       reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
       string = String.build do |io|
-        io.puts "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::Cursor
+        io.puts "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::Hourglass
         io.puts "For security reasons large withdrawals have to be processed manually right now" if @tip.node_balance < amount
       end
       reply(msg, string)
@@ -478,10 +479,11 @@ class DiscordBot
       address = @tip.get_address(msg.author.id.to_u64)
       embed = Discord::Embed.new(
         footer: Discord::EmbedFooter.new("I love you! ❤"),
-        image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{@config.uri_scheme}:#{address}")
+        image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{URI.escape(@config.uri_scheme)}:#{address}")
       )
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
-    rescue
+      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*")# embed)
+    rescue ex
+      io.puts ex
       reply(msg, "**ERROR**: Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
       @bot.delete_message(notif.channel_id, notif.id)
