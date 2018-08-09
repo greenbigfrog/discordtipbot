@@ -27,9 +27,9 @@ CREATE TABLE config (
 
        contacted boolean DEFAULT false,
 
-       mention boolean DEFAULT false,
-       soak boolean DEFAULT false,
-       rain boolean DEFAULT false,
+       mention boolean DEFAULT true,
+       soak boolean DEFAULT true,
+       rain boolean DEFAULT true,
 
        created_time timestamptz NOT NULL DEFAULT now()
 );
