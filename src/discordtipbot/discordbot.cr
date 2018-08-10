@@ -732,11 +732,11 @@ class DiscordBot
   end
 
   def support(msg : Discord::Message)
-    reply(msg, "For support please visit <http://tipbot.gbf.re>")
+    reply(msg, "For support please visit <https://discord.gg/H52pC6j>")
   end
 
   def github(msg : Discord::Message)
-    reply(msg, "To contribute to the development of the tipbot visit <https://github.com/greenbigfrog/discordtipbot/>")
+    reply(msg, "To contribute to the development of the tipbot visit <https://github.com/trethiest/discordtipbot/>")
   end
 
   def uptime(msg : Discord::Message)
