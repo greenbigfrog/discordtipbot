@@ -103,7 +103,7 @@ class DiscordBot
 
       # Make use of the status to display info
       spawn do
-        sleep 10
+        sleep 5
         Discord.every(1.minutes) do
           update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
         end
@@ -118,7 +118,7 @@ class DiscordBot
 
     # Check if it's time to send off (or on) site
     spawn do
-      Discord.every(10.seconds) do
+      Discord.every(30.minutes) do
         check_and_notify_if_its_time_to_send_back_onsite
         check_and_notify_if_its_time_to_send_offsite
       end
