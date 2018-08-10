@@ -2,10 +2,6 @@
 
 Highly configurable tip bot for the chat plattform discord. **DO NOT RUN THIS CODE UNLESS YOU KNOW WHAT YOU ARE DOING!**
 
-Instead of executing this code yourself, feel free to contact me at https://discord.gg/r3NspwB to discuss me hosting it for you.
-
-If you collect some kind of bounty or donation(s), I'd appreciate you forwarding some of it after your hosting costs.
-
 ## Terms
 
 In no event shall this bot or it's dev be responsible in the event of lost, stolen or misdirected funds.
@@ -40,7 +36,7 @@ Preferably run your wallets in testnet mode by adding `testnet=1` to each wallet
 
 ## Contributing
 
-1. Fork it ( https://github.com/greenbigfrog/discordtipbot/fork )
+1. Fork it ( https://github.com/trethiest/discordtipbot/fork )
 2. Create your feature branch (git checkout -b my-new-feature)
 3. Commit your changes (git commit -am 'Add some feature')
 4. Push to the branch (git push origin my-new-feature)
@@ -50,3 +46,4 @@ Preferably run your wallets in testnet mode by adding `testnet=1` to each wallet
 
 - [greenbigfrog](https://github.com/greenbigfrog) Jonathan B. - creator, maintainer
 - [z64](https://github.com/z64) Zac Nowicki - advisor, reviewer
+- [incognitojam](https://github.com/incognitojam) Cameron Clough - contributor
