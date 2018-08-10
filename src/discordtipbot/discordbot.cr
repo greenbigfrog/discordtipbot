@@ -480,7 +480,7 @@ class DiscordBot
       embed = Discord::Embed.new(
         image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{URI.escape(@config.uri_scheme)}:#{address}")
       )
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*")# embed)
+      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
       reply(msg, "**ERROR**: Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
@@ -640,7 +640,8 @@ class DiscordBot
 
   # the users balance
   def balance(msg : Discord::Message)
-    reply(msg, "#{msg.author.username} has a confirmed balance of **#{@tip.get_balance(msg.author.id.to_u64)} #{@config.coinname_short}**")
+    notif = reply(msg, "Sent balance in a DM") unless private?(msg)
+    @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "#{msg.author.username} has a confirmed balance of **#{@tip.get_balance(msg.author.id.to_u64)} #{@config.coinname_short}**")
   end
 
   # Config command (available to admins and respective server owner)
