@@ -902,6 +902,7 @@ class DiscordBot
   private def check_and_notify_if_its_time_to_send_offsite
     wallet = @tip.node_balance(@config.confirmations)
     users = @tip.db_balance
+    return if wallet == 0 || users == 0
     goal_percentage = BigDecimal.new(0.25)
 
     if (wallet / users) > 0.4
@@ -924,6 +925,7 @@ class DiscordBot
   private def check_and_notify_if_its_time_to_send_back_onsite
     wallet = @tip.node_balance(0)
     users = @tip.db_balance
+    return if wallet == 0 || users == 0
     goal_percentage = BigDecimal.new(0.35)
 
     if (wallet / users) < 0.2 || @tip.pending_withdrawal_sum > @tip.node_balance
