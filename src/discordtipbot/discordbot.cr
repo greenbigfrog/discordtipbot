@@ -212,7 +212,7 @@ class DiscordBot
         users = @tip.process_pending_withdrawals
         users.each do |x|
           begin
-            @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your withdrawal just got processed" + Emoji::Check)
+            @bot.create_message(@cache.resolve_dm_channel(x.to_u64), Emoji::Complete + " Your withdrawal just got processed!")
           end
         end
       end
@@ -272,7 +272,7 @@ class DiscordBot
   end
 
   private def dm_deposit(userid : UInt64)
-    @bot.create_message(@cache.resolve_dm_channel(userid), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit!\n*#{TERMS}*")
+    @bot.create_message(@cache.resolve_dm_channel(userid), Emoji::Complete + " Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit!\n*#{TERMS}*")
   rescue ex
     user = @cache.resolve_user(userid)
     @log.warn("#{@config.coinname_short}: Failed to contact #{userid} (#{user.username}##{user.discriminator}}) with deposit notification (Exception: #{ex.inspect_with_backtrace})")
@@ -331,8 +331,8 @@ class DiscordBot
 
   # respond getinfo RPC
   def getinfo(msg : Discord::Message)
-    return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(msg.author.id.to_u64)
-    return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
+    return reply(msg, Emoji::Alarm + " This is an admin only command!") unless @config.admins.includes?(msg.author.id.to_u64)
+    return reply(msg, Emoji::Error + " This command can only be used in DMs") unless private?(msg)
 
     info = @tip.get_info.as_h
     return unless info.is_a?(Hash(String, JSON::Any))
@@ -360,18 +360,18 @@ class DiscordBot
 
   # transfer from user to user
   def tip(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
+    return reply(msg, Emoji::Error + " Who are you planning on tipping? yourself?") if private?(msg)
 
     cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
     cmd = cmd_string.split(" ")
 
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
+    return reply(msg, Emoji::Error + " Command usage: #{cmd_usage}") unless cmd.size > 2
 
     match = USER_REGEX.match(cmd[1])
     id = match["id"].try &.to_u64 if match
 
-    err = "**ERROR**: Please specify the user you want to tip! #{cmd_usage}"
+    err = Emoji::Error + " Please specify the user you want to tip! #{cmd_usage}"
     return reply(msg, err) unless id
     begin
       to = @cache.resolve_user(id)
@@ -379,24 +379,24 @@ class DiscordBot
       return reply(msg, err)
     end
 
-    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if bot(to)
+    return reply(msg, Emoji::Error + " As a design choice you aren't allowed to tip Bot accounts") if bot(to)
 
-    return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id.to_u64
+    return reply(msg, Emoji::Error + " Are you trying to tip yourself!?") if id == msg.author.id.to_u64
 
-    return reply(msg, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
+    return reply(msg, Emoji::Error + " The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
 
     amount = amount(msg, cmd[2])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
+    return reply(msg, Emoji::Error + " Please specify a valid amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**ERROR**: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
+    return reply(msg, Emoji::Error + " You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
 
     case @tip.transfer(from: msg.author.id.to_u64, to: id, amount: amount, memo: "tip")
     when true
       reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
     when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
+      reply(msg, Emoji::Error + " Insufficient balance")
     when "error"
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      reply(msg, Emoji::Error + " There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     end
   end
 
@@ -406,12 +406,12 @@ class DiscordBot
     # cmd[0]: trigger, cmd[1]: amount, cmd[2..size]: message
     cmd = cmd_string.split(" ")
 
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 1
+    return reply(msg, Emoji::Error + " Command usage: #{cmd_usage}") unless cmd.size > 1
 
     amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
+    return reply(msg, Emoji::Error + " Please specify a valid amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[1] == "all"
+    return reply(msg, Emoji::Error + " Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[1] == "all"
 
     case @tip.transfer(from: msg.author.id.to_u64, to: 163607982473609216_u64, amount: amount, memo: "donation")
     when true
@@ -430,9 +430,9 @@ class DiscordBot
       )
       post_embed_to_webhook(embed, @config.general_webhook)
     when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
+      reply(msg, Emoji::Error + " Insufficient balance")
     when "error"
-      reply(msg, "**ERROR**: Please try again later")
+      reply(msg, Emoji::Error + " Please try again later")
     end
   end
 
@@ -443,30 +443,30 @@ class DiscordBot
     # cmd[0]: command, cmd[1]: address, cmd[2]: amount
     cmd = cmd_string.split(" ")
 
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
+    return reply(msg, Emoji::Error + " Command usage: #{cmd_usage}") unless cmd.size > 2
 
     amount = amount(msg, cmd[2])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
+    return reply(msg, Emoji::Error + " Please specify a valid amount! #{cmd_usage}") unless amount
 
     amount = amount - @config.txfee if cmd[2] == "all"
 
-    return reply(msg, "**ERROR**: You have to withdraw at least #{@config.min_withdraw}") if amount < @config.min_withdraw
+    return reply(msg, Emoji::Error + " You have to withdraw at least #{@config.min_withdraw}") if amount < @config.min_withdraw
 
     address = cmd[1]
 
     case @tip.withdraw(msg.author.id.to_u64, address, amount)
     when "insufficient balance"
-      reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee} #{@config.coinname_short}")
+      reply(msg, Emoji::Error + " You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee} #{@config.coinname_short}")
     when "invalid address"
-      reply(msg, "**ERROR**: Please specify a valid #{@config.coinname_full} address")
+      reply(msg, Emoji::Error + " Please specify a valid #{@config.coinname_full} address")
     when "internal address"
-      reply(msg, "**ERROR**: Withdrawing to an internal address isn't permitted")
+      reply(msg, Emoji::Error + " Withdrawing to an internal address isn't permitted")
     when false
-      reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      reply(msg, Emoji::Error + " There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
       string = String.build do |io|
-        io.puts "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::Hourglass
-        io.puts "For security reasons large withdrawals have to be processed manually right now" if @tip.node_balance < amount
+        io.puts Emoji::Pending + " Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly...*"
+        io.puts Emoji::Error + " For security reasons large withdrawals have to be processed manually right now" if @tip.node_balance < amount
       end
       reply(msg, string)
     end
@@ -482,7 +482,7 @@ class DiscordBot
       )
       @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
-      reply(msg, "**ERROR**: Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
+      reply(msg, Emoji::Error + " Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
       @bot.delete_message(notif.channel_id, notif.id)
     end
@@ -490,7 +490,7 @@ class DiscordBot
 
   # send coins to all currently online users
   def soak(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private?(msg)
+    return reply(msg, Emoji::Error + " Who are you planning on making wet? yourself?") if private?(msg)
 
     return reply(msg, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
 
@@ -502,11 +502,11 @@ class DiscordBot
     return reply(msg, cmd_usage) unless cmd.size > 1
 
     amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
+    return reply(msg, Emoji::Error + " You have to specify an amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**ERROR**: You have to soak at least **#{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
+    return reply(msg, Emoji::Error + " You have to soak at least **#{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
 
-    return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
+    return reply(msg, Emoji::Error + " Something went wrong") unless guild_id = guild_id(msg)
 
     trigger_typing(msg)
 
@@ -540,9 +540,9 @@ class DiscordBot
 
     case @tip.multi_transfer(from: msg.author.id.to_u64, users: targets, total: amount, memo: "soak")
     when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
+      reply(msg, Emoji::Error + " Insufficient balance")
     when false
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      reply(msg, Emoji::Error + " There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
       amount_each = BigDecimal.new(amount / targets.size).round(8)
 
@@ -554,7 +554,7 @@ class DiscordBot
 
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
+    return reply(msg, Emoji::Error + " Who are you planning on tipping? yourself?") if private?(msg)
 
     return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
 
@@ -566,20 +566,20 @@ class DiscordBot
     return reply(msg, cmd_usage) unless cmd.size > 1
 
     amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
+    return reply(msg, Emoji::Error + " You have to specify an amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**ERROR**: You have to rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_rain_total
+    return reply(msg, Emoji::Error + " You have to rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_rain_total
 
-    return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
+    return reply(msg, Emoji::Error + " Something went wrong") unless guild_id = guild_id(msg)
 
     authors = active_users(msg)
-    return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.nil? || authors.empty?
+    return reply(msg, Emoji::Error + " There is nobody to rain on!") if authors.nil? || authors.empty?
 
     case @tip.multi_transfer(from: msg.author.id.to_u64, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
+      reply(msg, Emoji::Error + " Insufficient balance")
     when false
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      reply(msg, Emoji::Error + " There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
       amount_each = BigDecimal.new(amount / authors.size).round(8)
 
@@ -598,7 +598,7 @@ class DiscordBot
   end
 
   def lucky(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: This command doesn't work in DMs") if private?(msg)
+    return reply(msg, Emoji::Error + " This command doesn't work in DMs") if private?(msg)
 
     cmd_usage = "#{@config.prefix}lucky [amount]"
 
@@ -608,13 +608,13 @@ class DiscordBot
     return reply(msg, cmd_usage) unless cmd.size > 1
 
     amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
+    return reply(msg, Emoji::Error + " You have to specify an amount! #{cmd_usage}") unless amount
 
-    return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_tip} #{@config.coinname_short}") unless amount >= @config.min_tip
+    return reply(msg, Emoji::Error + " You have to lucky rain at least #{@config.min_tip} #{@config.coinname_short}") unless amount >= @config.min_tip
 
     users = active_users(msg)
 
-    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users && (users = users.to_a).size > 0
+    return reply(msg, Emoji::Error + " There is no one to make lucky!") unless users && (users = users.to_a).size > 0
 
     user = users.sample
 
@@ -622,9 +622,9 @@ class DiscordBot
     when true
       reply(msg, "#{msg.author.username} luckily rained **#{amount} #{@config.coinname_short}** onto **<@#{user}>**")
     when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
+      reply(msg, Emoji::Error + " Insufficient balance")
     when "error"
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      reply(msg, Emoji::Error + " There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     end
   end
 
@@ -648,14 +648,12 @@ class DiscordBot
   def config(msg : Discord::Message, cmd_string : String)
     reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
 
-    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id.to_u64)
+    return reply(msg, Emoji::Alarm + " This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id.to_u64)
 
     cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
     # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
     cmd = cmd_string.split(" ")
-
-    return reply(msg, cmd_usage) unless cmd.size == 3
-    return reply(msg, cmd_usage) unless {"rain", "soak", "mention"}.includes?(cmd[1]) && {"on", "off"}.includes?(cmd[2])
+    return reply(msg, cmd_usage) unless cmd.size == 3 && {"rain", "soak", "mention"}.includes?(cmd[1]) && {"on", "off"}.includes?(cmd[2])
 
     memo = cmd[1]
     if cmd[2] == "on"
@@ -664,7 +662,7 @@ class DiscordBot
       status = false
     end
 
-    reply(msg, "Successfully turned #{memo} #{cmd[2]}") if @tip.update_config(memo, status, guild_id(msg))
+    reply(msg, Emoji::Complete + " Successfully turned #{memo} #{cmd[2]}") if @tip.update_config(memo, status, guild_id(msg))
   end
 
   def check_config(msg : Discord::Message)
@@ -700,12 +698,12 @@ class DiscordBot
     info = @tip.get_info
     return unless info.is_a?(Hash(String, JSON::Any))
 
-    reply(msg, "The node has **#{info["connections"]} Connections**")
+    reply(msg, "The node has **#{info["connections"]} connections**")
   end
 
   def admin(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(msg.author.id.to_u64)
-    return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg)
+    return reply(msg, Emoji::Alarm + " This is an admin only command! You have been reported!") unless @config.admins.includes?(msg.author.id.to_u64)
+    return reply(msg, Emoji::Error + " This command only works in DMs") unless private?(msg)
 
     # cmd[0] = command, cmd[1] = type, cmd [2] = user
     cmd = cmd_string.split(" ")
@@ -721,7 +719,7 @@ class DiscordBot
     end
 
     if cmd[1]? == "balance"
-      return reply(msg, "**ERROR**: You forgot to supply an ID to check balance of") unless cmd[2]?
+      return reply(msg, Emoji::Error + " You forgot to supply an ID to check balance of") unless cmd[2]?
       bal = @tip.get_balance(cmd[2].to_u64)
       reply(msg, "**#{cmd[2]}**'s balance is: **#{bal}** #{@config.coinname_short}")
     end
@@ -753,7 +751,7 @@ class DiscordBot
 
   def exit(msg : Discord::Message)
     id = msg.author.id.to_u64
-    return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
+    return reply(msg, Emoji::Alarm + " This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
 
     @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
     exit
@@ -775,10 +773,10 @@ class DiscordBot
   end
 
   def offsite(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg) unless msg.channel_id.to_u64 == 421752342262579201
+    return reply(msg, Emoji::Error + " This command only works in DMs") unless private?(msg) unless msg.channel_id.to_u64 == 421752342262579201
 
     id = msg.author.id.to_u64
-    return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(id)
+    return reply(msg, Emoji::Alarm + " This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
 
     cmd_usage = String.build do |io|
       io.puts "This command allows the storage of coins off site"
@@ -803,7 +801,7 @@ class DiscordBot
       return reply(msg, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 4
 
       amount = amount(msg, cmd[3])
-      return reply(msg, "**ERROR**: Please specify a valid amount") if amount.nil?
+      return reply(msg, Emoji::Error + " Please specify a valid amount") if amount.nil?
 
       case @tip.offsite_withdrawal(id, amount, cmd[2])
       when "Invalid Address"
