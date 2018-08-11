@@ -19,6 +19,13 @@ module Webhook::Converter
   end
 end
 
+class GlobalConfig
+  JSON.mapping(
+    log_level: Logger::Severity,
+    bots: {type: Array(Config), nilable: false}
+  )
+end
+
 class Config
   JSON.mapping(
     database_url: String,

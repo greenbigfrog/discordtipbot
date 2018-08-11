@@ -8,29 +8,30 @@ require "big/json"
 require "./discordtipbot/*"
 
 unless ENV["TIPBOT_ENV"]? == "test"
-  puts "No Config File specified! Exiting!" if ARGV.size == 0
+  puts "No config file specified! Exiting!" if ARGV.size == 0
   exit if ARGV.size == 0
 
   log = Logger.new(STDOUT)
-
-  # Set your logger level here
   log.level = Logger::DEBUG
 
   log.debug("Tipbot network getting started")
 
-  log.debug("Attempting to read config from \"#{ARGV[0]}\"")
-  config = File.open(ARGV[0], "r") do |file|
-    Array(Config).from_json(file)
+  log.debug("Attempting to read global config from \"#{ARGV[0]}\"")
+  global_config = File.open(ARGV[0], "r") do |file|
+    GlobalConfig.from_json(file)
   end
-  log.info("read config from \"#{ARGV[0]}\"")
+  log.info("Read global config from \"#{ARGV[0]}\"")
+  
+  log.info("Setting log level to " + global_config.log_level.to_s)
+  log.level = global_config.log_level
 
-  log.debug("starting forking")
-  bots = config.each do |x|
+  log.debug("Starting forking")
+  bots = global_config.bots.each do |config|
     spawn do
-      Controller.new(x, log)
+      Controller.new(config, log)
     end
   end
-  log.debug("finished forking")
+  log.debug("Finished forking")
 
   log.info("All bots should be running now")
   sleep
