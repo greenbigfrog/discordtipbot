@@ -6,7 +6,7 @@ class DiscordBot
 
   USER_REGEX = /<@!?(?<id>\d+)>/
   START_TIME = Time.now
-  TERMS      = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
+  TERMS      = "In no event shall this bot or it's developers be responsible for any loss, theft or misdirection of funds. Please do not use this bot as your main wallet."
   ZWS        = "​" # There is a zero width space stored here
 
   @unavailable_guilds = Set(UInt64).new
@@ -348,14 +348,14 @@ class DiscordBot
   end
 
   def help(msg : Discord::Message)
-    cmds = {"ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "github", "invite"}
+    cmds = {"balance", "tip", "soak", "rain", "lucky", "deposit", "withdraw", "config", "ping", "active", "terms", "support", "github", "invite"}
     string = String.build do |str|
       cmds.each { |x| str << "`" + @config.prefix + x + "`, " }
     end
 
     string = string.rchop(", ")
 
-    reply(msg, "Currently the following commands are available: #{string}")
+    reply(msg, "Currently the following commands are available: #{string}.\nYou can learn more information about each command here: https://git.io/bccbot")
   end
 
   # transfer from user to user
@@ -737,7 +737,7 @@ class DiscordBot
   end
 
   def github(msg : Discord::Message)
-    reply(msg, "To contribute to the development of the tipbot visit <https://github.com/trethiest/discordtipbot/>")
+    reply(msg, "To contribute to the development of the tipbot visit <https://git.io/bccbotsrc>")
   end
 
   def uptime(msg : Discord::Message)
