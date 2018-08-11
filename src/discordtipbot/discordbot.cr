@@ -100,14 +100,26 @@ class DiscordBot
 
     @bot.on_ready do
       @log.info("#{@config.coinname_short}: #{@config.coinname_full} bot received READY")
+      update_game("Starting up...", "idle")
+      embed = Discord::Embed.new(
+        title: "Starting up",
+        description: "The bot process has started",
+        colour: 0x4caf50_u32,
+        timestamp: Time.now
+      )
+      post_embed_to_webhook(embed, @config.general_webhook)
 
       # Make use of the status to display info
       spawn do
-        sleep 5
+        sleep 10
         Discord.every(1.minutes) do
           update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
         end
       end
+
+      Signal::INT.trap { shutdown() }
+      Signal::KILL.trap { shutdown() }
+      Signal::TERM.trap { shutdown() }
     end
 
     # Add user to active_users_cache on new message unless bot user
@@ -267,8 +279,8 @@ class DiscordBot
     @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
   end
 
-  private def update_game(name : String)
-    @bot.status_update("online", Discord::GamePlaying.new(name, 0_i64))
+  private def update_game(name : String, status = "online")
+    @bot.status_update(status, Discord::GamePlaying.new(name, 0_i64))
   end
 
   private def dm_deposit(userid : UInt64)
@@ -757,7 +769,22 @@ class DiscordBot
     return reply(msg, Emoji::Alarm + " This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
 
     @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
-    exit
+    shutdown()
+  end
+
+  def shutdown()
+    update_game("Shutting down...", "dnd")
+    embed = Discord::Embed.new(
+      title: "Shutdown imminent",
+      description: "The bot process was interrupted",
+      colour: 0xf44336_u32,
+      timestamp: Time.now
+    )
+    post_embed_to_webhook(embed, @config.general_webhook)
+    spawn do
+      sleep 1.seconds
+      exit
+    end
   end
 
   def statistics(msg : Discord::Message)
