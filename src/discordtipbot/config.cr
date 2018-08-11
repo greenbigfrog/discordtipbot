@@ -26,6 +26,13 @@ class GlobalConfig
   )
 end
 
+class WhitelistedBot
+  JSON.mapping(
+    id: UInt64,
+    owner: UInt64
+  )
+end
+
 class Config
   JSON.mapping(
     database_url: String,
@@ -63,7 +70,7 @@ class Config
 
     admins: Array(UInt64),
     ignored_users: Set(UInt64),
-    whitelisted_bots: Set(UInt64),
+    whitelisted_bots: Array(WhitelistedBot),
 
     general_webhook: {type: Webhook, converter: Webhook::Converter},
     admin_webhook: {type: Webhook, converter: Webhook::Converter}

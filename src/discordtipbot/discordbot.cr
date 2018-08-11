@@ -476,11 +476,14 @@ class DiscordBot
   def deposit(msg : Discord::Message)
     notif = reply(msg, "Sent deposit address in a DM") unless private?(msg)
     begin
+      user_id = msg.author.id.to_u64
+      @config.whitelisted_bots.each { |bot| user_id = bot.owner if user_id == bot.id }
       address = @tip.get_address(msg.author.id.to_u64)
+
       embed = Discord::Embed.new(
         image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{URI.escape(@config.uri_scheme)}:#{address}")
       )
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
+      @bot.create_message(@cache.resolve_dm_channel(user_id), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
       reply(msg, Emoji::Error + " Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
       return unless notif.is_a?(Discord::Message)
@@ -890,10 +893,10 @@ class DiscordBot
   end
 
   private def bot(user : Discord::User)
-    bot_status = user.bot
-    if bot_status
-      return false if @config.whitelisted_bots.includes?(user.id)
-    end
+    return false unless user.bot
+
+    bot_status = true
+    @config.whitelisted_bots.each { |bot| bot_status = false if user.id.to_u64 == bot.id }
     bot_status
   end
 
