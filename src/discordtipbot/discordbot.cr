@@ -656,7 +656,9 @@ class DiscordBot
   # the users balance
   def balance(msg : Discord::Message)
     notif = reply(msg, "Sent balance in a DM") unless private?(msg)
-    @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "#{msg.author.username} has a confirmed balance of **#{@tip.get_balance(msg.author.id.to_u64)} #{@config.coinname_short}**")
+    balance = @tip.get_balance(msg.author.id.to_u64)
+    @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "#{msg.author.username} has a confirmed balance of **#{balance} #{@config.coinname_short}**")
+    @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "You can deposit funds with the #{@config.prefix}deposit command") if balance.to_u64 < 1
   end
 
   # Config command (available to admins and respective server owner)
