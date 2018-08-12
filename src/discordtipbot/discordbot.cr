@@ -543,11 +543,11 @@ class DiscordBot
     # TODO only soak people that can view the channel
 
     users = users - @config.ignored_users.to_a
-
     return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
 
     if (users.size * @config.min_soak) > @config.min_soak_total
-      targets = users.sample((amount / @config.min_soak).to_i32)
+      count = amount.to_f64 / @config.min_soak.to_f64
+      targets = users.sample(count.to_i64)
     else
       targets = users
     end
@@ -560,9 +560,7 @@ class DiscordBot
       reply(msg, Emoji::Error + " There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
       amount_each = BigDecimal.new(amount / targets.size).round(8)
-
       string = build_user_string(get_config_mention(msg), targets)
-
       reply(msg, "**#{msg.author.username}** soaked a total of **#{amount_each * targets.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end
   end
@@ -873,7 +871,7 @@ class DiscordBot
           Discord::EmbedField.new(name: "Wallet Balance", value: "#{wallet} #{@config.coinname_short}"),
           Discord::EmbedField.new(name: "Users Balance", value: "#{users} #{@config.coinname_short}"),
           Discord::EmbedField.new(name: "Ideal Wallet Balance Range", value: "#{users * BigDecimal.new(0.25)}..#{users * BigDecimal.new(0.35)}"),
-          Discord::EmbedField.new(name: "Current Percentage", value: "#{((wallet / users) * 100).round(4)}%"),
+          Discord::EmbedField.new(name: "Current Percentage", value: "#{((wallet.to_f64 / users.to_f64) * 100).round(4)}%"),
         ]
       )
       @bot.create_message(msg.channel_id, "​", embed)
@@ -932,14 +930,14 @@ class DiscordBot
   private def check_and_notify_if_its_time_to_send_offsite
     wallet = @tip.node_balance(@config.confirmations)
     users = @tip.db_balance
-    return if wallet == 0 || users == 0
+    return if users == 0
     goal_percentage = BigDecimal.new(0.25)
 
-    if (wallet / users) > 0.4
+    if (wallet.to_f64 / users.to_f64) > 0.4
       return if @tip.pending_withdrawal_sum > @tip.node_balance
       missing = wallet - (users * goal_percentage)
       return if @tip.pending_coin_transactions
-      current_percentage = ((wallet / users) * 100).round(4)
+      current_percentage = ((wallet.to_f64 / users.to_f64) * 100).round(4)
       embed = Discord::Embed.new(
         title: "It's time to send some coins off site",
         description: "Please remove **#{missing} #{@config.coinname_short}** from the bot and to your own wallet! `#{@config.prefix}offsite send`",
@@ -955,13 +953,13 @@ class DiscordBot
   private def check_and_notify_if_its_time_to_send_back_onsite
     wallet = @tip.node_balance(0)
     users = @tip.db_balance
-    return if wallet == 0 || users == 0
+    return if users == 0
     goal_percentage = BigDecimal.new(0.35)
 
-    if (wallet / users) < 0.2 || @tip.pending_withdrawal_sum > @tip.node_balance
+    if (wallet.to_f64 / users.to_f64) < 0.2 || @tip.pending_withdrawal_sum > @tip.node_balance
       missing = wallet - (users * goal_percentage)
       missing = missing - @tip.pending_withdrawal_sum if @tip.pending_withdrawal_sum > @tip.node_balance
-      current_percentage = ((wallet / users) * 100).round(4)
+      current_percentage = ((wallet.to_f64 / users.to_f64) * 100).round(4)
       embed = Discord::Embed.new(
         title: "It's time to send some coins back to the bot",
         description: "Please deposit **#{missing} #{@config.coinname_short}** to the bot (your own `#{@config.prefix}offsite address`)",
