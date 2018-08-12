@@ -68,6 +68,7 @@ class Config
 
     high_balance: Int32,
 
+    donation_target: UInt64,
     admins: Array(UInt64),
     ignored_users: Set(UInt64),
     whitelisted_bots: Array(WhitelistedBot),

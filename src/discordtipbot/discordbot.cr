@@ -425,7 +425,7 @@ class DiscordBot
 
     return reply(msg, Emoji::Error + " Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[1] == "all"
 
-    case @tip.transfer(from: msg.author.id.to_u64, to: 163607982473609216_u64, amount: amount, memo: "donation")
+    case @tip.transfer(from: msg.author.id.to_u64, to: @config.donation_target, amount: amount, memo: "donation")
     when true
       reply(msg, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
 
