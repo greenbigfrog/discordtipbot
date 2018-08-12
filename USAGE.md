@@ -32,7 +32,7 @@ The bot is free to use and only collects a fee when you withdraw coins from the 
 
   **Usage: `;rain [amount]`**
 
-  Rain is similar to soak except it will only give coins to users who have spoken in the channel recently. If nobody has spoken in the channel in the last 10 minutes or so it will not distribute your coins.
+  Rain is similar to soak except it will only give coins to users who have spoken in the channel recently. If nobody has spoken in the channel in the last 10 minutes or so it will not distribute your coins. It splits the coins between all active users.
 
 - ## Lucky
   **Usage: `;lucky [amount]`**
