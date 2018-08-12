@@ -12,6 +12,7 @@ class TipBot
     ensure_user(to)
 
     return "insufficient balance" if balance(from) < amount
+    return "error" if from == to
 
     @db.transaction do |tx|
       begin
