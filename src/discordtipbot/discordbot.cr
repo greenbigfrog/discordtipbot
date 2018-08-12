@@ -130,7 +130,7 @@ class DiscordBot
 
     # Check if it's time to send off (or on) site
     spawn do
-      Discord.every(30.minutes) do
+      Discord.every(6.hours) do
         check_and_notify_if_its_time_to_send_back_onsite
         check_and_notify_if_its_time_to_send_offsite
       end
