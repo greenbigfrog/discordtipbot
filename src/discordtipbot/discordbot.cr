@@ -363,7 +363,7 @@ class DiscordBot
 
     cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.split(' ', remove_empty: true)
 
     return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
 
