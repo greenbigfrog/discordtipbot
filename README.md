@@ -44,6 +44,6 @@ Preferably run your wallets in testnet mode by adding `testnet=1` to each wallet
 
 ## Contributors
 
-- [greenbigfrog](https://github.com/greenbigfrog) Jonathan B. - creator, maintainer
+- [greenbigfrog](https://github.com/greenbigfrog) Jonathan B. - creator
 - [z64](https://github.com/z64) Zac Nowicki - advisor, reviewer
 - [incognitojam](https://github.com/incognitojam) Cameron Clough - contributor
