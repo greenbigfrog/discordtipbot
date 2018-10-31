@@ -2,8 +2,8 @@ name: discordtipbot
 version: 0.1.1
 
 authors:
-  - Jonathan B. <greenbigfrog@gmail.com>
   - Cameron C. <cameronjclough@gmail.com>
+  - Jonathan B. <greenbigfrog@gmail.com>
 
 targets:
   discordtipbot:
