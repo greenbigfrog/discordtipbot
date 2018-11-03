@@ -18,7 +18,10 @@ dependencies:
     branch: add-bigdecimal
   discordcr:
     github: greenbigfrog/discordcr
-    branch: type-fix
+    branch: special
   bitcoin_rpc:
     github: greenbigfrog/bitcoin_rpc
     branch: master
+  raven:
+    github: greenbigfrog/raven.cr
+    branch: new-cr

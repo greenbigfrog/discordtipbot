@@ -101,7 +101,7 @@ class DiscordBot
       @log.info("#{@config.coinname_short}: #{@config.coinname_full} bot received READY")
 
       # Make use of the status to display info
-      spawn do
+      raven_spawn do
         sleep 10
         Discord.every(1.minutes) do
           update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
@@ -116,7 +116,7 @@ class DiscordBot
     end
 
     # Check if it's time to send off (or on) site
-    spawn do
+    raven_spawn do
       Discord.every(10.seconds) do
         check_and_notify_if_its_time_to_send_back_onsite
         check_and_notify_if_its_time_to_send_offsite
@@ -177,7 +177,7 @@ class DiscordBot
     end
 
     # receive wallet transactions and insert into coin_transactions
-    spawn do
+    raven_spawn do
       server = HTTP::Server.new do |context|
         next unless context.request.method == "POST"
         @tip.insert_tx(context.request.query_params["tx"])
@@ -187,13 +187,13 @@ class DiscordBot
     end
 
     # on launch check for deposits and insert them into coin_transactions during down time
-    spawn do
+    raven_spawn do
       @tip.insert_history_deposits
       @log.info("#{@config.coinname_short}: Inserted deposits during down time")
     end
 
     # check for confirmed deposits every 60 seconds
-    spawn do
+    raven_spawn do
       Discord.every(30.seconds) do
         users = @tip.check_deposits
         @log.debug("#{@config.coinname_short}: Checked deposits")
@@ -206,7 +206,7 @@ class DiscordBot
     end
 
     # Check for pending withdrawals every X seconds
-    spawn do
+    raven_spawn do
       Discord.every(30.seconds) do
         users = @tip.process_pending_withdrawals
         users.each do |x|
@@ -218,7 +218,7 @@ class DiscordBot
     end
 
     # warn users that the tipbot shouldn't be used as wallet if their balance exceeds @config.high_balance
-    spawn do
+    raven_spawn do
       Discord.every(1.hours) do
         if Set{6, 18}.includes?(Time.now.hour)
           users = @tip.get_high_balance(@config.high_balance)
@@ -231,7 +231,7 @@ class DiscordBot
     end
 
     # periodically clean up the user activity cache
-    spawn do
+    raven_spawn do
       Discord.every(60.minutes) do
         @active_users_cache.prune
       end
