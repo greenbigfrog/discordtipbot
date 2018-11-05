@@ -1,5 +1,9 @@
 version: 1.0
 shards:
+  any_hash:
+    github: Sija/any_hash.cr
+    version: 0.2.2
+
   bitcoin_rpc:
     github: greenbigfrog/bitcoin_rpc
     commit: c43d9ee9bb1ec25ca14322a06d3709f5a414fe3d
@@ -10,9 +14,13 @@ shards:
 
   discordcr:
     github: greenbigfrog/discordcr
-    commit: d63b0d51ddba27b6342acad8364e656073c3bdde
+    commit: 87a04687a7ebfdf5dd396ce1d384fd39521f42af
 
   pg:
     github: greenbigfrog/crystal-pg
     commit: 5a01c3e38be055df648e5744b3c03a8d7d4d57bc
+
+  raven:
+    github: greenbigfrog/raven.cr
+    commit: 1060c969371e4fb4f03f75f048b9d90c0b8f77ef
 
