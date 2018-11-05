@@ -40,5 +40,5 @@ unless ENV["TIPBOT_ENV"]? == "test"
 
     log.info("All bots should be running now")
   end
-    sleep
+  sleep
 end
