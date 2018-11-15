@@ -20,6 +20,22 @@ module Webhook::Converter
 end
 
 class Config
+  class_getter current : Hash(String, Config) = Hash(String, Config).new
+
+  def self.load(path)
+    File.open(path, "r") do |file|
+      parser = JSON::PullParser.new(file)
+      parser.read_array do
+        instance = Config.new(parser)
+        @@current[instance.coinname_short] = instance
+      end
+    end
+  end
+
+  def self.reload(path)
+    self.load(path)
+  end
+
   JSON.mapping(
     database_url: String,
 
