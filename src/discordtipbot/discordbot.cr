@@ -29,7 +29,7 @@ class DiscordBot
 
       content = msg.content
 
-      if private?(msg)
+      if private_channel?(msg)
         content = @config.prefix + content unless content.match(@prefix_regex)
       end
 
@@ -279,7 +279,7 @@ class DiscordBot
     @log.warn("#{@config.coinname_short}: Failed to contact #{userid} (#{user.username}##{user.discriminator}}) with deposit notification (Exception: #{ex.inspect_with_backtrace})")
   end
 
-  private def private?(msg : Discord::Message)
+  private def private_channel?(msg : Discord::Message)
     channel(msg).type == Discord::ChannelType::DM
   end
 
@@ -332,8 +332,8 @@ class DiscordBot
 
   # respond getinfo RPC
   def getinfo(msg : Discord::Message)
-    return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(msg.author.id.to_u64)
-    return reply(msg, "**ERROR**: This command can only be used in DMs") unless private?(msg)
+    return if admin_alarm?(msg)
+    return reply(msg, "**ERROR**: This command can only be used in DMs") unless private_channel?(msg)
 
     info = @tip.get_info.as_h
     return unless info.is_a?(Hash(String, JSON::Any))
@@ -361,7 +361,7 @@ class DiscordBot
 
   # transfer from user to user
   def tip(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
+    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private_channel?(msg)
 
     cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
@@ -380,7 +380,7 @@ class DiscordBot
       return reply(msg, err)
     end
 
-    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if bot(to)
+    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if bot?(to)
 
     return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id.to_u64
 
@@ -475,7 +475,7 @@ class DiscordBot
 
   # return deposit address
   def deposit(msg : Discord::Message)
-    notif = reply(msg, "Sent deposit address in a DM") unless private?(msg)
+    notif = reply(msg, "Sent deposit address in a DM") unless private_channel?(msg)
     begin
       address = @tip.get_address(msg.author.id.to_u64)
       embed = Discord::Embed.new(
@@ -492,7 +492,7 @@ class DiscordBot
 
   # send coins to all currently online users
   def soak(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private?(msg)
+    return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private_channel?(msg)
 
     return reply(msg, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
 
@@ -556,7 +556,7 @@ class DiscordBot
 
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private?(msg)
+    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private_channel?(msg)
 
     return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
 
@@ -600,8 +600,7 @@ class DiscordBot
   end
 
   def lucky(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: This command doesn't work in DMs") if private?(msg)
-
+    return if private?(msg)
     cmd_usage = "#{@config.prefix}lucky [amount]"
 
     # cmd[0]: command, cmd[1]: amount"
@@ -631,7 +630,7 @@ class DiscordBot
   end
 
   def active(msg : Discord::Message)
-    return reply(msg, "You cannot use this command in a private channel!") if private?(msg)
+    return if private?(msg)
 
     authors = active_users(msg)
     return reply(msg, "No active users!") if authors.nil? || authors.empty?
@@ -647,10 +646,9 @@ class DiscordBot
 
   # Config command (available to admins and respective server owner)
   def config(msg : Discord::Message, cmd_string : String)
-    reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please rather use them in the respective server") if private?(msg)
+    reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please rather use them in the respective server") if private_channel?(msg)
 
-    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || @config.admins.includes?(msg.author.id.to_u64)
-
+    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || admin?(msg)
     cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
     # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
     cmd = cmd_string.split(" ")
@@ -670,7 +668,7 @@ class DiscordBot
 
   def check_config(msg : Discord::Message)
     string = String.build do |str|
-      unless private?(msg)
+      unless private_channel?(msg)
         mention = get_config(msg, "mention")
         rain = get_config(msg, "rain")
         soak = get_config(msg, "soak")
@@ -705,8 +703,8 @@ class DiscordBot
   end
 
   def admin(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(msg.author.id.to_u64)
-    return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg)
+    return if admin_alarm?(msg)
+    return reply(msg, "**ERROR**: This command only works in DMs") unless private_channel?(msg)
 
     # cmd[0] = command, cmd[1] = type, cmd [2] = user
     cmd = cmd_string.split(" ")
@@ -754,7 +752,7 @@ class DiscordBot
 
   def exit(msg : Discord::Message)
     id = msg.author.id.to_u64
-    return reply(msg, "**ALARM**: This is an admin only command! You have been reported!") unless @config.admins.includes?(id)
+    return if admin_alarm?(msg)
 
     @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
     exit
@@ -776,10 +774,10 @@ class DiscordBot
   end
 
   def offsite(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: This command only works in DMs") unless private?(msg) unless msg.channel_id.to_u64 == 421752342262579201
+    return unless private_channel?(msg) unless msg.channel_id.to_u64 == 421752342262579201
 
     id = msg.author.id.to_u64
-    return reply(msg, "**ALARM**: This is an admin only command!") unless @config.admins.includes?(id)
+    return if admin_alarm?(msg)
 
     cmd_usage = String.build do |io|
       io.puts "This command allows the storage of coins off site"
@@ -892,12 +890,32 @@ class DiscordBot
     @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
   end
 
-  private def bot(user : Discord::User)
+  private def bot?(user : Discord::User)
     bot_status = user.bot
     if bot_status
       return false if @config.whitelisted_bots.includes?(user.id)
     end
     bot_status
+  end
+
+  private def admin?(msg : Discord::Message)
+    @config.admins.includes?(msg.author.id.to_u64)
+  end
+
+  private def admin_alarm?(msg : Discord::Message)
+    unless admin?(msg)
+      reply(msg, "**ALARM**: This is an admin only command! You have been reported!")
+      return true
+    end
+    false
+  end
+
+  private def private?(msg : Discord::Message)
+    if private_channel?(msg)
+      reply(msg, "**ERROR**: This command doesn't work in DMs")
+      return true
+    end
+    false
   end
 
   private def check_and_notify_if_its_time_to_send_offsite
