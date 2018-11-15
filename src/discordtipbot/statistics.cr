@@ -1,10 +1,10 @@
 struct Statistics
   DB.mapping({
-    transactions: {type: Int64, key: "transaction_count"},
-    total:        {type: BigDecimal, key: "transaction_sum"},
-    tips:         {type: BigDecimal, key: "tip_sum"},
-    soaks:        {type: BigDecimal, key: "soak_sum"},
-    rains:        {type: BigDecimal, key: "rain_sum"},
+    transactions: {type: Int64?, key: "transaction_count"},
+    total:        {type: BigDecimal?, key: "transaction_sum"},
+    tips:         {type: BigDecimal?, key: "tip_sum"},
+    soaks:        {type: BigDecimal?, key: "soak_sum"},
+    rains:        {type: BigDecimal?, key: "rain_sum"},
   })
 
   @@ttl : Time::Span = 10.minutes
