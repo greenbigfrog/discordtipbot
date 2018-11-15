@@ -1,44 +1,37 @@
-require "raven"
-require "logger"
-require "pg"
-require "pg/pg_ext/big_decimal"
-require "discordcr"
-require "big"
-require "big/json"
+class DiscordTipBot
+  def initialize
+    abort "No Config File specified! Exiting!" if ARGV.size == 0
 
-require "./discordtipbot/*"
+    @log = Logger.new(STDOUT)
 
-unless ENV["TIPBOT_ENV"]? == "test"
-  puts "No Config File specified! Exiting!" if ARGV.size == 0
-  exit if ARGV.size == 0
+    load_config
 
-  Raven.configure do |config|
-    config.async = true
-  end
-
-  Raven.capture do
-    log = Logger.new(STDOUT)
-
-    # Set your logger level here
-    log.level = Logger::DEBUG
-
-    log.debug("Tipbot network getting started")
-
-    log.debug("Attempting to read config from \"#{ARGV[0]}\"")
-    config = File.open(ARGV[0], "r") do |file|
-      Array(Config).from_json(file)
+    Raven.configure do |raven_config|
+      raven_config.async = true
     end
-    log.info("read config from \"#{ARGV[0]}\"")
 
-    log.debug("starting forking")
-    config.each do |x|
-      raven_spawn(name: "#{x.coinname_full} Bot") do
-        Controller.new(x, log)
+    Raven.capture do
+      # Set your log level here
+      @log.level = Logger::DEBUG
+
+      @log.debug("Tipbot network getting started")
+
+      @log.debug("starting forking")
+      Config.current.each do |name, config|
+        raven_spawn(name: "#{name} Bot") do
+          Controller.new(config, @log)
+        end
       end
-    end
-    log.debug("finished forking")
+      @log.debug("finished forking")
 
-    log.info("All bots should be running now")
+      @log.info("All bots should be running now")
+    end
+    sleep
   end
-  sleep
+
+  def load_config
+    @log.debug("Attempting to load config from #{ARGV[0].inspect}")
+    Config.load(ARGV[0])
+    @log.info("Loaded config from #{ARGV[0].inspect}")
+  end
 end
