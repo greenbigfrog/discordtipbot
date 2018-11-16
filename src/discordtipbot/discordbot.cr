@@ -99,17 +99,7 @@ class DiscordBot
       end
     end
 
-    @bot.on_ready(ErrorCatcher.new) do
-      @log.info("#{@config.coinname_short}: #{@config.coinname_full} bot received READY")
-
-      # Make use of the status to display info
-      raven_spawn do
-        sleep 10
-        Discord.every(1.minutes) do
-          update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
-        end
-      end
-    end
+    display_info_in_status
 
     # Add user to active_users_cache on new message unless bot user
     @bot.on_message_create(ErrorCatcher.new) do |msg|
@@ -125,52 +115,7 @@ class DiscordBot
       end
     end
 
-    # Handle new guilds and owner notifying etc
-    @streaming = false
-
-    @bot.on_ready(ErrorCatcher.new) do |payload|
-      # Only fire on first READY, or if ID cache was cleared
-      next unless @unavailable_guilds.empty? && @available_guilds.empty?
-      @streaming = true
-      @unavailable_guilds.concat payload.guilds.map(&.id.to_u64)
-    end
-
-    @bot.on_guild_create(ErrorCatcher.new) do |payload|
-      if @streaming
-        @available_guilds.add payload.id.to_u64
-
-        # Done streaming
-        if @available_guilds == @unavailable_guilds
-          # Process guilds at a rate
-          @cache.guilds.each do |_id, guild|
-            handle_new_guild(guild)
-            sleep 0.1
-          end
-
-          # Any guild after this is new, not streaming anymore
-          @streaming = false
-          @log.debug("#{@config.coinname_short}: Done streaming/Cacheing guilds after #{Time.now - START_TIME}")
-        end
-      else
-        # Brand new guild
-        owner = @cache.resolve_user(payload.owner_id)
-        embed = Discord::Embed.new(
-          title: payload.name,
-          thumbnail: Discord::EmbedThumbnail.new("https://cdn.discordapp.com/icons/#{payload.id}/#{payload.icon}.png"),
-          colour: 0x00ff00_u32,
-          timestamp: Time.now,
-          fields: [
-            Discord::EmbedField.new(name: "Owner", value: "#{owner.username}##{owner.discriminator}; <@#{owner.id}>"),
-            Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s),
-          ]
-        )
-        post_embed_to_webhook(embed, @config.general_webhook) if handle_new_guild(payload)
-      end
-    end
-
-    @bot.on_guild_create(ErrorCatcher.new) do |payload|
-      @presence_cache.handle_presence(payload.presences)
-    end
+    handle_guilds
 
     @bot.on_presence_update(ErrorCatcher.new) do |presence|
       @presence_cache.handle_presence(presence)
@@ -242,22 +187,6 @@ class DiscordBot
     end
   end
 
-  private def handle_new_guild(guild : Discord::Guild | Discord::Gateway::GuildCreatePayload)
-    @tip.add_server(guild.id.to_u64)
-
-    unless @tip.get_config(guild.id.to_u64, "contacted")
-      string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at http://tipbot.gbf.re"
-      begin
-        contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
-      rescue
-        @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
-      end
-      @tip.update_config("contacted", true, guild.id.to_u64) if contact
-      return true
-    end
-    false
-  end
-
   # Since there is no easy way, just to reply to a message
   private def reply(payload : Discord::Message, msg : String)
     if msg.size > 2000
@@ -268,10 +197,6 @@ class DiscordBot
     end
   rescue
     @log.warn("#{@config.coinname_short}: bot failed sending a msg to #{payload.channel_id} with text: #{msg}")
-  end
-
-  private def update_game(name : String)
-    @bot.status_update("online", Discord::GamePlaying.new(name, 0_i64))
   end
 
   private def dm_deposit(userid : UInt64)
@@ -361,274 +286,12 @@ class DiscordBot
     reply(msg, "Currently the following commands are available: #{string}")
   end
 
-  # transfer from user to user
-  def tip(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private_channel?(msg)
-
-    cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
-    # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
-
-    match = USER_REGEX.match(cmd[1])
-    id = match["id"].try &.to_u64 if match
-
-    err = "**ERROR**: Please specify the user you want to tip! #{cmd_usage}"
-    return reply(msg, err) unless id
-    begin
-      to = @cache.resolve_user(id)
-    rescue
-      return reply(msg, err)
-    end
-
-    return reply(msg, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if bot?(to)
-
-    return reply(msg, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id.to_u64
-
-    return reply(msg, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
-
-    amount = amount(msg, cmd[2])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
-
-    case @tip.transfer(from: msg.author.id.to_u64, to: id, amount: amount, memo: "tip")
-    when true
-      reply(msg, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when "error"
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    end
-  end
-
-  # Basically just tip greenbigfrog internally
-  def donate(msg : Discord::Message, cmd_string : String)
-    cmd_usage = "`#{@config.prefix}donate [amount] [message]`"
-    # cmd[0]: trigger, cmd[1]: amount, cmd[2..size]: message
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[1] == "all"
-
-    case @tip.transfer(from: msg.author.id.to_u64, to: 163607982473609216_u64, amount: amount, memo: "donation")
-    when true
-      reply(msg, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
-
-      fields = [Discord::EmbedField.new(name: "Amount", value: "#{amount} #{@config.coinname_short}"),
-                Discord::EmbedField.new(name: "User", value: "#{msg.author.username}##{msg.author.discriminator}; <@#{msg.author.id.to_u64}>")]
-      fields << Discord::EmbedField.new(name: "Message", value: cmd[2..cmd.size].join(" ")) if cmd[2]?
-
-      embed = Discord::Embed.new(
-        title: "Donation",
-        thumbnail: Discord::EmbedThumbnail.new("https://cdn.discordapp.com/avatars/#{msg.author.id.to_u64}/#{msg.author.avatar}.png"),
-        colour: 0x6600ff_u32,
-        timestamp: Time.now,
-        fields: fields
-      )
-      post_embed_to_webhook(embed, @config.general_webhook)
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when "error"
-      reply(msg, "**ERROR**: Please try again later")
-    end
-  end
-
-  # withdraw amount to address
-  def withdraw(msg : Discord::Message, cmd_string : String)
-    cmd_usage = "#{@config.prefix}withdraw [address] [amount]"
-
-    # cmd[0]: command, cmd[1]: address, cmd[2]: amount
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
-
-    amount = amount(msg, cmd[2])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
-
-    amount = amount - @config.txfee if cmd[2] == "all"
-
-    return reply(msg, "**ERROR**: You have to withdraw at least #{@config.min_withdraw}") if amount <= @config.min_withdraw
-
-    address = cmd[1]
-
-    case @tip.withdraw(msg.author.id.to_u64, address, amount)
-    when "insufficient balance"
-      reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee} #{@config.coinname_short}")
-    when "invalid address"
-      reply(msg, "**ERROR**: Please specify a valid #{@config.coinname_full} address")
-    when "internal address"
-      reply(msg, "**ERROR**: Withdrawing to an internal address isn't permitted")
-    when false
-      reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    when true
-      string = String.build do |io|
-        io.puts "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::CURSOR
-        io.puts "For security reasons large withdrawals have to be processed manually right now" if @tip.node_balance < amount
-      end
-      reply(msg, string)
-    end
-  end
-
-  # return deposit address
-  def deposit(msg : Discord::Message)
-    notif = reply(msg, "Sent deposit address in a DM") unless private_channel?(msg)
-    begin
-      address = @tip.get_address(msg.author.id.to_u64)
-      embed = Discord::Embed.new(
-        footer: Discord::EmbedFooter.new("I love you! ❤"),
-        image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{@config.uri_scheme}:#{address}")
-      )
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
-    rescue
-      reply(msg, "**ERROR**: Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
-      return unless notif.is_a?(Discord::Message)
-      @bot.delete_message(notif.channel_id, notif.id)
-    end
-  end
-
-  # send coins to all currently online users
-  def soak(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private_channel?(msg)
-
-    return reply(msg, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
-
-    cmd_usage = "#{@config.prefix}soak [amount]"
-
-    # cmd[0]: command, cmd[1]: amount
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, cmd_usage) unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: You have to soak at least **#{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
-
-    return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
-
-    trigger_typing(msg)
-
-    users = Array(UInt64).new
-    last_id = 0_u64
-
-    loop do
-      new_users = @bot.list_guild_members(guild_id, after: last_id)
-      break if new_users.size == 0
-      last_id = new_users.last.user.id
-      new_users.reject!(&.user.bot)
-      new_users.each do |x|
-        next unless @presence_cache.online?(x.user.id.to_u64)
-        users << x.user.id.to_u64 unless x.user.id.to_u64 == msg.author.id.to_u64
-        @cache.cache(x.user)
-      end
-    end
-
-    # TODO only soak people that can view the channel
-
-    users = users - @config.ignored_users.to_a
-
-    return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
-
-    if (users.size * @config.min_soak) > @config.min_soak_total
-      targets = users.sample((amount / @config.min_soak).to_i32)
-    else
-      targets = users
-    end
-    targets.reject! { |x| x == nil }
-
-    case @tip.multi_transfer(from: msg.author.id.to_u64, users: targets, total: amount, memo: "soak")
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when false
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    when true
-      amount_each = BigDecimal.new(amount / targets.size).round(8)
-
-      string = build_user_string(get_config_mention(msg), targets)
-
-      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount_each * targets.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
-    end
-  end
-
-  # split amount between people who recently sent a message
-  def rain(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private_channel?(msg)
-
-    return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
-
-    cmd_usage = "#{@config.prefix}rain [amount]"
-
-    # cmd[0]: command, cmd[1]: amount
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, cmd_usage) unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: You have to rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_rain_total
-
-    return reply(msg, "**ERROR**: Something went wrong") unless guild_id(msg)
-
-    authors = active_users(msg)
-    return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.nil? || authors.empty?
-
-    case @tip.multi_transfer(from: msg.author.id.to_u64, users: authors, total: amount, memo: "rain")
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when false
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    when true
-      amount_each = BigDecimal.new(amount / authors.size).round(8)
-
-      string = build_user_string(get_config_mention(msg), authors)
-
-      reply(msg, "**#{msg.author.username}** rained a total of **#{amount_each * authors.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
-    end
-  end
-
   private def get_config_mention(msg : Discord::Message)
     @tip.get_config(guild_id(msg), "mention") || false
   end
 
   private def get_config(msg : Discord::Message, memo : String)
     @tip.get_config(guild_id(msg), memo)
-  end
-
-  def lucky(msg : Discord::Message, cmd_string : String)
-    return if private?(msg)
-    cmd_usage = "#{@config.prefix}lucky [amount]"
-
-    # cmd[0]: command, cmd[1]: amount"
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, cmd_usage) unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_tip} #{@config.coinname_short}") unless amount >= @config.min_tip
-
-    users = active_users(msg)
-
-    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users && (users = users.to_a).size > 0
-
-    user = users.sample
-
-    case @tip.transfer(from: msg.author.id.to_u64, to: user, amount: amount, memo: "lucky")
-    when true
-      reply(msg, "#{msg.author.username} luckily rained **#{amount} #{@config.coinname_short}** onto **<@#{user}>**")
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when "error"
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    end
   end
 
   def active(msg : Discord::Message)
@@ -704,48 +367,6 @@ class DiscordBot
     reply(msg, "The node has **#{info["connections"]} Connections**")
   end
 
-  def admin(msg : Discord::Message, cmd_string : String)
-    return if admin_alarm?(msg)
-    return reply(msg, "**ERROR**: This command only works in DMs") unless private_channel?(msg)
-
-    # cmd[0] = command, cmd[1] = type, cmd [2] = user
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, "Current total user balances: **#{@tip.db_balance}**") if cmd.size == 1
-
-    case cmd[1]?
-    when "unclaimed"
-      node = @tip.node_balance
-      return if node.nil?
-      unclaimed = node - (@tip.deposit_sum - @tip.withdrawal_sum)
-
-      return reply(msg, "Unclaimed coins: **#{unclaimed}** #{@config.coinname_short}")
-    when "balance"
-      return reply(msg, "**ERROR**: You forgot to supply an ID to check balance of") unless cmd[2]?
-      bal = @tip.get_balance(cmd[2].to_u64)
-      reply(msg, "**#{cmd[2]}**'s balance is: **#{bal}** #{@config.coinname_short}")
-    end
-  end
-
-  def admin_config(msg : Discord::Message, cmd_string : String)
-    return if admin_alarm?(msg)
-
-    # Currently the same coins have to be present in both the old and new config file
-
-    # cmd[0] = command, cmd [1] = path
-    cmd = cmd_string.split(" ")
-
-    path = cmd[1]? || ARGV[0]
-
-    begin
-      Config.reload(path)
-    rescue ex
-      return reply(msg, "There was an issue loading config from `#{path}`\n```cr\n#{ex.inspect_with_backtrace}```")
-    end
-    @config = Config.current[@config.coinname_short]
-    reply(msg, "Loaded config from #{path}")
-  end
-
   def invite(msg : Discord::Message)
     reply(msg, "You can add this bot to your own guild using following URL: <https://discordapp.com/oauth2/authorize?&client_id=#{@config.discord_client_id}&scope=bot>")
   end
@@ -791,84 +412,6 @@ class DiscordBot
     end
 
     reply(msg, string)
-  end
-
-  def offsite(msg : Discord::Message, cmd_string : String)
-    return unless private_channel?(msg) unless msg.channel_id.to_u64 == 421752342262579201
-
-    id = msg.author.id.to_u64
-    return if admin_alarm?(msg)
-
-    cmd_usage = String.build do |io|
-      io.puts "This command allows the storage of coins off site"
-      io.puts
-      io.puts "- `address` Send coins here to deposit them again"
-      io.puts "- `send` Take coins out of the bot"
-      io.puts "- `bal` Check your current balance for the offsite part"
-    end
-
-    # cmd[0] = "offsite", cmd[1]: category
-    cmd = cmd_string.cmd_split
-
-    if cmd.size < 2
-      return reply(msg, cmd_usage)
-    end
-
-    case cmd[1]
-    when "address"
-      reply(msg, "Send coins here to put them back in the bot: **#{@tip.get_offsite_address(id)}**")
-    when "send"
-      # cmd[2]: address, cmd[3]: amount
-      return reply(msg, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 4
-
-      amount = amount(msg, cmd[3])
-      return reply(msg, "**ERROR**: Please specify a valid amount") if amount.nil?
-
-      case @tip.offsite_withdrawal(id, amount, cmd[2])
-      when "Invalid Address"
-        reply(msg, "You specified an invalid address")
-      when "Insufficient Funds"
-        reply(msg, "Insufficient funds. Try a smaller amount")
-      when true
-        reply(msg, "Success!")
-      else
-        reply(msg, "Something went horribly wrong.")
-      end
-    when .starts_with?("bal")
-      reply(msg, "Your current offsite balance is **#{@tip.get_offsite_balance(msg.author.id.to_u64)} #{@config.coinname_short}**\n*(This does not include unconfirmed transactions)*")
-    when "info"
-      fields = Array(Discord::EmbedField).new
-
-      @tip.get_offsite_balances.each do |user|
-        fields << Discord::EmbedField.new(name: ZWS, value: "<@#{user[:userid]}>: #{user[:balance]} #{@config.coinname_short}")
-      end
-
-      embed = Discord::Embed.new(
-        title: "Info",
-        colour: 0x9933ff_u32,
-        timestamp: Time.now,
-        fields: fields
-      )
-      @bot.create_message(msg.channel_id, "", embed)
-    when "status"
-      users = @tip.total_db_balance.round(2)
-      wallet = @tip.node_balance.round(2)
-
-      embed = Discord::Embed.new(
-        title: "Status",
-        colour: 0x00ccff_u32,
-        timestamp: Time.now,
-        fields: [
-          Discord::EmbedField.new(name: "Wallet Balance", value: "#{wallet} #{@config.coinname_short}"),
-          Discord::EmbedField.new(name: "Users Balance", value: "#{users} #{@config.coinname_short}"),
-          Discord::EmbedField.new(name: "Ideal Wallet Balance Range", value: "#{users * BigDecimal.new(0.25)}..#{users * BigDecimal.new(0.35)}"),
-          Discord::EmbedField.new(name: "Current Percentage", value: "#{((wallet / users) * 100).round(4)}%"),
-        ]
-      )
-      @bot.create_message(msg.channel_id, "​", embed)
-    else
-      reply(msg, cmd_usage)
-    end
   end
 
   private def active_users(msg : Discord::Message)
