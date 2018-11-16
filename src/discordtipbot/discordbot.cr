@@ -1,5 +1,4 @@
 require "./utilities"
-require "../../lib/raven/src/raven/integrations/kernel/*"
 
 class DiscordBot
   include Utilities
