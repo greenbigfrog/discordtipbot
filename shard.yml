@@ -23,5 +23,4 @@ dependencies:
     github: greenbigfrog/bitcoin_rpc
     branch: master
   raven:
-    github: greenbigfrog/raven.cr
-    branch: new-cr
+    github: Sija/raven.cr

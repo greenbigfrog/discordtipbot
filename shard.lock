@@ -10,7 +10,7 @@ shards:
 
   db:
     github: crystal-lang/crystal-db
-    version: 0.5.0
+    version: 0.5.1
 
   discordcr:
     github: greenbigfrog/discordcr
@@ -21,6 +21,6 @@ shards:
     commit: 5a01c3e38be055df648e5744b3c03a8d7d4d57bc
 
   raven:
-    github: greenbigfrog/raven.cr
-    commit: 1060c969371e4fb4f03f75f048b9d90c0b8f77ef
+    github: Sija/raven.cr
+    version: 1.1.0
 
