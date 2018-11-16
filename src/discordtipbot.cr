@@ -31,7 +31,7 @@ unless ENV["TIPBOT_ENV"]? == "test"
     log.info("read config from \"#{ARGV[0]}\"")
 
     log.debug("starting forking")
-    bots = config.each do |x|
+    config.each do |x|
       raven_spawn(name: "#{x.coinname_full} Bot") do
         Controller.new(x, log)
       end

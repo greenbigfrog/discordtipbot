@@ -325,8 +325,6 @@ class TipBot
     return unless txlist.is_a?(Array(JSON::Any))
     return unless txlist.size > 0
 
-    users = Array(UInt64).new
-
     txlist.each do |tx|
       tx = tx.as_h
       next unless tx.is_a?(Hash(String, JSON::Any))

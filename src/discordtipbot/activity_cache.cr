@@ -61,7 +61,7 @@ class ActivityCache
 
   # Clears all cached set of expired entries
   def prune
-    @cache.each do |channel_id, set|
+    @cache.each do |channel_id, _|
       prune_set(@cache[channel_id])
     end
   end

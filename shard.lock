@@ -1,5 +1,9 @@
 version: 1.0
 shards:
+  ameba:
+    github: veelenga/ameba
+    version: 0.8.1
+
   any_hash:
     github: Sija/any_hash.cr
     version: 0.2.2
@@ -10,7 +14,7 @@ shards:
 
   db:
     github: crystal-lang/crystal-db
-    version: 0.5.0
+    version: 0.5.1
 
   discordcr:
     github: greenbigfrog/discordcr

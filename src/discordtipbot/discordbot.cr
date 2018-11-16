@@ -211,7 +211,7 @@ class DiscordBot
         users = @tip.process_pending_withdrawals
         users.each do |x|
           begin
-            @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your withdrawal just got processed" + Emoji::Check)
+            @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your withdrawal just got processed" + Emoji::CHECK)
           rescue
             raise "#{config.coinname_short}: Unable to send confirmation message to #{x}, while processing pending withdrawals"
           end
@@ -466,7 +466,7 @@ class DiscordBot
       reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     when true
       string = String.build do |io|
-        io.puts "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::Cursor
+        io.puts "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::CURSOR
         io.puts "For security reasons large withdrawals have to be processed manually right now" if @tip.node_balance < amount
       end
       reply(msg, string)
@@ -572,7 +572,7 @@ class DiscordBot
 
     return reply(msg, "**ERROR**: You have to rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_rain_total
 
-    return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
+    return reply(msg, "**ERROR**: Something went wrong") unless guild_id(msg)
 
     authors = active_users(msg)
     return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.nil? || authors.empty?
