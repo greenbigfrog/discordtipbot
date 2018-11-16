@@ -367,7 +367,7 @@ class DiscordBot
 
     cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
     # cmd[0]: trigger, cmd[1]: user, cmd[2]: amount
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
 
@@ -407,7 +407,7 @@ class DiscordBot
   def donate(msg : Discord::Message, cmd_string : String)
     cmd_usage = "`#{@config.prefix}donate [amount] [message]`"
     # cmd[0]: trigger, cmd[1]: amount, cmd[2..size]: message
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 1
 
@@ -444,7 +444,7 @@ class DiscordBot
     cmd_usage = "#{@config.prefix}withdraw [address] [amount]"
 
     # cmd[0]: command, cmd[1]: address, cmd[2]: amount
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
 
@@ -501,7 +501,7 @@ class DiscordBot
     cmd_usage = "#{@config.prefix}soak [amount]"
 
     # cmd[0]: command, cmd[1]: amount
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, cmd_usage) unless cmd.size > 1
 
@@ -565,7 +565,7 @@ class DiscordBot
     cmd_usage = "#{@config.prefix}rain [amount]"
 
     # cmd[0]: command, cmd[1]: amount
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, cmd_usage) unless cmd.size > 1
 
@@ -606,7 +606,7 @@ class DiscordBot
     cmd_usage = "#{@config.prefix}lucky [amount]"
 
     # cmd[0]: command, cmd[1]: amount"
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, cmd_usage) unless cmd.size > 1
 
@@ -653,7 +653,7 @@ class DiscordBot
     return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || admin?(msg)
     cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
     # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, cmd_usage) unless cmd.size == 3
     return reply(msg, cmd_usage) unless {"rain", "soak", "mention"}.includes?(cmd[1]) && {"on", "off"}.includes?(cmd[2])
@@ -709,7 +709,7 @@ class DiscordBot
     return reply(msg, "**ERROR**: This command only works in DMs") unless private_channel?(msg)
 
     # cmd[0] = command, cmd[1] = type, cmd [2] = user
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     return reply(msg, "Current total user balances: **#{@tip.db_balance}**") if cmd.size == 1
 
@@ -808,7 +808,7 @@ class DiscordBot
     end
 
     # cmd[0] = "offsite", cmd[1]: category
-    cmd = cmd_string.split(" ")
+    cmd = cmd_string.cmd_split
 
     if cmd.size < 2
       return reply(msg, cmd_usage)
