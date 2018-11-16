@@ -20,9 +20,17 @@ shards:
     github: greenbigfrog/discordcr
     commit: 87a04687a7ebfdf5dd396ce1d384fd39521f42af
 
+  discordcr-middleware:
+    github: z64/discordcr-middleware
+    version: 0.4.0
+
   pg:
     github: greenbigfrog/crystal-pg
     commit: 5a01c3e38be055df648e5744b3c03a8d7d4d57bc
+
+  rate_limiter:
+    github: z64/rate_limiter
+    commit: b9992a7c474f9f863aa34ac677244d6b520cba97
 
   raven:
     github: greenbigfrog/raven.cr

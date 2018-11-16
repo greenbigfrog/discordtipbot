@@ -24,7 +24,7 @@ class DiscordBot
     bot_id = @cache.resolve_current_user.id
     @prefix_regex = /^(?:#{'\\' + @config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
-    @bot.on_message_create do |msg|
+    @bot.on_message_create(ErrorCatcher.new) do |msg|
       next if msg.author.id.to_u64 == bot_id
 
       content = msg.content
@@ -99,7 +99,7 @@ class DiscordBot
       end
     end
 
-    @bot.on_ready do
+    @bot.on_ready(ErrorCatcher.new) do
       @log.info("#{@config.coinname_short}: #{@config.coinname_full} bot received READY")
 
       # Make use of the status to display info
@@ -112,7 +112,7 @@ class DiscordBot
     end
 
     # Add user to active_users_cache on new message unless bot user
-    @bot.on_message_create do |msg|
+    @bot.on_message_create(ErrorCatcher.new) do |msg|
       next if msg.content.match @prefix_regex
       @active_users_cache.touch(msg.channel_id.to_u64, msg.author.id.to_u64, msg.timestamp.to_utc) unless msg.author.bot
     end
@@ -128,14 +128,14 @@ class DiscordBot
     # Handle new guilds and owner notifying etc
     @streaming = false
 
-    @bot.on_ready do |payload|
+    @bot.on_ready(ErrorCatcher.new) do |payload|
       # Only fire on first READY, or if ID cache was cleared
       next unless @unavailable_guilds.empty? && @available_guilds.empty?
       @streaming = true
       @unavailable_guilds.concat payload.guilds.map(&.id.to_u64)
     end
 
-    @bot.on_guild_create do |payload|
+    @bot.on_guild_create(ErrorCatcher.new) do |payload|
       if @streaming
         @available_guilds.add payload.id.to_u64
 
@@ -168,11 +168,11 @@ class DiscordBot
       end
     end
 
-    @bot.on_guild_create do |payload|
+    @bot.on_guild_create(ErrorCatcher.new) do |payload|
       @presence_cache.handle_presence(payload.presences)
     end
 
-    @bot.on_presence_update do |presence|
+    @bot.on_presence_update(ErrorCatcher.new) do |presence|
       @presence_cache.handle_presence(presence)
 
       @cache.cache(Discord::User.new(presence.user)) if presence.user.full?
