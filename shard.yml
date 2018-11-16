@@ -25,6 +25,8 @@ dependencies:
   raven:
     github: greenbigfrog/raven.cr
     branch: new-cr
+  discordcr-middleware:
+    github: z64/discordcr-middleware
 
 development_dependencies:
   ameba:
