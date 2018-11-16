@@ -7,7 +7,7 @@ require "big"
 require "big/json"
 
 require "./discordtipbot"
-require "./discordtipbot/*"
+require "./discordtipbot/**"
 
 unless ENV["TIPBOT_ENV"]? == "test"
   DiscordTipBot.new
