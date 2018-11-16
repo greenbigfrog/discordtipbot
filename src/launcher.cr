@@ -5,6 +5,7 @@ require "pg/pg_ext/big_decimal"
 require "discordcr"
 require "big"
 require "big/json"
+require "discordcr-middleware"
 
 require "./discordtipbot"
 require "./discordtipbot/**"
