@@ -110,8 +110,14 @@ class TipBot
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
     balance = balance(from)
+
+    # TODO set mode to down as soon rounding modes are available in crystal
     amount = BigDecimal.new(total / users.size).round(8)
-    return "insufficient balance" if balance < total || amount * users.size > balance
+    # TODO get rid of temporary fix below
+    # This only applies if thanks to rounding the total amount
+    # is higher then the sum of the split up balance
+    amount = BigDecimal.new(total / users.size).round(7) if amount * users.size > total
+    return "insufficient balance" if balance < total
 
     users.each do |x|
       return false unless self.transfer(from, x, amount, memo)
