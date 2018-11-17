@@ -22,7 +22,7 @@ class DiscordBot
     @webhook = Discord::Client.new("")
 
     bot_id = @cache.resolve_current_user.id
-    @prefix_regex = /^(?:#{@config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
+    @prefix_regex = /^(?:#{'\\' + @config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
     @bot.on_message_create do |msg|
       next if msg.author.id.to_u64 == bot_id
