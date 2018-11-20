@@ -27,6 +27,9 @@ dependencies:
     branch: new-cr
   discordcr-middleware:
     github: z64/discordcr-middleware
+  kemal:
+    github: kemalcr/kemal
+
 
 development_dependencies:
   ameba:

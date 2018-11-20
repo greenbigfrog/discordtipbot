@@ -19,7 +19,8 @@ class DiscordTipBot
       @log.debug("starting forking")
       Config.current.each do |name, config|
         raven_spawn(name: "#{name} Bot") do
-          Controller.new(config, @log)
+          # Controller.new(config, @log)
+          Website.new(config)
         end
       end
       @log.debug("finished forking")
