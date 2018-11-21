@@ -14,6 +14,25 @@ class Data
 
     @db.query_one(sql, id, as: Data::User)
   end
+
+  def statistics
+    @db.query_one("SELECT * FROM statistics", as: Statistics)
+  end
+
+  def get_transactions(user : UInt64)
+    @db.query_all("SELECT * FROM transactions WHERE to_id = $1 OR from_id = $1", user, as: Data::Transaction)
+  end
+end
+
+class Data::Transaction
+  DB.mapping(
+    id: Int32,
+    memo: String,
+    from_id: Int64,
+    to_id: Int64,
+    amount: BigDecimal,
+    time: Time
+  )
 end
 
 class Data::User

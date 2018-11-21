@@ -1,0 +1,8 @@
+<h1>Statistics</h1>
+<% res = data.statistics %>
+<p>There have been a total of <%= res.transactions %> Transactions.</p>
+
+<p>A total of <%= res.total %> have been transferred.<br>
+<%= res.tips %> were tipped, <%= res.soaks %> soaked, and <%= res.rains %> rained.</p>
+
+<p><small>These Statistics were last updated at <%= Statistics.last %>.</p>

@@ -32,7 +32,7 @@ class Website
 <script>
 setTimeout(function(){
   window.location.href = "http://127.0.0.1:3000/auth"
-  }, 2000);
+  }, 5000);
 </script>
  
 <title>Page Redirection</title>
@@ -65,7 +65,22 @@ HTML
 
     get "/logout" do |env|
       env.session.destroy
-      "You have been logged out"
+      render("src/discordtipbot/website/views/logout.ecr", "src/discordtipbot/website/views/layouts/layout.ecr")
+    end
+
+    get "/transactions" do |env|
+      token = env.session.string?("access_token")
+      env.session.string("origin", env.request.resource)
+      env.redirect("/redirect_auth") unless token.is_a?(String)
+      if token
+        user = auth.get_user(token)
+        transactions = data.get_transactions(user.id.to_u64)
+        render("src/discordtipbot/website/views/transactions.ecr", "src/discordtipbot/website/views/layouts/layout.ecr")
+      end
+    end
+
+    get "/statistics" do |env|
+      render("src/discordtipbot/website/views/statistics.ecr", "src/discordtipbot/website/views/layouts/layout.ecr")
     end
 
     Kemal.run
