@@ -20,6 +20,10 @@ class Website
     auth = DiscordOAuth2.new(ENV["CLIENT_ID"], ENV["CLIENT_SECRET"], redirect_uri)
     data = Data.new(config)
 
+    get "/" do
+      render("src/discordtipbot/website/views/main.ecr", "src/discordtipbot/website/views/layouts/layout.ecr")
+    end
+
     get "/redirect_auth" do |env|
       <<-HTML
 <meta charset="UTF-8">
