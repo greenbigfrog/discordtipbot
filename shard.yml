@@ -29,6 +29,10 @@ dependencies:
     github: z64/discordcr-middleware
   kemal:
     github: kemalcr/kemal
+    #kemal-csrf:
+    #github: exploitd/kemal-csrf
+  kemal-session:
+    github: kemalcr/kemal-session
 
 
 development_dependencies:

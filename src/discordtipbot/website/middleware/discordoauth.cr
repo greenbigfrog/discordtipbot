@@ -12,12 +12,13 @@ class DiscordOAuth2
     @client.get_authorize_uri(scope)
   end
 
-  def get_user(params)
-    access_token = @client.get_access_token_using_authorization_code(params["code"])
-    # TODO cache access token
+  def get_access_token(params)
+    @client.get_access_token_using_authorization_code(params["code"])
+  end
 
+  def get_user(access_token)
     client = HTTP::Client.new("discordapp.com", tls: true)
-    access_token.authenticate(client)
+    OAuth2::AccessToken::Bearer.new(access_token, nil, nil, nil, nil).authenticate(client)
 
     raw_json = client.get("/api/v6/users/@me").body
 
