@@ -14,10 +14,24 @@ border: 1px solid black;
 </tr>
 <% transactions.each do |trans| %>
 	<tr>
-	<td><%= trans.from_id %></td>
-	<td><%= trans.to_id %></td>
-	<td><%= trans.amount %></td>
-	<td><%= trans.time %></td>
+	<td><%= user.username %></td>
+	<% if trans.from_id == id %>
+		<td><%= trans.memo %></td>
+		<td><%= trans.amount %></td>
+		<td>onto</td>
+		<td><%= trans.to_id %></td>
+		<td>at</td>
+		<td><%= trans.time %></td>
+	<% else %>
+		<td>received</td>
+		<td><%= trans.amount %></td>
+		<td>as</td>
+		<td><%= trans.memo %></td>
+		<td>from</td>
+		<td><%= trans.from_id %></td>
+		<td>at</td>
+		<td><%= trans.time %> </td>
+	<% end %>
 	</tr>
 <% end %>
 </table>

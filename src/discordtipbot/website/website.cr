@@ -74,7 +74,8 @@ HTML
       env.redirect("/redirect_auth") unless token.is_a?(String)
       if token
         user = auth.get_user(token)
-        transactions = data.get_transactions(user.id.to_u64)
+	id = user.id.to_u64
+        transactions = data.get_transactions(id)
         render("src/discordtipbot/website/views/transactions.ecr", "src/discordtipbot/website/views/layouts/layout.ecr")
       end
     end
