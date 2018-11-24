@@ -1,12 +1,12 @@
 require "./utilities"
 
+USER_REGEX = /<@!?(?<id>\d+)>/
+START_TIME = Time.now
+TERMS      = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
+ZWS        = "​" # There is a zero width space stored here
+
 class DiscordBot
   include Utilities
-
-  USER_REGEX = /<@!?(?<id>\d+)>/
-  START_TIME = Time.now
-  TERMS      = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
-  ZWS        = "​" # There is a zero width space stored here
 
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
@@ -24,6 +24,11 @@ class DiscordBot
     bot_id = @cache.resolve_current_user.id
     @prefix_regex = /^(?:#{'\\' + @config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("ping", config.prefix), Ping.new)
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("withdraw", config.prefix), Amount.new(@tip), Withdraw.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["deposit", "address"], config.prefix), Deposit.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("soak", config.prefix), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
+
     @bot.on_message_create(ErrorCatcher.new) do |msg|
       next if msg.author.id.to_u64 == bot_id
 
@@ -38,18 +43,8 @@ class DiscordBot
 
       # If a command expects input pass in parsed command
       case cmd
-      when .starts_with? "ping"
-        self.ping(msg)
       when .starts_with? "tip"
         self.tip(msg, cmd)
-      when .starts_with? "withdraw"
-        self.withdraw(msg, cmd)
-      when .starts_with? "deposit"
-        self.deposit(msg)
-      when .starts_with? "address"
-        self.deposit(msg)
-      when .starts_with? "soak"
-        self.soak(msg, cmd)
       when .starts_with? "rain"
         self.rain(msg, cmd)
       when .starts_with? "balance"
@@ -324,14 +319,6 @@ class DiscordBot
 
   # All helper methods for handling discord commands below
 
-  # respond with pong
-  def ping(msg : Discord::Message)
-    m = reply(msg, "Pong!")
-    return unless m.is_a?(Discord::Message)
-    time = Time.utc_now - msg.timestamp
-    @bot.edit_message(m.channel_id, m.id, "Pong! *Time taken: #{time.total_milliseconds} ms.*")
-  end
-
   # respond getinfo RPC
   def getinfo(msg : Discord::Message)
     return if admin_alarm?(msg)
@@ -436,123 +423,6 @@ class DiscordBot
       reply(msg, "**ERROR**: Insufficient balance")
     when "error"
       reply(msg, "**ERROR**: Please try again later")
-    end
-  end
-
-  # withdraw amount to address
-  def withdraw(msg : Discord::Message, cmd_string : String)
-    cmd_usage = "#{@config.prefix}withdraw [address] [amount]"
-
-    # cmd[0]: command, cmd[1]: address, cmd[2]: amount
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 2
-
-    amount = amount(msg, cmd[2])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
-
-    amount = amount - @config.txfee if cmd[2] == "all"
-
-    return reply(msg, "**ERROR**: You have to withdraw at least #{@config.min_withdraw}") if amount <= @config.min_withdraw
-
-    address = cmd[1]
-
-    case @tip.withdraw(msg.author.id.to_u64, address, amount)
-    when "insufficient balance"
-      reply(msg, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee} #{@config.coinname_short}")
-    when "invalid address"
-      reply(msg, "**ERROR**: Please specify a valid #{@config.coinname_full} address")
-    when "internal address"
-      reply(msg, "**ERROR**: Withdrawing to an internal address isn't permitted")
-    when false
-      reply(msg, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    when true
-      string = String.build do |io|
-        io.puts "Pending withdrawal of **#{amount} #{@config.coinname_short}** to **#{address}**. *Processing shortly*" + Emoji::CURSOR
-        io.puts "For security reasons large withdrawals have to be processed manually right now" if @tip.node_balance < amount
-      end
-      reply(msg, string)
-    end
-  end
-
-  # return deposit address
-  def deposit(msg : Discord::Message)
-    notif = reply(msg, "Sent deposit address in a DM") unless private_channel?(msg)
-    begin
-      address = @tip.get_address(msg.author.id.to_u64)
-      embed = Discord::Embed.new(
-        footer: Discord::EmbedFooter.new("I love you! ❤"),
-        image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{@config.uri_scheme}:#{address}")
-      )
-      @bot.create_message(@cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
-    rescue
-      reply(msg, "**ERROR**: Could not send deposit details in a DM. Enable `allow direct messages from server members` in your privacy settings")
-      return unless notif.is_a?(Discord::Message)
-      @bot.delete_message(notif.channel_id, notif.id)
-    end
-  end
-
-  # send coins to all currently online users
-  def soak(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on making wet? yourself?") if private_channel?(msg)
-
-    return reply(msg, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "soak")
-
-    cmd_usage = "#{@config.prefix}soak [amount]"
-
-    # cmd[0]: command, cmd[1]: amount
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, cmd_usage) unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: You have to soak at least **#{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
-
-    return reply(msg, "**ERROR**: Something went wrong") unless guild_id = guild_id(msg)
-
-    trigger_typing(msg)
-
-    users = Array(UInt64).new
-    last_id = 0_u64
-
-    loop do
-      new_users = @bot.list_guild_members(guild_id, after: last_id)
-      break if new_users.size == 0
-      last_id = new_users.last.user.id
-      new_users.reject!(&.user.bot)
-      new_users.each do |x|
-        next unless @presence_cache.online?(x.user.id.to_u64)
-        users << x.user.id.to_u64 unless x.user.id.to_u64 == msg.author.id.to_u64
-        @cache.cache(x.user)
-      end
-    end
-
-    # TODO only soak people that can view the channel
-
-    users = users - @config.ignored_users.to_a
-
-    return reply(msg, "No one wants to get wet right now :sob:") unless users.size > 1
-
-    if (users.size * @config.min_soak) > @config.min_soak_total
-      targets = users.sample((amount / @config.min_soak).to_i32)
-    else
-      targets = users
-    end
-    targets.reject! { |x| x == nil }
-
-    case @tip.multi_transfer(from: msg.author.id.to_u64, users: targets, total: amount, memo: "soak")
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when false
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    when true
-      amount_each = BigDecimal.new(amount / targets.size).round(8)
-
-      string = build_user_string(get_config_mention(msg), targets)
-
-      reply(msg, "**#{msg.author.username}** soaked a total of **#{amount_each * targets.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end
   end
 
@@ -669,6 +539,7 @@ class DiscordBot
   end
 
   def check_config(msg : Discord::Message)
+    pp Time.now
     string = String.build do |str|
       unless private_channel?(msg)
         mention = get_config(msg, "mention")
@@ -682,7 +553,7 @@ class DiscordBot
       str.puts "Minimum rain: #{@config.min_rain_total}"
       str.puts "Minimum soak: #{@config.min_soak_total}"
     end
-
+    pp Time.now
     reply(msg, string)
   end
 
