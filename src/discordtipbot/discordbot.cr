@@ -28,6 +28,7 @@ class DiscordBot
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("withdraw", config.prefix), Amount.new(@tip), Withdraw.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["deposit", "address"], config.prefix), Deposit.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("soak", config.prefix), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("\u{1f4be}", config.prefix), SystemStats.new)
 
     @bot.on_message_create(ErrorCatcher.new) do |msg|
       next if msg.author.id.to_u64 == bot_id
