@@ -1,5 +1,17 @@
 require "json"
 
+private macro define_string_getter(strings)
+  def get?(some_string)
+    case some_string
+    {% for string in strings %}
+    when {{ string }} then @{{ string.id }}
+    {% end %}
+    else
+      raise "Value not found"
+    end
+  end
+end
+
 class Webhook
   REGEX = /^https:\/\/discordapp\.com\/api\/webhooks\/(?<id>\d+)\/(?<token>\S+)/
 
@@ -21,6 +33,10 @@ end
 
 class Config
   class_getter current : Hash(String, Config) = Hash(String, Config).new
+
+  define_string_getter(["min_soak", "min_soak_total",
+                        "min_rain", "min_rain_total",
+                        "min_tip"])
 
   def self.load(path)
     File.open(path, "r") do |file|
@@ -65,6 +81,7 @@ class Config
     min_tip: BigDecimal,
     min_soak: BigDecimal,
     min_soak_total: BigDecimal,
+    min_rain: BigDecimal,
     min_rain_total: BigDecimal,
     min_withdraw: BigDecimal,
 

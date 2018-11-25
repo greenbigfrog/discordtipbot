@@ -5,7 +5,7 @@ USER_REGEX      = /<@!?(?<id>\d+)>/
 START_TIME      = Time.now
 TERMS           = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
 ZWS             = "​" # There is a zero width space stored here
-CONFIG_COLLUMNS = Set{"soak", "rain", "mention", "min_soak", "min_soak_total", "min_rain", "min_tip"}
+CONFIG_COLLUMNS = Set{"soak", "rain", "mention", "min_soak", "min_soak_total", "min_rain", "min_rain_total", "min_tip"}
 
 class DiscordBot
   include Utilities
@@ -34,12 +34,43 @@ class DiscordBot
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("donate", config.prefix), ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Donate.new(@tip, @config, @webhook))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["balance", "bal"], config.prefix), Balance.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("\u{1f4be}", config.prefix), SystemStats.new)
-    # rain
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("offsite", config.prefix), OnlyPrivate.new, BotAdmin.new(@config), Amount.new(@tip), Offsite.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("config", config.prefix), NoPrivate.new, PermissionMiddleware.new(Discord::Permissions::Administrator), ConfigCommand.new(@tip))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("checkconfig", config.prefix), ConfigMiddleware.new(@tip.db, @config), CheckConfig.new)
     # admin
     # admin_config
     # getinfo
     # help
+    # checkconfig
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("lucky", @config.prefix), NoPrivate.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip)) { |msg, ctx| lucky(msg, ctx) }
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("rain", @config.prefix), NoPrivate.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip)) { |msg, ctx| rain(msg, ctx) }
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("active", @config.prefix), NoPrivate.new) { |msg, _| active(msg) }
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("statistics", @config.prefix)) do |msg, _|
+      stats = Statistics.get(@tip.db)
+      string = String.build do |io|
+        io.puts "*Currently the users of this bot have:*"
+        io.puts "Transfered a total of **#{stats.total} #{@config.coinname_short}** in #{stats.transactions} transactions"
+        io.puts
+        io.puts "Of these **#{stats.tips} #{@config.coinname_short}** were tips,"
+        io.puts "**#{stats.rains} #{@config.coinname_short}** were rains and"
+        io.puts "**#{stats.soaks} #{@config.coinname_short}** were soaks."
+        io.puts "*Last updated at #{Statistics.last}*"
+      end
+
+      reply(msg, string)
+    end
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("exit", @config.prefix), BotAdmin.new(@config)) do |msg, _|
+      @log.warn("#{@config.coinname_short}: Shutdown requested by #{msg.author.id}")
+      sleep 1
+      exit
+    end
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("stats", @config.prefix)) do |msg, _|
+      guilds = @cache.guilds.size
+      cached_users = @cache.users.size
+      users = @cache.guilds.values.map { |x| x.member_count || 0 }.sum
+
+      reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)")
+    end
 
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new) do |msg|
       content = msg.content
@@ -52,20 +83,16 @@ class DiscordBot
       next unless cmd = match.named_captures["cmd"]
 
       case cmd
-      when .starts_with? "help"
-        self.help(msg)
       when .starts_with? "terms"
         reply(msg, TERMS)
       when .starts_with? "blocks"
         info = @tip.get_info
-        next unless info.is_a?(Hash(String, JSON::Any))
+        next unless info.is_a?(JSON::Any)
         reply(msg, "Current Block Count (known to the node): **#{info["blocks"]}**")
       when .starts_with? "connections"
         info = @tip.get_info
-        next unless info.is_a?(Hash(String, JSON::Any))
+        next unless info.is_a?(JSON::Any)
         reply(msg, "The node has **#{info["connections"]} Connections**")
-      when .starts_with? "active"
-        self.active(msg)
       when .starts_with? "support"
         reply(msg, "For support please visit <http://tipbot.gbf.re>")
       when .starts_with? "github"
@@ -74,18 +101,6 @@ class DiscordBot
         reply(msg, "You can add this bot to your own guild using following URL: <https://discordapp.com/oauth2/authorize?&client_id=#{@config.discord_client_id}&scope=bot>")
       when .starts_with? "uptime"
         reply(msg, "Bot has been running for #{Time.now - START_TIME}")
-      when .starts_with? "checkconfig"
-        self.check_config(msg)
-      when .starts_with? "stats"
-        self.stats(msg)
-      when .starts_with? "lucky"
-        self.lucky(msg, cmd)
-      when .starts_with? "exit"
-        self.exit(msg)
-      when .starts_with? "statistics"
-        self.statistics(msg)
-      when .starts_with? "offsite"
-        self.offsite(msg, cmd)
       end
     end
 
@@ -343,89 +358,12 @@ class DiscordBot
     reply(msg, "Currently the following commands are available: #{string}")
   end
 
-  # split amount between people who recently sent a message
-  def rain(msg : Discord::Message, cmd_string : String)
-    return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private_channel?(msg)
-
-    return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
-
-    cmd_usage = "#{@config.prefix}rain [amount]"
-
-    # cmd[0]: command, cmd[1]: amount
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, cmd_usage) unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: You have to rain at least #{@config.min_rain_total} #{@config.coinname_short}") unless amount >= @config.min_rain_total
-
-    return reply(msg, "**ERROR**: Something went wrong") unless guild_id(msg)
-
-    authors = active_users(msg)
-    return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.nil? || authors.empty?
-
-    case @tip.multi_transfer(from: msg.author.id.to_u64, users: authors, total: amount, memo: "rain")
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when false
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    when true
-      amount_each = BigDecimal.new(amount / authors.size).round(8)
-
-      string = build_user_string(get_config_mention(msg), authors)
-
-      reply(msg, "**#{msg.author.username}** rained a total of **#{amount_each * authors.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
-    end
-  end
-
   private def get_config_mention(msg : Discord::Message)
     @tip.get_config(guild_id(msg), "mention") || false
   end
 
   private def get_config(msg : Discord::Message, memo : String)
     @tip.get_config(guild_id(msg), memo)
-  end
-
-  def lucky(msg : Discord::Message, cmd_string : String)
-    return if private?(msg)
-    cmd_usage = "#{@config.prefix}lucky [amount]"
-
-    # cmd[0]: command, cmd[1]: amount"
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, cmd_usage) unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: You have to lucky rain at least #{@config.min_tip} #{@config.coinname_short}") unless amount >= @config.min_tip
-
-    users = active_users(msg)
-
-    return reply(msg, "**ERROR**: There is no one to make lucky!") unless users && (users = users.to_a).size > 0
-
-    user = users.sample
-
-    case @tip.transfer(from: msg.author.id.to_u64, to: user, amount: amount, memo: "lucky")
-    when true
-      reply(msg, "#{msg.author.username} luckily rained **#{amount} #{@config.coinname_short}** onto **<@#{user}>**")
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when "error"
-      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    end
-  end
-
-  def active(msg : Discord::Message)
-    return if private?(msg)
-
-    authors = active_users(msg)
-    return reply(msg, "No active users!") if authors.nil? || authors.empty?
-
-    singular = authors.size == 1
-    reply(msg, "There #{singular ? "is" : "are"} **#{authors.size}** active user#{singular ? "" : "s"} ATM")
   end
 
   def check_config(msg : Discord::Message)
@@ -489,150 +427,6 @@ class DiscordBot
     reply(msg, "Loaded config from #{path}")
   end
 
-  def stats(msg : Discord::Message)
-    guilds = @cache.guilds.size
-    cached_users = @cache.users.size
-    users = @cache.guilds.values.map { |x| x.member_count || 0 }.sum
-
-    reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)")
-  end
-
-  def exit(msg : Discord::Message)
-    id = msg.author.id.to_u64
-    return if admin_alarm?(msg)
-
-    @log.warn("#{@config.coinname_short}: Shutdown requested by #{id}")
-    exit
-  end
-
-  def statistics(msg : Discord::Message)
-    stats = Statistics.get(@tip.db)
-    string = String.build do |io|
-      io.puts "*Currently the users of this bot have:*"
-      io.puts "Transfered a total of **#{stats.total} #{@config.coinname_short}** in #{stats.transactions} transactions"
-      io.puts
-      io.puts "Of these **#{stats.tips} #{@config.coinname_short}** were tips,"
-      io.puts "**#{stats.rains} #{@config.coinname_short}** were rains and"
-      io.puts "**#{stats.soaks} #{@config.coinname_short}** were soaks."
-      io.puts "*Last updated at #{Statistics.last}*"
-    end
-
-    reply(msg, string)
-  end
-
-  def offsite(msg : Discord::Message, cmd_string : String)
-    return unless private_channel?(msg) unless msg.channel_id.to_u64 == 421752342262579201
-
-    id = msg.author.id.to_u64
-    return if admin_alarm?(msg)
-
-    cmd_usage = String.build do |io|
-      io.puts "This command allows the storage of coins off site"
-      io.puts
-      io.puts "- `address` Send coins here to deposit them again"
-      io.puts "- `send` Take coins out of the bot"
-      io.puts "- `bal` Check your current balance for the offsite part"
-    end
-
-    # cmd[0] = "offsite", cmd[1]: category
-    cmd = cmd_string.cmd_split
-
-    if cmd.size < 2
-      return reply(msg, cmd_usage)
-    end
-
-    case cmd[1]
-    when "address"
-      reply(msg, "Send coins here to put them back in the bot: **#{@tip.get_offsite_address(id)}**")
-    when "send"
-      # cmd[2]: address, cmd[3]: amount
-      return reply(msg, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 4
-
-      amount = amount(msg, cmd[3])
-      return reply(msg, "**ERROR**: Please specify a valid amount") if amount.nil?
-
-      case @tip.offsite_withdrawal(id, amount, cmd[2])
-      when "Invalid Address"
-        reply(msg, "You specified an invalid address")
-      when "Insufficient Funds"
-        reply(msg, "Insufficient funds. Try a smaller amount")
-      when true
-        reply(msg, "Success!")
-      else
-        reply(msg, "Something went horribly wrong.")
-      end
-    when .starts_with?("bal")
-      reply(msg, "Your current offsite balance is **#{@tip.get_offsite_balance(msg.author.id.to_u64)} #{@config.coinname_short}**\n*(This does not include unconfirmed transactions)*")
-    when "info"
-      fields = Array(Discord::EmbedField).new
-
-      @tip.get_offsite_balances.each do |user|
-        fields << Discord::EmbedField.new(name: ZWS, value: "<@#{user[:userid]}>: #{user[:balance]} #{@config.coinname_short}")
-      end
-
-      embed = Discord::Embed.new(
-        title: "Info",
-        colour: 0x9933ff_u32,
-        timestamp: Time.now,
-        fields: fields
-      )
-      @bot.create_message(msg.channel_id, "", embed)
-    when "status"
-      users = @tip.total_db_balance.round(2)
-      wallet = @tip.node_balance.round(2)
-
-      embed = Discord::Embed.new(
-        title: "Status",
-        colour: 0x00ccff_u32,
-        timestamp: Time.now,
-        fields: [
-          Discord::EmbedField.new(name: "Wallet Balance", value: "#{wallet} #{@config.coinname_short}"),
-          Discord::EmbedField.new(name: "Users Balance", value: "#{users} #{@config.coinname_short}"),
-          Discord::EmbedField.new(name: "Ideal Wallet Balance Range", value: "#{users * BigDecimal.new(0.25)}..#{users * BigDecimal.new(0.35)}"),
-          Discord::EmbedField.new(name: "Current Percentage", value: "#{((wallet / users) * 100).round(4)}%"),
-        ]
-      )
-      @bot.create_message(msg.channel_id, "​", embed)
-    else
-      reply(msg, cmd_usage)
-    end
-  end
-
-  private def active_users(msg : Discord::Message)
-    cache_users(msg) if Time.now - START_TIME < 10.minutes
-
-    authors = @active_users_cache.resolve_to_id(msg.channel_id.to_u64)
-    return unless authors
-    authors.delete(msg.author.id.to_u64)
-    authors - @config.ignored_users.to_a
-  end
-
-  private def cache_users(msg : Discord::Message)
-    trigger_typing(msg)
-
-    msgs = Array(Discord::Message).new
-    channel = @bot.get_channel(msg.channel_id)
-    last_id = channel.last_message_id
-    before = Time.now - 10.minutes
-
-    loop do
-      new_msgs = @bot.get_channel_messages(msg.channel_id, before: last_id)
-      if new_msgs.size < 50
-        new_msgs.each { |x| msgs << x }
-        break
-      end
-      last_id = new_msgs.last.id
-      new_msgs.each { |x| msgs << x }
-      break if new_msgs.last.timestamp < before
-    end
-
-    msgs.each do |x|
-      next if x.author.bot
-      next if x.content.match @prefix_regex
-      @active_users_cache.add_if_youngest(x.channel_id.to_u64, x.author.id.to_u64, x.timestamp.to_utc)
-    end
-  end
-
   private def post_embed_to_webhook(embed : Discord::Embed, webhook : Webhook)
     @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
   end
@@ -643,26 +437,6 @@ class DiscordBot
       return false if @config.whitelisted_bots.includes?(user.id)
     end
     bot_status
-  end
-
-  private def admin?(msg : Discord::Message)
-    @config.admins.includes?(msg.author.id.to_u64)
-  end
-
-  private def admin_alarm?(msg : Discord::Message)
-    unless admin?(msg)
-      reply(msg, "**ALARM**: This is an admin only command! You have been reported!")
-      return true
-    end
-    false
-  end
-
-  private def private?(msg : Discord::Message)
-    if private_channel?(msg)
-      reply(msg, "**ERROR**: This command doesn't work in DMs")
-      return true
-    end
-    false
   end
 
   private def check_and_notify_if_its_time_to_send_offsite

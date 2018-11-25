@@ -1,0 +1,6 @@
+# 0.2.0
+- Minimum tip/soak/rain can be configured on per server basis
+- Ping now includes WS delay, Roundtrip as well as total processing time
+- Almost all commands make use of middleware now
+
+starts at 0.1.0

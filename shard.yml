@@ -1,5 +1,5 @@
 name: discordtipbot
-version: 0.1.0
+version: 0.2.0
 
 authors:
   - Jonathan B. <greenbigfrog@gmail.com>
@@ -8,7 +8,7 @@ targets:
   discordtipbot:
     main: src/discordtipbot.cr
 
-crystal: 0.20.5
+crystal: 0.27.0
 
 license: MIT
 
