@@ -35,7 +35,8 @@ class Tip
     amount = ctx[Amount].amount(msg, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
-    return client.create_message(msg.channel_id, "**ERROR**: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
+    min_tip = ctx[ConfigMiddleware].get_decimal_config(msg, "min_tip")
+    return client.create_message(msg.channel_id, "**ERROR**: You have to tip at least #{min_tip} #{@config.coinname_short}") if amount < min_tip
 
     case @tip.transfer(from: msg.author.id.to_u64, to: id, amount: amount, memo: "tip")
     when true

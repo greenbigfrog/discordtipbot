@@ -22,7 +22,9 @@ class Soak
     amount = ctx[Amount].amount(msg, cmd[0])
     return client.create_message(msg.channel_id, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
-    return client.create_message(msg.channel_id, "**ERROR**: You have to soak at least **#{@config.min_soak_total} #{@config.coinname_short}**") unless amount >= @config.min_soak_total
+    min_soak = ctx[ConfigMiddleware].get_decimal_config(msg, "min_soak")
+    min_soak_total = ctx[ConfigMiddleware].get_decimal_config(msg, "min_soak_total")
+    return client.create_message(msg.channel_id, "**ERROR**: You have to soak at least **#{min_soak_total} #{@config.coinname_short}**") unless amount >= min_soak_total
 
     users = Array(UInt64).new
     last_id = 0_u64
@@ -45,8 +47,8 @@ class Soak
 
     return client.create_message(msg.channel_id, "No one wants to get wet right now :sob:") unless users.size > 1
 
-    if (users.size * @config.min_soak) > @config.min_soak_total
-      targets = users.sample((amount / @config.min_soak).to_i32)
+    if (users.size * min_soak) > amount
+      targets = users.sample((amount / min_soak).to_i32)
     else
       targets = users
     end
