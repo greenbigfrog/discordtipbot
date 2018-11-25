@@ -28,12 +28,17 @@ class DiscordBot
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("withdraw", config.prefix), Amount.new(@tip), Withdraw.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["deposit", "address"], config.prefix), Deposit.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("soak", config.prefix), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
-    # @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("tip", config.prefix), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Tip.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("tip", config.prefix), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Tip.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["balance", "bal"], config.prefix), TriggerTyping.new, Balance.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("\u{1f4be}", config.prefix), SystemStats.new)
+    # rain
+    # config
+    # admin
+    # admin_config
+    # getinfo
+    # help
 
-    @bot.on_message_create(ErrorCatcher.new) do |msg|
-      next if msg.author.id.to_u64 == bot_id
-
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new) do |msg|
       content = msg.content
 
       if private_channel?(msg)
@@ -43,40 +48,29 @@ class DiscordBot
       next unless match = content.match(@prefix_regex)
       next unless cmd = match.named_captures["cmd"]
 
-      # If a command expects input pass in parsed command
       case cmd
-      when .starts_with? "rain"
-        self.rain(msg, cmd)
-      when .starts_with? "balance"
-        self.balance(msg)
-      when .starts_with? "bal"
-        self.balance(msg)
-      when .starts_with? "getinfo"
-        self.getinfo(msg)
       when .starts_with? "help"
         self.help(msg)
-      when .starts_with? "config"
-        self.config(msg, cmd)
       when .starts_with? "terms"
-        self.terms(msg)
+        reply(msg, TERMS)
       when .starts_with? "blocks"
-        self.blocks(msg)
+        info = @tip.get_info
+        next unless info.is_a?(Hash(String, JSON::Any))
+        reply(msg, "Current Block Count (known to the node): **#{info["blocks"]}**")
       when .starts_with? "connections"
-        self.connections(msg)
-      when .starts_with? "admin"
-        self.admin(msg, cmd)
-      when .starts_with? "reload_conf" || "load_conf"
-        self.admin_config(msg, cmd)
+        info = @tip.get_info
+        next unless info.is_a?(Hash(String, JSON::Any))
+        reply(msg, "The node has **#{info["connections"]} Connections**")
       when .starts_with? "active"
         self.active(msg)
       when .starts_with? "support"
-        self.support(msg)
+        reply(msg, "For support please visit <http://tipbot.gbf.re>")
       when .starts_with? "github"
-        self.github(msg)
+        reply(msg, "To contribute to the development of the tipbot visit <https://github.com/greenbigfrog/discordtipbot/>")
       when .starts_with? "invite"
-        self.invite(msg)
+        reply(msg, "You can add this bot to your own guild using following URL: <https://discordapp.com/oauth2/authorize?&client_id=#{@config.discord_client_id}&scope=bot>")
       when .starts_with? "uptime"
-        self.uptime(msg)
+        reply(msg, "Bot has been running for #{Time.now - START_TIME}")
       when .starts_with? "checkconfig"
         self.check_config(msg)
       when .starts_with? "stats"
@@ -469,11 +463,6 @@ class DiscordBot
     reply(msg, "There #{singular ? "is" : "are"} **#{authors.size}** active user#{singular ? "" : "s"} ATM")
   end
 
-  # the users balance
-  def balance(msg : Discord::Message)
-    reply(msg, "#{msg.author.username} has a confirmed balance of **#{@tip.get_balance(msg.author.id.to_u64)} #{@config.coinname_short}**")
-  end
-
   # Config command (available to admins and respective server owner)
   def config(msg : Discord::Message, cmd_string : String)
     reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please rather use them in the respective server") if private_channel?(msg)
@@ -513,24 +502,6 @@ class DiscordBot
     end
     pp Time.now
     reply(msg, string)
-  end
-
-  def terms(msg : Discord::Message)
-    reply(msg, TERMS)
-  end
-
-  def blocks(msg : Discord::Message)
-    info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Any))
-
-    reply(msg, "Current Block Count (known to the node): **#{info["blocks"]}**")
-  end
-
-  def connections(msg : Discord::Message)
-    info = @tip.get_info
-    return unless info.is_a?(Hash(String, JSON::Any))
-
-    reply(msg, "The node has **#{info["connections"]} Connections**")
   end
 
   def admin(msg : Discord::Message, cmd_string : String)
@@ -573,22 +544,6 @@ class DiscordBot
     end
     @config = Config.current[@config.coinname_short]
     reply(msg, "Loaded config from #{path}")
-  end
-
-  def invite(msg : Discord::Message)
-    reply(msg, "You can add this bot to your own guild using following URL: <https://discordapp.com/oauth2/authorize?&client_id=#{@config.discord_client_id}&scope=bot>")
-  end
-
-  def support(msg : Discord::Message)
-    reply(msg, "For support please visit <http://tipbot.gbf.re>")
-  end
-
-  def github(msg : Discord::Message)
-    reply(msg, "To contribute to the development of the tipbot visit <https://github.com/greenbigfrog/discordtipbot/>")
-  end
-
-  def uptime(msg : Discord::Message)
-    reply(msg, "Bot has been running for #{Time.now - START_TIME}")
   end
 
   def stats(msg : Discord::Message)

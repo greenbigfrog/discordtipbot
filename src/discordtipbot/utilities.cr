@@ -37,4 +37,12 @@ module Utilities
     end
     string.rchop(", ")
   end
+
+  def bot?(user : Discord::User)
+    bot_status = user.bot
+    if bot_status
+      return false if @config.whitelisted_bots.includes?(user.id)
+    end
+    bot_status
+  end
 end

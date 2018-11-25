@@ -6,8 +6,9 @@ class Soak
 
   def call(msg, ctx)
     client = ctx[Discord::Client]
+    cache = client.cache.not_nil!
 
-    guild_id = @cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64
+    guild_id = cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64
     return client.create_message(msg.channel_id, "Something went wrong") if guild_id.nil?
 
     return client.create_message(msg.channel_id, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id, "soak")
@@ -34,7 +35,7 @@ class Soak
       new_users.each do |x|
         next unless @presence_cache.online?(x.user.id.to_u64)
         users << x.user.id.to_u64 unless x.user.id.to_u64 == msg.author.id.to_u64
-        @cache.cache(x.user)
+        cache.cache(x.user)
       end
     end
 

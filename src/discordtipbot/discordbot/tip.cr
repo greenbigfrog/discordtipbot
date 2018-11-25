@@ -1,4 +1,6 @@
 class Tip
+  include Utilities
+
   def initialize(@tip : TipBot, @config : Config)
   end
 
@@ -11,7 +13,7 @@ class Tip
 
     return client.create_message(msg.channel_id, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size >= 2
 
-    match = USER_REGEX.match(cmd[1])
+    match = USER_REGEX.match(cmd[0])
     id = match["id"].try &.to_u64 if match
 
     err = "**ERROR**: Please specify the user you want to tip! #{cmd_usage}"
@@ -22,13 +24,15 @@ class Tip
       return client.create_message(msg.channel_id, err)
     end
 
+    return unless to
+
     return client.create_message(msg.channel_id, "**ERROR**: As a design choice you aren't allowed to tip Bot accounts") if bot?(to)
 
     return client.create_message(msg.channel_id, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id.to_u64
 
     return client.create_message(msg.channel_id, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
 
-    amount = amount(msg, cmd[2])
+    amount = ctx[Amount].amount(msg, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
     return client.create_message(msg.channel_id, "**ERROR**: You have to tip at least #{@config.min_tip} #{@config.coinname_short}") if amount < @config.min_tip
