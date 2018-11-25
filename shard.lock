@@ -18,7 +18,7 @@ shards:
 
   discordcr:
     github: greenbigfrog/discordcr
-    commit: 87a04687a7ebfdf5dd396ce1d384fd39521f42af
+    commit: 2370641dfc66268aeb1bd963a187bcf8a884dc8c
 
   discordcr-middleware:
     github: z64/discordcr-middleware
