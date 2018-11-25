@@ -192,16 +192,12 @@ class TipBot
     end
   end
 
-  def update_config(memo : String, status : Bool, server : UInt64)
-    case memo
-    when "mention"
-      @db.exec("UPDATE config SET mention=$1 WHERE serverid=$2", status, server)
-    when "soak"
-      @db.exec("UPDATE config SET soak=$1 WHERE serverid=$2", status, server)
-    when "rain"
-      @db.exec("UPDATE config SET rain=$1 WHERE serverid=$2", status, server)
-    when "contacted"
-      @db.exec("UPDATE config SET contacted=$1 WHERE serverid=$2", status, server)
+  def update_config(memo : String, status : Bool | BigDecimal, server : UInt64)
+    return false unless CONFIG_COLLUMNS.includes?(memo)
+    begin
+      @db.exec("UPDATE config SET #{memo} = $1 WHERE serverid = $2", status, server)
+    rescue PQ::PQError
+      false
     end
   end
 

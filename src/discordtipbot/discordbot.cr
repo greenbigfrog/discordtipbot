@@ -1,9 +1,11 @@
 require "./utilities"
+require "discordcr-middleware/middleware/cached_routes"
 
-USER_REGEX = /<@!?(?<id>\d+)>/
-START_TIME = Time.now
-TERMS      = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
-ZWS        = "​" # There is a zero width space stored here
+USER_REGEX      = /<@!?(?<id>\d+)>/
+START_TIME      = Time.now
+TERMS           = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
+ZWS             = "​" # There is a zero width space stored here
+CONFIG_COLLUMNS = Set{"soak", "rain", "mention", "min_soak", "min_soak_total", "min_rain", "min_tip"}
 
 class DiscordBot
   include Utilities
@@ -27,12 +29,13 @@ class DiscordBot
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("ping", config.prefix), Ping.new)
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("withdraw", config.prefix), Amount.new(@tip), Withdraw.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["deposit", "address"], config.prefix), Deposit.new(@tip, @config))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("soak", config.prefix), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("tip", config.prefix), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Tip.new(@tip, @config))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["balance", "bal"], config.prefix), TriggerTyping.new, Balance.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("soak", config.prefix), NoPrivate.new, TriggerTyping.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("tip", config.prefix), NoPrivate.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Tip.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("donate", config.prefix), ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Donate.new(@tip, @config, @webhook))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["balance", "bal"], config.prefix), Balance.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("\u{1f4be}", config.prefix), SystemStats.new)
     # rain
-    # config
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("config", config.prefix), NoPrivate.new, PermissionMiddleware.new(Discord::Permissions::Administrator), ConfigCommand.new(@tip))
     # admin
     # admin_config
     # getinfo
@@ -81,8 +84,6 @@ class DiscordBot
         self.exit(msg)
       when .starts_with? "statistics"
         self.statistics(msg)
-      when .starts_with? "donate"
-        self.donate(msg, cmd)
       when .starts_with? "offsite"
         self.offsite(msg, cmd)
       end
@@ -342,42 +343,6 @@ class DiscordBot
     reply(msg, "Currently the following commands are available: #{string}")
   end
 
-  # Basically just tip greenbigfrog internally
-  def donate(msg : Discord::Message, cmd_string : String)
-    cmd_usage = "`#{@config.prefix}donate [amount] [message]`"
-    # cmd[0]: trigger, cmd[1]: amount, cmd[2..size]: message
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 1
-
-    amount = amount(msg, cmd[1])
-    return reply(msg, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
-
-    return reply(msg, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[1] == "all"
-
-    case @tip.transfer(from: msg.author.id.to_u64, to: 163607982473609216_u64, amount: amount, memo: "donation")
-    when true
-      reply(msg, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
-
-      fields = [Discord::EmbedField.new(name: "Amount", value: "#{amount} #{@config.coinname_short}"),
-                Discord::EmbedField.new(name: "User", value: "#{msg.author.username}##{msg.author.discriminator}; <@#{msg.author.id.to_u64}>")]
-      fields << Discord::EmbedField.new(name: "Message", value: cmd[2..cmd.size].join(" ")) if cmd[2]?
-
-      embed = Discord::Embed.new(
-        title: "Donation",
-        thumbnail: Discord::EmbedThumbnail.new("https://cdn.discordapp.com/avatars/#{msg.author.id.to_u64}/#{msg.author.avatar}.png"),
-        colour: 0x6600ff_u32,
-        timestamp: Time.now,
-        fields: fields
-      )
-      post_embed_to_webhook(embed, @config.general_webhook)
-    when "insufficient balance"
-      reply(msg, "**ERROR**: Insufficient balance")
-    when "error"
-      reply(msg, "**ERROR**: Please try again later")
-    end
-  end
-
   # split amount between people who recently sent a message
   def rain(msg : Discord::Message, cmd_string : String)
     return reply(msg, "**ERROR**: Who are you planning on tipping? yourself?") if private_channel?(msg)
@@ -461,28 +426,6 @@ class DiscordBot
 
     singular = authors.size == 1
     reply(msg, "There #{singular ? "is" : "are"} **#{authors.size}** active user#{singular ? "" : "s"} ATM")
-  end
-
-  # Config command (available to admins and respective server owner)
-  def config(msg : Discord::Message, cmd_string : String)
-    reply(msg, "Since it's hard to identify which server you want to configure if you run these commands in DMs, please rather use them in the respective server") if private_channel?(msg)
-
-    return reply(msg, "**ALARM**: This command can only be used by the guild owner") unless @cache.resolve_guild(guild_id(msg)).owner_id == msg.author.id || admin?(msg)
-    cmd_usage = "#{@config.prefix}config [rain/soak/mention] [on/off]"
-    # cmd[0] = cmd, cmd[1] = memo, cmd[2] = status
-    cmd = cmd_string.cmd_split
-
-    return reply(msg, cmd_usage) unless cmd.size == 3
-    return reply(msg, cmd_usage) unless {"rain", "soak", "mention"}.includes?(cmd[1]) && {"on", "off"}.includes?(cmd[2])
-
-    memo = cmd[1]
-    if cmd[2] == "on"
-      status = true
-    else
-      status = false
-    end
-
-    reply(msg, "Successfully turned #{memo} #{cmd[2]}") if @tip.update_config(memo, status, guild_id(msg))
   end
 
   def check_config(msg : Discord::Message)
