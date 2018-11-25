@@ -16,6 +16,6 @@ class ConfigMiddleware
 
   def get_decimal_config(msg : Discord::Message, memo : String)
     server = @cache.try &.resolve_channel(msg.channel_id).guild_id
-    @db.query_one("SELECT #{memo} FROM config WHERE serverid = $1", server, as: BigDecimal?) || 1
+    @db.query_one("SELECT #{memo} FROM config WHERE serverid = $1", server, as: BigDecimal?) || @config.get?(memo)
   end
 end

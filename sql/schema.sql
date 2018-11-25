@@ -32,6 +32,7 @@ CREATE TABLE config (
        min_soak numeric(64, 8) DEFAULT 1,
        min_soak_total numeric(64, 8) DEFAULT 1,
        rain boolean DEFAULT false,
+       min_rain_total numeric(64, 8) DEFAULT 1,
        min_rain numeric(64, 8) DEFAULT 1,
        min_tip numeric(64, 8) DEFAULT 1,
 
