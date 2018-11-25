@@ -1,10 +1,14 @@
 class Command
   getter command : Array(String) = Array(String).new
 
+  getter time : Time = Time.utc_now
+
   def initialize(@cmd : String | Array(String), @prefix_char : Char | String)
   end
 
   def call(payload, ctx)
+    @time = Time.utc_now
+
     cache = ctx[Discord::Client].cache.not_nil!
     cmd = @cmd
     if cmd.is_a?(Array(String))
