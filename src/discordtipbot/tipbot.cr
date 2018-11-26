@@ -177,6 +177,7 @@ class TipBot
     @coin_api.validate_address(address)
   end
 
+  # TODO get rid of below
   def get_config(server : UInt64, memo : String)
     case memo
     when "soak"
@@ -192,7 +193,7 @@ class TipBot
     end
   end
 
-  def update_config(memo : String, status : Bool | BigDecimal, server : UInt64)
+  def update_config(memo : String, status : Bool | BigDecimal | String, server : UInt64)
     return false unless CONFIG_COLLUMNS.includes?(memo)
     begin
       @db.exec("UPDATE config SET #{memo} = $1 WHERE serverid = $2", status, server)

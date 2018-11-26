@@ -5,7 +5,8 @@ USER_REGEX      = /<@!?(?<id>\d+)>/
 START_TIME      = Time.now
 TERMS           = "In no event shall this bot or its dev be responsible for any loss, theft or misdirection of funds."
 ZWS             = "​" # There is a zero width space stored here
-CONFIG_COLLUMNS = Set{"soak", "rain", "mention", "min_soak", "min_soak_total", "min_rain", "min_rain_total", "min_tip"}
+CONFIG_COLLUMNS = Set{"soak", "rain", "mention", "min_soak", "min_soak_total",
+                      "min_rain", "min_rain_total", "min_tip", "contacted", "prefix"}
 
 class DiscordBot
   include Utilities
@@ -26,26 +27,26 @@ class DiscordBot
     bot_id = @cache.resolve_current_user.id
     @prefix_regex = /^(?:#{'\\' + @config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("ping", config.prefix), Ping.new)
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("withdraw", config.prefix), Amount.new(@tip), Withdraw.new(@tip, @config))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["deposit", "address"], config.prefix), Deposit.new(@tip, @config))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("soak", config.prefix), NoPrivate.new, TriggerTyping.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("tip", config.prefix), NoPrivate.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Tip.new(@tip, @config))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("donate", config.prefix), ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Donate.new(@tip, @config, @webhook))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new(["balance", "bal"], config.prefix), Balance.new(@tip, @config))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("\u{1f4be}", config.prefix), SystemStats.new)
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("offsite", config.prefix), OnlyPrivate.new, BotAdmin.new(@config), Amount.new(@tip), Offsite.new(@tip, @config))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("config", config.prefix), NoPrivate.new, PermissionMiddleware.new(Discord::Permissions::Administrator), ConfigCommand.new(@tip))
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("checkconfig", config.prefix), ConfigMiddleware.new(@tip.db, @config), CheckConfig.new)
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("ping"), Ping.new)
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("withdraw"), Amount.new(@tip), Withdraw.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new(["deposit", "address"]), Deposit.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("soak"), NoPrivate.new, TriggerTyping.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("tip"), NoPrivate.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip), Tip.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("donate"), Amount.new(@tip), Donate.new(@tip, @config, @webhook))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new(["balance", "bal"]), Balance.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("\u{1f4be}"), SystemStats.new)
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("offsite"), OnlyPrivate.new, BotAdmin.new(@config), Amount.new(@tip), Offsite.new(@tip, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("config"), NoPrivate.new, PermissionMiddleware.new(Discord::Permissions::Administrator), ConfigCommand.new(@tip))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("checkconfig"), CheckConfig.new)
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("prefix"), NoPrivate.new, PermissionMiddleware.new(Discord::Permissions::Administrator), PremiumOnly.new, Prefix.new(@tip))
     # admin
     # admin_config
     # getinfo
     # help
-    # checkconfig
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("lucky", @config.prefix), NoPrivate.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip)) { |msg, ctx| lucky(msg, ctx) }
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("rain", @config.prefix), NoPrivate.new, ConfigMiddleware.new(@tip.db, @config), Amount.new(@tip)) { |msg, ctx| rain(msg, ctx) }
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("active", @config.prefix), NoPrivate.new) { |msg, _| active(msg) }
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("statistics", @config.prefix)) do |msg, _|
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("lucky"), NoPrivate.new, Amount.new(@tip)) { |msg, ctx| lucky(msg, ctx) }
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("rain"), NoPrivate.new, Amount.new(@tip)) { |msg, ctx| rain(msg, ctx) }
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("active"), NoPrivate.new) { |msg, _| active(msg) }
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("statistics")) do |msg, _|
       stats = Statistics.get(@tip.db)
       string = String.build do |io|
         io.puts "*Currently the users of this bot have:*"
@@ -59,12 +60,12 @@ class DiscordBot
 
       reply(msg, string)
     end
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("exit", @config.prefix), BotAdmin.new(@config)) do |msg, _|
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("exit"), BotAdmin.new(@config)) do |msg, _|
       @log.warn("#{@config.coinname_short}: Shutdown requested by #{msg.author.id}")
       sleep 1
       exit
     end
-    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, Command.new("stats", @config.prefix)) do |msg, _|
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new, ConfigMiddleware.new(@tip.db, @config), Command.new("stats")) do |msg, _|
       guilds = @cache.guilds.size
       cached_users = @cache.users.size
       users = @cache.guilds.values.map { |x| x.member_count || 0 }.sum
