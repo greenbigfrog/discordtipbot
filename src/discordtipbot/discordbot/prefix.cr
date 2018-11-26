@@ -9,13 +9,14 @@ class Prefix
     # cmd[0] = new_prefix
     cmd = ctx[Command].command
 
-    return client.create_message(msg.channel_id, "Usage: `.prefix [new_prefix]") if cmd.empty?
+    return client.create_message(msg.channel_id, "Usage: `.prefix [new_prefix]`") if cmd.empty?
+    return client.create_message(msg.channel_id, "**ERROR:** Prefix must be a single character *(Emoji count as a single character)*") if cmd[0].size > 1
 
     guild_id = cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64
     return if guild_id.nil?
 
     return client.create_message(msg.channel_id, "Successfully set the prefix to `#{cmd[0]}`") if @tip.update_config("prefix", cmd[0], guild_id)
-    client.create_message(msg.channel_id, "An error occured. Please try again or get support at <http://tipbot.gbf.re>")
+    client.create_message(msg.channel_id, "**ERROR:** Please try again or get support at <http://tipbot.gbf.re>")
     yield
   end
 end
