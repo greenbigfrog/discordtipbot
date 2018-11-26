@@ -3,7 +3,7 @@ class Command
 
   getter time : Time = Time.utc_now
 
-  def initialize(@cmd : String | Array(String), @prefix_char : Char | String)
+  def initialize(@cmd : String | Array(String))
   end
 
   def call(payload, ctx)
@@ -23,7 +23,8 @@ class Command
     end
 
     unless match
-      prefix = /^(#{Regex.escape(@prefix_char)}|<@!?#{cache.resolve_current_user.id}> +)(#{cmd_regex || cmd})(?<command>.*)/
+      prefix_char = ctx[ConfigMiddleware].get_prefix(payload)
+      prefix = /^(#{Regex.escape(prefix_char)}|<@!?#{cache.resolve_current_user.id}> +)(#{cmd_regex || cmd})(?<command>.*)/
       match = payload.content.match(prefix)
     end
 

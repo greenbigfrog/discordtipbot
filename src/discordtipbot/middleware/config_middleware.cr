@@ -9,13 +9,19 @@ class ConfigMiddleware
     yield
   end
 
+  def get_prefix(msg)
+    @db.query_one?("SELECT prefix FROM config WHERE serverid = $1", server_id(msg), as: String?) || @config.prefix
+  end
+
   def get_config(msg : Discord::Message, memo : String)
-    server = @cache.try &.resolve_channel(msg.channel_id).guild_id
-    @db.query_one("SELECT $1 FROM config WHERE serverid = $2", memo, server, as: Bool?) || false
+    @db.query_one?("SELECT #{memo} FROM config WHERE serverid = $1", server_id(msg), as: Bool?) || false
   end
 
   def get_decimal_config(msg : Discord::Message, memo : String)
-    server = @cache.try &.resolve_channel(msg.channel_id).guild_id
-    @db.query_one("SELECT #{memo} FROM config WHERE serverid = $1", server, as: BigDecimal?) || @config.get?(memo)
+    @db.query_one?("SELECT #{memo} FROM config WHERE serverid = $1", server_id(msg), as: BigDecimal?) || @config.get?(memo)
+  end
+
+  private def server_id(msg)
+    @cache.try &.resolve_channel(msg.channel_id).guild_id
   end
 end
