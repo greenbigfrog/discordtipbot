@@ -177,22 +177,6 @@ class TipBot
     @coin_api.validate_address(address)
   end
 
-  # TODO get rid of below
-  def get_config(server : UInt64, memo : String)
-    case memo
-    when "soak"
-      @db.query_one("SELECT soak FROM config WHERE serverid = $1", server, as: Bool?) || false
-    when "mention"
-      @db.query_one("SELECT mention FROM config WHERE serverid = $1", server, as: Bool?) || false
-    when "rain"
-      @db.query_one("SELECT rain FROM config WHERE serverid = $1", server, as: Bool?) || false
-    when "contacted"
-      @db.query_one("SELECT contacted FROM config WHERE serverid = $1", server, as: Bool?) || false
-    else
-      false
-    end
-  end
-
   def update_config(memo : String, status : Bool | BigDecimal | String, server : UInt64)
     return false unless CONFIG_COLLUMNS.includes?(memo)
     begin
@@ -370,6 +354,28 @@ class TipBot
     @db.query_all(sql, as: {userid: Int64, balance: BigDecimal})
   end
 
+  def clear_expired_premium
+    @db.exec("UPDATE config SET premium = false, premium_till = null WHERE premium_till < (NOW() AT TIME ZONE 'utc')")
+  end
+
+  def set_premium(guild_id : UInt64, till : Time)
+    @db.exec("UPDATE config SET premium = true, premium_till = $1 WHERE serverid = $2", till, guild_id)
+  end
+
+  def extend_premium(guild_id : UInt64, extend_by : Time::Span)
+    current = status_premium(guild_id)
+    if current
+      till = current + extend_by
+    else
+      till = Time.utc_now + extend_by
+    end
+    set_premium(guild_id, till)
+  end
+
+  def status_premium(guild_id : UInt64)
+    @db.query_one?("SELECT premium_till FROM config WHERE serverid = $1", guild_id, as: Time?)
+  end
+
   private def delete_deposit_address(user : UInt64)
     @db.exec("UPDATE accounts SET address=null WHERE userid=$1", user)
   end
@@ -400,6 +406,6 @@ class TipBot
   end
 
   private def balance(id : UInt64)
-    @db.query_one("SELECT balance FROM accounts WHERE userid=$1", id, as: BigDecimal)
+    @db.query_one?("SELECT balance FROM accounts WHERE userid=$1", id, as: BigDecimal?) || BigDecimal.new
   end
 end

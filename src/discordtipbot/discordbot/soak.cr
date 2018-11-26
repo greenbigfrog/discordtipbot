@@ -11,7 +11,9 @@ class Soak
     guild_id = cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64
     return client.create_message(msg.channel_id, "Something went wrong") if guild_id.nil?
 
-    return client.create_message(msg.channel_id, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id, "soak")
+    unless ctx[ConfigMiddleware].get_config(msg, "soak")
+      return client.create_message(msg.channel_id, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions")
+    end
 
     cmd_usage = "#{@config.prefix}soak [amount]"
 
@@ -62,7 +64,7 @@ class Soak
     when true
       amount_each = BigDecimal.new(amount / targets.size).round(8)
 
-      string = build_user_string(@tip.get_config(guild_id, "mention") || false, targets)
+      string = build_user_string(ctx[ConfigMiddleware].get_config(msg, "mention") || false, targets)
 
       client.create_message(msg.channel_id, "**#{msg.author.username}** soaked a total of **#{amount_each * targets.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end

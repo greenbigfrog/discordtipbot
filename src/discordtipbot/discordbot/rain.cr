@@ -1,6 +1,8 @@
 class DiscordBot
   def rain(msg, ctx)
-    return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions") unless @tip.get_config(guild_id(msg), "rain")
+    unless ctx[ConfigMiddleware].get_config(msg, "rain")
+      return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions")
+    end
 
     cmd_usage = "#{@config.prefix}rain [amount]"
 
@@ -29,7 +31,7 @@ class DiscordBot
     when true
       amount_each = BigDecimal.new(amount / authors.size).round(8)
 
-      string = build_user_string(get_config_mention(msg), authors)
+      string = build_user_string(ctx[ConfigMiddleware].get_config(msg, "mention"), authors)
 
       reply(msg, "**#{msg.author.username}** rained a total of **#{amount_each * authors.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     end

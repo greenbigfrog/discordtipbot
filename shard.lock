@@ -22,7 +22,15 @@ shards:
 
   discordcr-middleware:
     github: z64/discordcr-middleware
-    version: 0.4.0
+    commit: b18846bd7709996b825855b58168db4a441233bf
+
+  humanize_time:
+    github: mamantoha/humanize_time
+    version: 0.3.0
+
+  i18n:
+    github: TechMagister/i18n.cr
+    commit: d8a8933f6a4eb7d9790c3803cb8bec06c304ea5c
 
   pg:
     github: greenbigfrog/crystal-pg

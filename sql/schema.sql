@@ -28,6 +28,7 @@ CREATE TABLE config (
        contacted boolean DEFAULT false,
        prefix char,
        premium boolean DEFAULT false,
+       premium_till timestamp,
 
        mention boolean DEFAULT false,
        soak boolean DEFAULT false,
