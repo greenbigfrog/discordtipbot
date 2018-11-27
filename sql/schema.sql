@@ -26,7 +26,7 @@ CREATE TABLE config (
        serverid bigint PRIMARY KEY,
 
        contacted boolean DEFAULT false,
-       prefix char,
+       prefix text,
        premium boolean DEFAULT false,
        premium_till timestamp,
 
