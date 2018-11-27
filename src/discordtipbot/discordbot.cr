@@ -38,8 +38,7 @@ class DiscordBot
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
       Command.new(["deposit", "address"]), Deposit.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("soak"), NoPrivate.new, TriggerTyping.new, ConfigMiddleware.new(@tip.db, @config),
-      Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
+      Command.new("soak"), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
       Command.new("tip"), NoPrivate.new, Amount.new(@tip), Tip.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
