@@ -14,14 +14,15 @@ class DiscordBot
     amount = ctx[Amount].amount(msg, cmd[0])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
-    min_rain = ctx[ConfigMiddleware].get_decimal_config(msg, "min_rain")
+    # min_rain = ctx[ConfigMiddleware].get_decimal_config(msg, "min_rain")
     min_rain_total = ctx[ConfigMiddleware].get_decimal_config(msg, "min_rain_total")
     return reply(msg, "**ERROR**: You have to rain at least #{min_rain_total} #{@config.coinname_short}") if amount < min_rain_total
 
     authors = active_users(msg)
     return reply(msg, "**ERROR**: There is nobody to rain on!") if authors.nil? || authors.empty?
 
-    authors = authors.sample((amount / min_rain).to_i32) if (authors.size * min_rain) > amount
+    # TODO enable user sampling as soon as crystal bug is fixed
+    # authors = authors.sample((amount / min_rain).to_i32) if (authors.size * min_rain) > amount
 
     case @tip.multi_transfer(from: msg.author.id.to_u64, users: authors, total: amount, memo: "rain")
     when "insufficient balance"
