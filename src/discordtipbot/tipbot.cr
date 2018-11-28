@@ -186,6 +186,10 @@ class TipBot
     end
   end
 
+  def clear_config(memo : String, server : UInt64)
+    @db.exec("UPDATE config SET #{memo} = '' WHERE serverid = $1", server)
+  end
+
   def add_server(id : UInt64)
     @db.exec("INSERT INTO config (serverid) VALUES($1) ON CONFLICT DO NOTHING", id)
   end
