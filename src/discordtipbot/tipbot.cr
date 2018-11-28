@@ -359,7 +359,18 @@ class TipBot
   end
 
   def clear_expired_premium
-    @db.exec("UPDATE config SET premium = false, premium_till = null WHERE premium_till < (NOW() AT TIME ZONE 'utc')")
+    sql = <<-SQL
+    UPDATE config
+    SET premium = false,
+        premium_till = null,
+        min_soak = null,
+        min_soak_total = null,
+        min_rain = null,
+        min_rain_total = null,
+        min_tip = null
+    WHERE premium_till < (NOW() AT TIME ZONE 'utc')
+    SQL
+    @db.exec(sql)
   end
 
   def set_premium(guild_id : UInt64, till : Time)
