@@ -24,6 +24,10 @@ shards:
     github: z64/discordcr-middleware
     commit: b18846bd7709996b825855b58168db4a441233bf
 
+  exception_page:
+    github: crystal-loot/exception_page
+    version: 0.1.1
+
   humanize_time:
     github: mamantoha/humanize_time
     version: 0.3.0
@@ -32,9 +36,21 @@ shards:
     github: TechMagister/i18n.cr
     commit: d8a8933f6a4eb7d9790c3803cb8bec06c304ea5c
 
+  kemal:
+    github: kemalcr/kemal
+    version: 0.25.1
+
+  kilt:
+    github: jeromegn/kilt
+    version: 0.4.0
+
   pg:
     github: greenbigfrog/crystal-pg
     commit: 5a01c3e38be055df648e5744b3c03a8d7d4d57bc
+
+  radix:
+    github: luislavena/radix
+    version: 0.3.8
 
   rate_limiter:
     github: z64/rate_limiter

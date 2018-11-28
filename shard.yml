@@ -30,6 +30,8 @@ dependencies:
     branch: master
   humanize_time:
     github: mamantoha/humanize_time
+  kemal:
+    github: kemalcr/kemal
 
 development_dependencies:
   ameba:
