@@ -1,5 +1,7 @@
 # discordtipbot
 
+[![Build Status](https://travis-ci.org/greenbigfrog/discordtipbot.svg?branch=master)](https://travis-ci.org/greenbigfrog/discordtipbot)
+
 Highly configurable tip bot for the chat plattform discord. **DO NOT RUN THIS CODE UNLESS YOU KNOW WHAT YOU ARE DOING!**
 
 Instead of executing this code yourself, feel free to contact me at https://discord.gg/r3NspwB to discuss me hosting it for you.
