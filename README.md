@@ -18,23 +18,36 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - It then launches a fiber for each bot
 
 ## Dependencies
-- crystal
-- postgresql
-- wallets as you wish
+- docker
 
-## Installation
-
-- First make sure you've got [crystal](https://crystal-lang.org/) installed.
-- clone the repo
-- Install shards (`shards install`)
+## Initial setup
+<!--
 - Install core wallet for each currency you plan on running
 - Add the RPC info to each wallets corresponding config file (`rpcuser` and `rpcpassword`)
-- Add `walletnotify=curl -X POST http://127.0.0.1:ABC/?tx=%s` to your wallets config file, replacing `ABC` with the walletnotify port you plan on using
+- Add `walletnotify=curl --retry 10 -X POST http://127.0.0.1:ABC/?tx=%s` to your wallets config file, replacing `ABC` with the walletnotify port you plan on using
 - It's recommendable to run your node as a full node, but to limit the connections to ~30, since else you might run into performance issues (`maxconnections=30`)
-- Create the database for each of the currencies you plan on running on: `createdb dogecoin-testnet`
-- Set the schema for the database by running: `psql -d dogecoin-testnet -f schema.sql`
-- Copy the sample config and edit it
-- Run bots using `crystal run src/discordtipbot.cr -- config.json`
+-->
+
+- Set docker to swarm mode: `docker swarm init`
+- Create a overlay network: `docker network create -d overlay --attachable dtb`
+- Clone and cd into this repository: `git clone https://github.com/greenbigfrog/discordtipbot.git`
+- Create a directory which will contain all the tipbot related stuff: `mkdir tipbot`
+- Copy and edit `sample-config.json` into `tipbot`
+- Modify `scripts/postgres-init.sh` to reflect the various coins, which will both create the required databases, as well as initialize a empty schema
+- Launch watchtower to automatically watch for changes to the images (in usual build process made by Travis): `docker run -d --name watchtower --network dtb -v /var/run/docker.sock:/var/run/docker.sock v2tec/watchtower`
+- Start a docker container called `database`, which'll mount a folder called `postgres-data` in the local directory: `docker run -d --name database --network dtb -v $PWD/postgres-data:/var/lib/postgresql/data -v $PWD/../sql/schema.sql:/schema.sql -v $PWD/../scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh -d postgres:11.1-alpine`
+
+## Building
+`scripts/deploy_to_docker.bash` contains instructions to build both a `dtb-launcher` and `dtb-website` image which will then contain binaries.
+
+## Running
+- Make sure you are in the directory with the config file and postgres data
+- Database: `docker run -d --name database --network dtb -v $PWD/postgres-data:/var/lib/postgresql/data -d postgres:11.1-alpine`
+- TipBot: `docker run -d --name discordbot --network dtb -v $PWD/config.json:/config.json greenbigfrog/dtb-launcher:latest`
+- Website: `docker run -d --name website --network dtb -v $PWD/config.json:/config.json greenbigfrog/dtb-website:latest`
+- Wallet: `docker run -d --network dtb -v ~/.dogecoin/:/dogecoin/.dogecoin/ greenbigfrog/dogecoin -printtoconsole`
+
+- cli: `docker run --rm -ti --network dtb -v ~/.dogecoin/:/dogecoin/.dogecoin/ greenbigfrog/dogecoin dogecoin-cli -rpcconnect=dogecoind -rpcuser=a -rpcpassword=b getinfo`
 
 ## Development
 
