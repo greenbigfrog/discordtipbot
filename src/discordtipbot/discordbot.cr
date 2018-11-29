@@ -61,6 +61,8 @@ class DiscordBot
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
       Command.new("premium"), BotAdmin.new(@config), Premium.new(@tip))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
+      Command.new("psql"), BotAdmin.new(@config), PSQL.new(@tip.db, @config))
+    @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
       Command.new("lucky"), NoPrivate.new, Amount.new(@tip)) { |msg, ctx| lucky(msg, ctx) }
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
       Command.new("rain"), NoPrivate.new, Amount.new(@tip)) { |msg, ctx| rain(msg, ctx) }
