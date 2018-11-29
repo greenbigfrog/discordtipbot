@@ -2,5 +2,6 @@
 /lib/
 /bin/
 /.shards/
+tipbot
 
 config.json

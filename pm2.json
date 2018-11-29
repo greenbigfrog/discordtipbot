@@ -1,0 +1,25 @@
+{
+  "apps": [
+    {
+        "script": "./launcher",
+        "name": "discordbot",
+        "exec_mode": "fork_mode",
+        "exec_intepreter": "none",
+        "args": "config.json"
+    },
+    {
+      "script": "./website",
+      "name": "webhook",
+      "exec_mode": "fork_mode",
+      "exec_intepreter": "none",
+      "args": "config.json --port=8080"
+    },
+    {
+        "script": "~/dogecoin-1.10.0/bin/dogecoind",
+        "name": "dogecoind",
+        "exec_mode": "fork_mode",
+        "exec_intepreter": "none",
+        "args": "-printtoconsole"
+    }
+  ]
+}

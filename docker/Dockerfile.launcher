@@ -1,0 +1,10 @@
+FROM crystallang/crystal:0.27.0
+ADD . /src
+WORKDIR /src
+RUN crystal build --release --static -s src/launcher.cr
+
+FROM debian:stretch-slim
+RUN apt-get update && apt-get install -y ca-certificates
+
+COPY --from=0 /src/launcher /
+ENTRYPOINT ["/launcher", "config.json"]

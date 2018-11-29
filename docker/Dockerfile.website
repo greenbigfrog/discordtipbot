@@ -1,0 +1,11 @@
+FROM crystallang/crystal:latest
+ADD . /src
+WORKDIR /src
+RUN crystal build --static --release -s src/website.cr
+
+FROM debian:stretch-slim
+RUN apt-get update && apt-get install -y ca-certificates
+
+COPY --from=0 /src/website /
+EXPOSE 8080
+ENTRYPOINT ["/website", "config.json", "-p 8080"]
