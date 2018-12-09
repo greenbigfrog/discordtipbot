@@ -6,6 +6,9 @@ CREATE TABLE accounts (
        userid bigint PRIMARY KEY,
        balance numeric(64, 8) NOT NULL DEFAULT 0 CONSTRAINT positive_account_balance CHECK (balance >= 0),
        address text,
+       
+       premium boolean DEFAULT false,
+       premium_till timestamp,
 
        created_time timestamptz NOT NULL DEFAULT now()
 );

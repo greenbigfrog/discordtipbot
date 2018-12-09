@@ -1,4 +1,6 @@
 class TipBot
+  include Premium
+
   getter db : DB::Database
 
   def initialize(@config : Config, @log : Logger)
@@ -356,39 +358,6 @@ class TipBot
     SQL
 
     @db.query_all(sql, as: {userid: Int64, balance: BigDecimal})
-  end
-
-  def clear_expired_premium
-    sql = <<-SQL
-    UPDATE config
-    SET premium = false,
-        premium_till = null,
-        min_soak = null,
-        min_soak_total = null,
-        min_rain = null,
-        min_rain_total = null,
-        min_tip = null
-    WHERE premium_till < (NOW() AT TIME ZONE 'utc')
-    SQL
-    @db.exec(sql)
-  end
-
-  def set_premium(guild_id : UInt64, till : Time)
-    @db.exec("UPDATE config SET premium = true, premium_till = $1 WHERE serverid = $2", till, guild_id)
-  end
-
-  def extend_premium(guild_id : UInt64, extend_by : Time::Span)
-    current = status_premium(guild_id)
-    if current
-      till = current + extend_by
-    else
-      till = Time.utc_now + extend_by
-    end
-    set_premium(guild_id, till)
-  end
-
-  def status_premium(guild_id : UInt64)
-    @db.query_one?("SELECT premium_till FROM config WHERE serverid = $1", guild_id, as: Time?)
   end
 
   private def delete_deposit_address(user : UInt64)
