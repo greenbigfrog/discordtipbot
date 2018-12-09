@@ -9,6 +9,7 @@ TERMS           = "In no event shall this bot or its dev be responsible for any 
 ZWS             = "​" # There is a zero width space stored here
 PREMIUM_CONFIG  = ["min_soak", "min_soak_total", "min_rain", "min_rain_total", "min_tip", "prefix"]
 CONFIG_COLLUMNS = ["soak", "rain", "mention", "contacted"] + PREMIUM_CONFIG
+SUPPORT         = "http://tipbot.gbf.re"
 
 class DiscordBot
   include Utilities
@@ -30,46 +31,47 @@ class DiscordBot
     @prefix_regex = /^(?:#{'\\' + @config.prefix}|<@!?#{bot_id}> ?)(?<cmd>.*)/
 
     admin = DiscordMiddleware::Permissions.new(Discord::Permissions::Administrator, "**Permission Denied.** User must have %permissions%")
+    rl = MW::RateLimiter.new
 
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("ping"), Ping.new)
+      Command.new("ping"), rl, Ping.new)
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("withdraw"), Amount.new(@tip), Withdraw.new(@tip, @config))
+      Command.new("withdraw"), rl, Amount.new(@tip), Withdraw.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new(["deposit", "address"]), Deposit.new(@tip, @config))
+      Command.new(["deposit", "address"]), rl, Deposit.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("soak"), NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
+      Command.new("soak"), rl, NoPrivate.new, TriggerTyping.new, Amount.new(@tip), Soak.new(@tip, @config, @cache, @presence_cache))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("tip"), NoPrivate.new, Amount.new(@tip), Tip.new(@tip, @config))
+      Command.new("tip"), rl, NoPrivate.new, Amount.new(@tip), Tip.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("donate"), Amount.new(@tip), Donate.new(@tip, @config, @webhook))
+      Command.new("donate"), rl, Amount.new(@tip), Donate.new(@tip, @config, @webhook))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new(["balance", "bal"]), Balance.new(@tip, @config))
+      Command.new(["balance", "bal"]), rl, Balance.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("\u{1f4be}"), SystemStats.new)
+      Command.new("\u{1f4be}"), rl, SystemStats.new)
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("offsite"), OnlyPrivate.new, BotAdmin.new(@config), Amount.new(@tip),
+      Command.new("offsite"), rl, OnlyPrivate.new, BotAdmin.new(@config), Amount.new(@tip),
       Offsite.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("admin"), OnlyPrivate.new, BotAdmin.new(@config), Admin.new(@tip, @config))
+      Command.new("admin"), rl, OnlyPrivate.new, BotAdmin.new(@config), Admin.new(@tip, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("config"), NoPrivate.new, admin, ConfigCommand.new(@tip))
+      Command.new("config"), rl, NoPrivate.new, admin, ConfigCommand.new(@tip))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("checkconfig"), CheckConfig.new)
+      Command.new("checkconfig"), rl, CheckConfig.new)
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("prefix"), NoPrivate.new, admin, PremiumOnly.new, Prefix.new(@tip))
+      Command.new("prefix"), rl, NoPrivate.new, admin, PremiumOnly.new, Prefix.new(@tip))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("premium"), BotAdmin.new(@config), PremiumCmd.new(@tip))
+      Command.new("premium"), rl, BotAdmin.new(@config), PremiumCmd.new(@tip))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("psql"), BotAdmin.new(@config), PSQL.new(@tip.db, @config))
+      Command.new("psql"), rl, BotAdmin.new(@config), PSQL.new(@tip.db, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("lucky"), NoPrivate.new, Amount.new(@tip)) { |msg, ctx| lucky(msg, ctx) }
+      Command.new("lucky"), rl, NoPrivate.new, Amount.new(@tip)) { |msg, ctx| lucky(msg, ctx) }
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("rain"), NoPrivate.new, Amount.new(@tip)) { |msg, ctx| rain(msg, ctx) }
+      Command.new("rain"), rl, NoPrivate.new, Amount.new(@tip)) { |msg, ctx| rain(msg, ctx) }
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("active"), NoPrivate.new) { |msg, _| active(msg) }
+      Command.new("active"), rl, NoPrivate.new) { |msg, _| active(msg) }
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("statistics")) do |msg, _|
+      Command.new("statistics"), rl) do |msg, _|
       stats = Statistics.get(@tip.db)
       string = String.build do |io|
         io.puts "*Currently the users of this bot have:*"
@@ -84,13 +86,13 @@ class DiscordBot
       reply(msg, string)
     end
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("exit"), BotAdmin.new(@config)) do |msg, _|
+      Command.new("exit"), rl, BotAdmin.new(@config)) do |msg, _|
       @log.warn("#{@config.coinname_short}: Shutdown requested by #{msg.author.id}")
       sleep 1
       exit
     end
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("stats")) do |msg, _|
+      Command.new("stats"), rl) do |msg, _|
       guilds = @cache.guilds.size
       cached_users = @cache.users.size
       users = @cache.guilds.values.map { |x| x.member_count || 0 }.sum
@@ -98,7 +100,7 @@ class DiscordBot
       reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)")
     end
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new(["reload_conf", "load_conf"]), BotAdmin.new(@config)) do |msg, ctx|
+      Command.new(["reload_conf", "load_conf"]), rl, BotAdmin.new(@config)) do |msg, ctx|
       # Currently the same coins have to be present in both the old and new config file
 
       # cmd [0] = path
@@ -115,7 +117,7 @@ class DiscordBot
       reply(msg, "Loaded config from #{path}")
     end
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("getinfo"), BotAdmin.new(@config), OnlyPrivate.new) do |msg, _|
+      Command.new("getinfo"), rl, BotAdmin.new(@config), OnlyPrivate.new) do |msg, _|
       info = @tip.get_info.as_h
       next unless info.is_a?(Hash(String, JSON::Any))
 
@@ -128,7 +130,7 @@ class DiscordBot
       @bot.create_message(msg.channel_id, ZWS, Discord::Embed.new(fields: embed))
     end
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("help")) do |msg, _|
+      Command.new("help"), rl) do |msg, _|
       # TODO rewrite help command
       cmds = {"ping", "uptime", "tip", "soak", "rain", "active", "balance", "terms", "withdraw", "deposit", "support", "github", "invite"}
       string = String.build do |str|

@@ -42,10 +42,10 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 
 ## Running
 - Make sure you are in the directory with the config file and postgres data
-- Database: `docker run -d --name database --network dtb -v $PWD/postgres-data:/var/lib/postgresql/data -d postgres:11.1-alpine`
+- Database: `docker run -d --name database --network dtb -v $PWD/postgres-data:/var/lib/postgresql/data postgres:11.1-alpine`
 - TipBot: `docker run -d --name discordbot --network dtb -v $PWD/config.json:/config.json greenbigfrog/dtb-launcher:latest`
 - Website: `docker run -d --name website --network dtb -v $PWD/config.json:/config.json greenbigfrog/dtb-website:latest`
-- Wallet: `docker run -d --network dtb -v ~/.dogecoin/:/dogecoin/.dogecoin/ greenbigfrog/dogecoin -printtoconsole`
+- Wallet: `docker run -d --name dogecoind --network dtb -v ~/.dogecoin/:/dogecoin/.dogecoin/ greenbigfrog/dogecoin -printtoconsole`
 
 - cli: `docker run --rm -ti --network dtb -v ~/.dogecoin/:/dogecoin/.dogecoin/ greenbigfrog/dogecoin dogecoin-cli -rpcconnect=dogecoind -rpcuser=a -rpcpassword=b getinfo`
 
