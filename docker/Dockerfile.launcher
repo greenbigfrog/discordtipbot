@@ -4,7 +4,10 @@ WORKDIR /src
 RUN crystal build --release --static -s src/launcher.cr
 
 FROM debian:stretch-slim
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apt-get update \
+	&& apt-get --no-install-recommends -y install ca-certificates \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=0 /src/launcher /
 ENTRYPOINT ["/launcher", "config.json"]

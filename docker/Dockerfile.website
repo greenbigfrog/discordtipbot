@@ -1,10 +1,13 @@
-FROM crystallang/crystal:latest
+FROM crystallang/crystal:0.27.0
 ADD . /src
 WORKDIR /src
 RUN crystal build --static --release -s src/website.cr
 
 FROM debian:stretch-slim
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apt-get update \
+	&& apt-get --no-install-recommends -y install ca-certificates \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=0 /src/website /
 EXPOSE 8080
