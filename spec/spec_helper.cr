@@ -1,2 +1,2 @@
 require "spec"
-require "../src/launcher"
+require "../src/discordtipbot"
