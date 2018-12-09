@@ -1,9 +1,12 @@
 class Command
+  getter name : String
   getter command : Array(String) = Array(String).new
 
   getter time : Time = Time.utc_now
 
   def initialize(@cmd : String | Array(String))
+    cmd = @cmd
+    @name = cmd.is_a?(String) ? cmd : cmd.first
   end
 
   def call(payload, ctx)

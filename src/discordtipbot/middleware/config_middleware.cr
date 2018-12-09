@@ -17,6 +17,12 @@ class ConfigMiddleware
     @db.query_one?("SELECT #{memo} FROM config WHERE serverid = $1", server_id(msg), as: Bool?) || false
   end
 
+  def get_premium(msg : Discord::Message)
+    guild = get_config(msg, "premium")
+    return true if guild
+    @db.query_one?("SELECT premium FROM accounts WHERE userid = $1", msg.author.id, as: Bool?) || false
+  end
+
   def get_decimal_config(msg : Discord::Message, memo : String)
     res = @db.query_one?("SELECT #{memo} FROM config WHERE serverid = $1", server_id(msg),
       as: BigDecimal?)
