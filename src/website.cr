@@ -3,56 +3,89 @@ require "big/json"
 require "pg"
 require "pg/pg_ext/big_decimal"
 require "./discordtipbot/config"
+require "./discordtipbot/premium"
+require "discordcr"
+
+class Coin
+  include Premium
+
+  getter db : DB::Database
+  getter bot : Discord::Client
+  getter cache : Discord::Cache
+  getter dbl_auth : String
+
+  def initialize(@db, @bot, @cache, @dbl_auth)
+  end
+end
+
+class Msg
+  getter coin : String
+  getter user : UInt64
+  getter msg : String
+
+  def initialize(@coin, @user, @msg)
+  end
+end
 
 Config.load(ARGV[0])
 
-database = Hash(String, DB::Database).new
+data = Hash(String, Coin).new
+queue = Deque(Msg).new
+
+spawn do
+  loop do
+    if x = queue.shift?
+      channel = data[x.coin].cache.resolve_dm_channel(x.user)
+      unless channel
+        puts "Unable to DM #{x.user}"
+        next
+      end
+      data[x.coin].bot.create_message(channel, x.msg)
+    end
+    sleep 2
+  end
+end
 
 Config.current.each do |_, config|
-  database[config.coinname_full.downcase] = DB.open(config.database_url + "?max_pool_size=10")
+  db = DB.open(config.database_url + "?max_pool_size=10")
+  bot = Discord::Client.new(token: config.discord_token, client_id: config.discord_client_id)
+  cache = Discord::Cache.new(bot)
+  bot.cache = cache
+  data[config.coinname_full.downcase] = Coin.new(db, bot, cache, config.dbl_auth)
 end
 
 get "/" do
-  "You should not be accessing this."
+  "Discord Tip Bot Website. WIP"
 end
 
 post "/webhook/:coin" do |env|
   headers = env.request.headers
   json = env.params.json
-
-  halt env, status_code: 403 unless headers["Authorization"]? == "ABC"
-
-  halt env, status_code: 204 unless json["type"] == "upvote"
-
   coin = env.params.url["coin"]
+
+  halt env, status_code: 403 unless headers["Authorization"]? == data[coin].dbl_auth
+
+  unless json["type"] == "upvote"
+    puts "Received test webhook call"
+    halt env, status_code: 204
+  end
   query = json["query"]?
   params = HTTP::Params.parse(query.lchop('?')) if query.is_a?(String)
   server = params["server"]? if params
 
+  user = json["user"]
+  halt env, status_code: 503 unless user.is_a?(String)
+  user = user.to_u64
+
   if server
-    extend_premium(database[coin], server.to_u64, 15.minutes)
+    data[coin].extend_premium(Premium::Kind::Guild, server.to_u64, 15.minutes)
+    msg = "Thanks for voting. Extended premium of #{server} by 15 minutes"
   else
-    # TODO handle if there's no server param
-    halt env, status_code: 503
+    data[coin].extend_premium(Premium::Kind::User, user, 1.hour)
+    msg = "Thanks for voting. Extended your own personal global premium by 1 hour"
   end
-end
 
-def set_premium(db : DB::Database, guild_id : UInt64, till : Time)
-  db.exec("UPDATE config SET premium = true, premium_till = $1 WHERE serverid = $2", till, guild_id)
-end
-
-def extend_premium(db : DB::Database, guild_id : UInt64, extend_by : Time::Span)
-  current = status_premium(db, guild_id)
-  if current
-    till = current + extend_by
-  else
-    till = Time.utc_now + extend_by
-  end
-  set_premium(db, guild_id, till)
-end
-
-def status_premium(db : DB::Database, guild_id : UInt64)
-  db.query_one?("SELECT premium_till FROM config WHERE serverid = $1", guild_id, as: Time?)
+  queue.push(Msg.new(coin, user, msg))
 end
 
 Kemal.run do |conf|

@@ -58,6 +58,8 @@ class Config
     discord_token: String,
     discord_client_id: UInt64,
 
+    dbl_auth: String,
+
     coin_api_type: String,
 
     blockio_api_key: String,
