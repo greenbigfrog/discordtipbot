@@ -59,7 +59,7 @@ class DiscordBot
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
       Command.new("prefix"), NoPrivate.new, admin, PremiumOnly.new, Prefix.new(@tip))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
-      Command.new("premium"), BotAdmin.new(@config), Premium.new(@tip))
+      Command.new("premium"), BotAdmin.new(@config), PremiumCmd.new(@tip))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
       Command.new("psql"), BotAdmin.new(@config), PSQL.new(@tip.db, @config))
     @bot.on_message_create(ErrorCatcher.new, IgnoreSelf.new(@config), ConfigMiddleware.new(@tip.db, @config),
