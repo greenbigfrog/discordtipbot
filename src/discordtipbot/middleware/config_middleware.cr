@@ -1,7 +1,9 @@
 class ConfigMiddleware
   getter cache : Discord::Cache | Nil
+  @db : DB::Database
 
-  def initialize(@db : DB::Database, @config : Config)
+  def initialize(@tip : TipBot, @config : Config)
+    @db = @tip.db
   end
 
   def call(msg, ctx)
@@ -21,6 +23,11 @@ class ConfigMiddleware
     guild = get_config(msg, "premium")
     return true if guild
     @db.query_one?("SELECT premium FROM accounts WHERE userid = $1", msg.author.id, as: Bool?) || false
+  end
+
+  def get_premium_string(kind : Premium::Kind, id)
+    status = @tip.status_premium(Premium::Kind::Guild, id)
+    HumanizeTime.distance_of_time_in_words(Time.utc_now, status) if status
   end
 
   def get_decimal_config(msg : Discord::Message, memo : String)

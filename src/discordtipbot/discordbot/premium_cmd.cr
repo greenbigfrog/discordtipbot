@@ -22,9 +22,9 @@ class PremiumCmd
       time_array = method ? cmd[2..3] : cmd[1..2]
       @tip.extend_premium(Premium::Kind::Guild, guild_id, time(time_array))
     end
-    status = @tip.status_premium(Premium::Kind::Guild, guild_id)
-    human = HumanizeTime.distance_of_time_in_words(Time.utc_now, status) if status
-    string = status ? "The guild has premium for another **#{human}** (till #{status})" : "The guild does **not** have premium"
+
+    human = ctx[ConfigMiddleware].get_premium_string(Premium::Kind::Guild, guild_id)
+    string = human ? "The guild has premium for another **#{human}**" : "The guild does **not** have premium"
     client.create_message(msg.channel_id, string)
     yield
   end
