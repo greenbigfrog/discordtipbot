@@ -8,13 +8,14 @@ class Offsite
     client = ctx[Discord::Client]
     id = msg.author.id.to_u64
 
-    cmd_usage = String.build do |io|
-      io.puts "This command allows the storage of coins off site"
-      io.puts
-      io.puts "- `address` Send coins here to deposit them again"
-      io.puts "- `send` Take coins out of the bot"
-      io.puts "- `bal` Check your current balance for the offsite part"
-    end
+    cmd_usage = <<-DOC
+    Usage: `#{@config.prefix}offsite [detail]`
+    This command allows the storage of coins off site
+
+    - `address` Send coins here to deposit them again
+    - `send` Take coins out of the bot
+    - `bal` Check your current balance for the offsite part
+    DOC
 
     # cmd[0]: category
     cmd = ctx[Command].command
