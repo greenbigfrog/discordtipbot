@@ -1,6 +1,7 @@
 class Soak
   include DiscordMiddleware::CachedRoutes
   include Utilities
+  include Amount
 
   def initialize(@tip : TipBot, @config : Config, @cache : Discord::Cache, @presence_cache : PresenceCache)
   end
@@ -22,7 +23,7 @@ class Soak
     cmd = ctx[Command].command
     return client.create_message(msg.channel_id, cmd_usage) unless cmd.size > 0
 
-    amount = ctx[Amount].amount(msg, cmd[0])
+    amount = parse_amount(msg, cmd[0])
     return client.create_message(msg.channel_id, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     min_soak = ctx[ConfigMiddleware].get_decimal_config(msg, "min_soak")

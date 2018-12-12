@@ -1,4 +1,6 @@
 class Withdraw
+  include Amount
+
   def initialize(@tip : TipBot, @config : Config)
   end
 
@@ -11,7 +13,7 @@ class Withdraw
 
     return client.create_message(msg.channel_id, "**ERROR**: Usage: #{cmd_usage}") if cmd.size < 2
 
-    amount = ctx[Amount].amount(msg, cmd[1])
+    amount = parse_amount(msg, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") if amount.nil?
 
     amount = amount - @config.txfee if cmd[1] == "all"
