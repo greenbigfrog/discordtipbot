@@ -10,19 +10,18 @@ class CoinApi
     @type = @config.coin_api_type
 
     rpc = nil
-    i = 1
+    retry_delay = 1
     while rpc.nil?
       begin
-        rpc = BitcoinRpc.new(@config.rpc_url, @config.rpc_username, @config.rpc_password)
-        rpc.getinfo
+        rpc = BitcoinRpc.new(@config.rpc_url, @config.rpc_username, @config.rpc_password).tap(&.getinfo)
+        break
       rescue ex
-        @log.warn("Unable to connect to Coin Daemon. Going to wait #{i} seconds before retrying")
-        rpc = nil
-        sleep (i = Math.min(i*2, 10))
+        @log.warn("Unable to connect to Coin Daemon (#{ex.class}: #{ex.message}). Retrying after #{retry_delay} seconds.")
+        sleep retry_delay
+        retry_delay = Math.min(retry_delay * 2, 10)
       end
     end
-    raise "rpc was still nil" if rpc.nil?
-    @rpc = rpc
+    @rpc = rpc.not_nil!
 
     @log.debug("#{config.coinname_short}: #{@rpc.getinfo}")
   end
