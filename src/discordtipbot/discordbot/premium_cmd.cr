@@ -3,6 +3,7 @@ class PremiumCmd
   end
 
   def call(msg, ctx)
+    # TODO
     client = ctx[Discord::Client]
     cmd = ctx[Command].command
     cache = client.cache.not_nil!
@@ -20,7 +21,7 @@ class PremiumCmd
     when "status"
     when "extend"
       time_array = method ? cmd[2..3] : cmd[1..2]
-      @tip.extend_premium(Premium::Kind::Guild, guild_id, time(time_array))
+      @tip.extend_premium(Premium::Kind::Guild, guild_id, time(time_array[0], time_array[1]))
     end
 
     human = ctx[ConfigMiddleware].get_premium_string(Premium::Kind::Guild, guild_id)
@@ -29,8 +30,7 @@ class PremiumCmd
     yield
   end
 
-  private def time(time_array) : Time::Span
-    number, span = time_array
+  private def time(number : String, span : String) : Time::Span
     case span
     when .starts_with?("minute") then number.to_i.minutes
     when .starts_with?("hour")   then number.to_i.hours
@@ -39,5 +39,7 @@ class PremiumCmd
     when .starts_with?("year")   then (number.to_i * 365).days
     else                              0.seconds
     end
+  rescue
+    0.seconds
   end
 end
