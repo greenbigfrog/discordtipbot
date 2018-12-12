@@ -1,7 +1,7 @@
 require "json"
 
-private macro define_string_getter(strings)
-  def get?(some_string)
+private macro define_string_getter(*strings)
+  def get(some_string)
     case some_string
     {% for string in strings %}
     when {{ string }} then @{{ string.id }}
@@ -34,9 +34,8 @@ end
 class Config
   class_getter current : Hash(String, Config) = Hash(String, Config).new
 
-  define_string_getter(["min_soak", "min_soak_total",
-                        "min_rain", "min_rain_total",
-                        "min_tip"])
+  define_string_getter("min_soak", "min_soak_total",
+    "min_rain", "min_rain_total", "min_tip")
 
   def self.load(path)
     File.open(path, "r") do |file|

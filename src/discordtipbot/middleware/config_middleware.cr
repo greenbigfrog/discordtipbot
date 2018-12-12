@@ -33,7 +33,7 @@ class ConfigMiddleware
   def get_decimal_config(msg : Discord::Message, memo : String)
     res = @db.query_one?("SELECT #{memo} FROM config WHERE serverid = $1", server_id(msg),
       as: BigDecimal?)
-    res ? reduce(res) : @config.get?(memo)
+    res ? reduce(res) : @config.get(memo)
   end
 
   private def server_id(msg)
