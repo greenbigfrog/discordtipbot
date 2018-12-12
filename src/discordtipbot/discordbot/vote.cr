@@ -1,10 +1,12 @@
 class Vote
+  include DiscordMiddleware::CachedRoutes
+
   def call(msg, ctx)
     client = ctx[Discord::Client]
     cache = client.cache.not_nil!
     bot = cache.resolve_current_user
     cfg = ctx[ConfigMiddleware]
-    channel = cache.resolve_channel(msg.channel_id)
+    channel = get_channel(client, msg.channel_id)
     thumbnail = "https://images.discordapp.net/avatars/#{bot.id}/#{bot.avatar}.png"
 
     embed = Discord::Embed.new

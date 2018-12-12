@@ -1,4 +1,5 @@
 class Soak
+  include DiscordMiddleware::CachedRoutes
   include Utilities
 
   def initialize(@tip : TipBot, @config : Config, @cache : Discord::Cache, @presence_cache : PresenceCache)
@@ -8,8 +9,8 @@ class Soak
     client = ctx[Discord::Client]
     cache = client.cache.not_nil!
 
-    guild_id = cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64
-    return client.create_message(msg.channel_id, "Something went wrong") if guild_id.nil?
+    return unless guild_id = get_channel(client, msg.channel_id).guild_id
+    guild_id = guild_id.to_u64
 
     unless ctx[ConfigMiddleware].get_config(msg, "soak")
       return client.create_message(msg.channel_id, "The owner of this server has disabled #{@config.prefix}soak. You can contact them and ask them to enable it as they should have received a DM with instructions")

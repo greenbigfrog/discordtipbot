@@ -1,4 +1,6 @@
 class PremiumCmd
+  include DiscordMiddleware::CachedRoutes
+
   def initialize(@tip : TipBot)
   end
 
@@ -6,14 +8,14 @@ class PremiumCmd
     # TODO
     client = ctx[Discord::Client]
     cmd = ctx[Command].command
-    cache = client.cache.not_nil!
 
     begin
       method = cmd[1]? if guild_id = cmd[0]?.try &.to_u64
     rescue
     end
-    guild_id = cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64 unless guild_id
-    return unless guild_id
+
+    return unless guild_id = get_channel(client, msg.channel_id).guild_id unless guild_id
+    guild_id = guild_id.to_u64
 
     @tip.clear_expired_premium
 

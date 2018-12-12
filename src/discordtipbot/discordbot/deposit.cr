@@ -1,12 +1,14 @@
 class Deposit
+  include DiscordMiddleware::CachedRoutes
+
   def initialize(@tip : TipBot, @config : Config)
   end
 
   def call(msg, ctx)
     client = ctx[Discord::Client]
-    cache = client.cache
-    return unless cache
-    unless cache.resolve_channel(msg.channel_id).try &.type == Discord::ChannelType::DM
+    cache = client.cache.not_nil!
+
+    unless get_channel(client, msg.channel_id).type.dm?
       notif = client.create_message(msg.channel_id, "Sent deposit address in a DM")
     end
     begin
