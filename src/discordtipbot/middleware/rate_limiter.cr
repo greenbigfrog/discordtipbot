@@ -9,7 +9,7 @@ class MW::RateLimiter
     @limiter.bucket(:guild, 5_u32, 10.seconds)
     @limiter.bucket(:user, 2_u32, 10.seconds)
 
-    @intense = Set{"soak", "rain"}
+    @intense = {"soak", "rain"}
   end
 
   private def reply(client, channel_id)
