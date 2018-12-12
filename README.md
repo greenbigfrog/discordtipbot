@@ -28,7 +28,6 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - It's recommendable to run your node as a full node, but to limit the connections to ~30, since else you might run into performance issues (`maxconnections=30`)
 -->
 
-- Set docker to swarm mode: `docker swarm init`
 - Create a overlay network: `docker network create -d overlay --attachable dtb`
 - Clone and cd into this repository: `git clone https://github.com/greenbigfrog/discordtipbot.git`
 - Create a directory which will contain all the tipbot related stuff: `mkdir tipbot`
