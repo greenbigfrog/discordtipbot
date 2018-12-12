@@ -1,7 +1,8 @@
 class Command
+  include DiscordMiddleware::CachedRoutes
+
   getter name : String
   getter command : Array(String) = Array(String).new
-
   getter time : Time = Time.utc_now
 
   def initialize(@cmd : String | Array(String))
@@ -11,8 +12,6 @@ class Command
 
   def call(payload, ctx)
     @time = Time.utc_now
-
-    cache = ctx[Discord::Client].cache.not_nil!
     cmd = @cmd
     if cmd.is_a?(Array(String))
       cmd_regex = ""
@@ -20,12 +19,15 @@ class Command
       cmd_regex = cmd_regex.chomp('|')
     end
 
-    if cache.resolve_channel(payload.channel_id).type == Discord::ChannelType::DM
+    client = ctx[Discord::Client]
+
+    if get_channel(client, payload.channel_id).type.dm?
       match = payload.content.match(/^(#{cmd_regex})(?<command>.*)/) if cmd_regex
       match = payload.content.match(/^(#{cmd})(?<command>.*)/) unless cmd.is_a?(Array(String))
     end
 
     unless match
+      cache = client.cache.not_nil!
       prefix_char = ctx[ConfigMiddleware].get_prefix(payload)
       prefix = /^(#{Regex.escape(prefix_char)}|<@!?#{cache.resolve_current_user.id}> +)(#{cmd_regex || cmd})(?<command>.*)/
       match = payload.content.match(prefix)

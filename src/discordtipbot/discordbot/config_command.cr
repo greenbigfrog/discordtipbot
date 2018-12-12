@@ -1,10 +1,11 @@
 class ConfigCommand
+  include DiscordMiddleware::CachedRoutes
+
   def initialize(@tip : TipBot)
   end
 
   def call(msg, ctx)
     client = ctx[Discord::Client]
-    cache = client.cache.not_nil!
 
     # cmd[0] = memo, cmd[1] = status
     cmd = ctx[Command].command
@@ -32,10 +33,9 @@ class ConfigCommand
       end
     end
 
-    guild_id = cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64
-    return if guild_id.nil?
+    return unless guild_id = get_channel(client, msg.channel_id).guild_id
 
-    return client.create_message(msg.channel_id, "Successfully set #{memo} #{cmd[1]}") if @tip.update_config(memo, status, guild_id)
+    return client.create_message(msg.channel_id, "Successfully set #{memo} #{cmd[1]}") if @tip.update_config(memo, status, guild_id.to_u64)
     client.create_message(msg.channel_id, "Illegal Operation. Unable to set #{memo} #{cmd[1]}")
     yield
   end

@@ -1,18 +1,19 @@
 class Prefix
+  include DiscordMiddleware::CachedRoutes
+
   def initialize(@tip : TipBot)
   end
 
   def call(msg, ctx)
     client = ctx[Discord::Client]
-    cache = client.cache.not_nil!
 
     # cmd[0] = new_prefix
     cmd = ctx[Command].command
 
     return client.create_message(msg.channel_id, "Usage: `.prefix \"[new_prefix/clear]\"`\nCurrent prefix is `#{ctx[ConfigMiddleware].get_prefix(msg)}`") if cmd.empty?
 
-    guild_id = cache.resolve_channel(msg.channel_id).guild_id.try &.to_u64
-    return if guild_id.nil?
+    return unless guild_id = get_channel(client, msg.channel_id).guild_id
+    guild_id = guild_id.to_u64
 
     string = cmd.join(' ').strip('"')
 
