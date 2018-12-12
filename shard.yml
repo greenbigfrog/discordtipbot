@@ -32,6 +32,8 @@ dependencies:
     github: mamantoha/humanize_time
   kemal:
     github: kemalcr/kemal
+  discord-bot-lists:
+    github: greenbigfrog/discord-bot-lists
 
 development_dependencies:
   ameba:

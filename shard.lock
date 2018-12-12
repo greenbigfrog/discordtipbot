@@ -16,13 +16,17 @@ shards:
     github: crystal-lang/crystal-db
     version: 0.5.1
 
+  discord-bot-lists:
+    github: greenbigfrog/discord-bot-lists
+    commit: 410996448c62a04a0ca317406ce19c968cb2400c
+
   discordcr:
     github: greenbigfrog/discordcr
     commit: 2370641dfc66268aeb1bd963a187bcf8a884dc8c
 
   discordcr-middleware:
     github: z64/discordcr-middleware
-    commit: b18846bd7709996b825855b58168db4a441233bf
+    commit: 1606ec9a61aa8aa1c04810227fd796807f8ffb93
 
   exception_page:
     github: crystal-loot/exception_page

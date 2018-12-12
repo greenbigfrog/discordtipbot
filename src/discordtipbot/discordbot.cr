@@ -2,6 +2,7 @@ require "./utilities"
 require "discordcr-middleware/middleware/cached_routes"
 require "discordcr-middleware/middleware/permissions"
 require "humanize_time"
+require "discord-bot-lists"
 
 USER_REGEX      = /<@!?(?<id>\d+)>/
 START_TIME      = Time.now
@@ -13,6 +14,7 @@ SUPPORT         = "http://tipbot.gbf.re"
 
 class DiscordBot
   include Utilities
+  include Dbl
 
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
@@ -187,6 +189,16 @@ class DiscordBot
           update_game("#{@config.prefix}help | Serving #{@cache.users.size} users in #{@cache.guilds.size} guilds")
         end
       end
+    end
+
+    @bot.on_ready(error) do
+      post_stats(
+        {
+          "discordbots.org" => @config.dbl_stats,
+          "discord.bots.gg" => @config.botsgg_token,
+        },
+        @cache
+      )
     end
 
     # Add user to active_users_cache on new message unless bot user
