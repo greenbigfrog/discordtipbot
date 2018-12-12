@@ -1,12 +1,5 @@
-class Amount
-  def initialize(@tip : TipBot)
-  end
-
-  def call(payload, ctx)
-    yield
-  end
-
-  def amount(msg, string) : BigDecimal?
+module Amount
+  def parse_amount(msg, string) : BigDecimal?
     if string == "all"
       @tip.get_balance(msg.author.id.to_u64)
     elsif string == "half"

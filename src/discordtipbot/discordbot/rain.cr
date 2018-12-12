@@ -1,4 +1,6 @@
 class DiscordBot
+  include Amount
+
   def rain(msg, ctx)
     unless ctx[ConfigMiddleware].get_config(msg, "rain")
       return reply(msg, "The owner of this server has disabled #{@config.prefix}rain. You can contact them and ask them to enable it as they should have received a DM with instructions")
@@ -11,7 +13,7 @@ class DiscordBot
 
     return reply(msg, cmd_usage) if cmd.empty?
 
-    amount = ctx[Amount].amount(msg, cmd[0])
+    amount = parse_amount(msg, cmd[0])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     # min_rain = ctx[ConfigMiddleware].get_decimal_config(msg, "min_rain")

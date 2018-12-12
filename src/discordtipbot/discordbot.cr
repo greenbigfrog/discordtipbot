@@ -35,28 +35,25 @@ class DiscordBot
     error = ErrorCatcher.new
     config = ConfigMiddleware.new(@tip, @config)
     typing = TriggerTyping.new
-    amount = Amount.new(@tip)
 
     @bot.on_message_create(error, config, Command.new("ping"),
       rl, Ping.new)
     @bot.on_message_create(error, config, Command.new("withdraw"),
-      rl, amount, Withdraw.new(@tip, @config))
+      rl, Withdraw.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new(["deposit", "address"]),
       rl, Deposit.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("soak"),
-      rl, NoPrivate.new, typing, amount,
-      Soak.new(@tip, @config, @cache, @presence_cache))
+      rl, NoPrivate.new, typing, Soak.new(@tip, @config, @cache, @presence_cache))
     @bot.on_message_create(error, config, Command.new("tip"),
-      rl, NoPrivate.new, amount, Tip.new(@tip, @config))
+      rl, NoPrivate.new, Tip.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("donate"),
-      rl, amount, Donate.new(@tip, @config, @webhook))
+      rl, Donate.new(@tip, @config, @webhook))
     @bot.on_message_create(error, config, Command.new(["balance", "bal"]),
       rl, Balance.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("\u{1f4be}"),
       rl, SystemStats.new)
     @bot.on_message_create(error, config, Command.new("offsite"),
-      rl, OnlyPrivate.new, BotAdmin.new(@config), amount,
-      Offsite.new(@tip, @config))
+      rl, OnlyPrivate.new, BotAdmin.new(@config), Offsite.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("admin"),
       rl, OnlyPrivate.new, BotAdmin.new(@config), Admin.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("config"),
@@ -72,9 +69,9 @@ class DiscordBot
     @bot.on_message_create(error, config, Command.new("psql"),
       rl, BotAdmin.new(@config), PSQL.new(@tip.db, @config))
     @bot.on_message_create(error, config, Command.new("lucky"),
-      rl, NoPrivate.new, amount) { |msg, ctx| lucky(msg, ctx) }
+      rl, NoPrivate.new) { |msg, ctx| lucky(msg, ctx) }
     @bot.on_message_create(error, config, Command.new("rain"),
-      rl, NoPrivate.new, amount) { |msg, ctx| rain(msg, ctx) }
+      rl, NoPrivate.new) { |msg, ctx| rain(msg, ctx) }
     @bot.on_message_create(error, config, Command.new("active"),
       rl, NoPrivate.new) { |msg, _| active(msg) }
     @bot.on_message_create(error, config, Command.new("statistics"), rl) do |msg, _|

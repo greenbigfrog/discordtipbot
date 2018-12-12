@@ -1,4 +1,6 @@
 class DiscordBot
+  include Amount
+
   def lucky(msg, ctx)
     cmd_usage = "#{@config.prefix}lucky [amount]"
 
@@ -7,7 +9,7 @@ class DiscordBot
 
     return reply(msg, cmd_usage) if cmd.empty?
 
-    amount = ctx[Amount].amount(msg, cmd[0])
+    amount = parse_amount(msg, cmd[0])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     min_tip = ctx[ConfigMiddleware].get_decimal_config(msg, "min_tip")

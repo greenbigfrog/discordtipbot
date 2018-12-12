@@ -1,4 +1,6 @@
 class Offsite
+  include Amount
+
   def initialize(@tip : TipBot, @config : Config)
   end
 
@@ -28,7 +30,7 @@ class Offsite
       # cmd[1]: address, cmd[2]: amount
       return client.create_message(msg.channel_id, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 4
 
-      amount = ctx[Amount].amount(msg, cmd[2])
+      amount = parse_amount(msg, cmd[2])
       return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount") if amount.nil?
 
       case @tip.offsite_withdrawal(id, amount, cmd[1])

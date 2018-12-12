@@ -1,5 +1,6 @@
 class Tip
   include Utilities
+  include Amount
 
   def initialize(@tip : TipBot, @config : Config)
   end
@@ -32,7 +33,7 @@ class Tip
 
     return client.create_message(msg.channel_id, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
 
-    amount = ctx[Amount].amount(msg, cmd[1])
+    amount = parse_amount(msg, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
     min_tip = ctx[ConfigMiddleware].get_decimal_config(msg, "min_tip")
