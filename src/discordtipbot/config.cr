@@ -58,6 +58,8 @@ class Config
     discord_client_id: UInt64,
 
     dbl_auth: String,
+    dbl_stats: String,
+    botsgg_token: String,
 
     coin_api_type: String,
 
