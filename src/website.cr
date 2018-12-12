@@ -35,12 +35,12 @@ queue = Deque(Msg).new
 spawn do
   loop do
     if x = queue.shift?
-      channel = data[x.coin].cache.resolve_dm_channel(x.user)
-      unless channel
-        puts "Unable to DM #{x.user}"
-        next
+      begin
+        channel = data[x.coin].cache.resolve_dm_channel(x.user)
+        data[x.coin].bot.create_message(channel, x.msg)
+      rescue ex
+        puts "Unable to DM #{x.user}\n#{ex.inspect_with_backtrace}"
       end
-      data[x.coin].bot.create_message(channel, x.msg)
     end
     sleep 2
   end
