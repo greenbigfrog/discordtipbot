@@ -301,11 +301,11 @@ class DiscordBot
     raven_spawn do
       Discord.every(30.seconds) do
         users = @tip.process_pending_withdrawals
-        users.each do |x|
+        users.each do |id, hash|
           begin
-            @bot.create_message(@cache.resolve_dm_channel(x.to_u64), "Your withdrawal just got processed" + Emoji::CHECK)
+            @bot.create_message(@cache.resolve_dm_channel(id), "Your withdrawal just got processed #{Emoji::CHECK}\n*Transaction ID: #{hash}*")
           rescue
-            @log.warn("#{@config.coinname_short}: Unable to send confirmation message to #{x}, while processing pending withdrawals")
+            @log.warn("#{@config.coinname_short}: Unable to send confirmation message to #{id}, while processing pending withdrawals")
           end
         end
       end
