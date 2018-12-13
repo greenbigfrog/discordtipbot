@@ -9,5 +9,6 @@ RUN apt-get update \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
+USER docker
 COPY --from=0 /src/launcher /
 ENTRYPOINT ["/launcher", "config.json"]
