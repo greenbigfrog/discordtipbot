@@ -12,13 +12,13 @@ shards:
     github: greenbigfrog/bitcoin_rpc
     commit: c43d9ee9bb1ec25ca14322a06d3709f5a414fe3d
 
+  bot_list:
+    github: z64/bot_list
+    commit: 5bd3c8ff8bc2b94d9e4ae9f880b0f9498b0f424c
+
   db:
     github: crystal-lang/crystal-db
     version: 0.5.1
-
-  discord-bot-lists:
-    github: greenbigfrog/discord-bot-lists
-    commit: 410996448c62a04a0ca317406ce19c968cb2400c
 
   discordcr:
     github: greenbigfrog/discordcr
