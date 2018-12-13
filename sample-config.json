@@ -5,6 +5,10 @@
         "discord_token": "Bot MTY4MjQ4ODg3NzIxN.922d8sdg8.GGDSGD",
         "discord_client_id": 16824888772172,
 
+        "dbl_auth": "ABC",
+        "dbl_stats": "eyfafaf",
+        "botsgg_token": "eyJhbGciO",
+
         "coin_api_type": "rpc",
 
         "blockio_api_key": "jsdjgjdsjkdgs",
@@ -28,6 +32,7 @@
         "min_tip": 0.1,
         "min_soak": 0.1,
         "min_soak_total": 5.0,
+        "min_rain": 1.0,
         "min_rain_total": 5.0,
         "min_withdraw": 1.0,
 
