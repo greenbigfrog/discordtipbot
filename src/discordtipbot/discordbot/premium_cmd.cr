@@ -37,6 +37,7 @@ class PremiumCmd
     when .starts_with?("minute") then number.to_i.minutes
     when .starts_with?("hour")   then number.to_i.hours
     when .starts_with?("day")    then number.to_i.days
+    when .starts_with?("week")   then number.to_i.weeks
     when .starts_with?("month")  then (number.to_i * 30).days
     when .starts_with?("year")   then (number.to_i * 365).days
     else                              0.seconds
