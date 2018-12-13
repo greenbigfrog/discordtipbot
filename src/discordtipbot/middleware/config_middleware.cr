@@ -26,7 +26,7 @@ class ConfigMiddleware
   end
 
   def get_premium_string(kind : Premium::Kind, id)
-    status = @tip.status_premium(Premium::Kind::Guild, id)
+    status = @tip.status_premium(kind, id)
     HumanizeTime.distance_of_time_in_words(Time.utc_now, status) if status
   end
 
