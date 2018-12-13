@@ -70,14 +70,14 @@ class TipBot
   end
 
   def process_pending_withdrawals
-    users = Set(UInt64).new
+    users = Hash(UInt64, String).new
 
     return users if self.pending_withdrawal_sum > self.node_balance(@config.confirmations)
     record = {id: Int32, from_id: Int64, address: String, amount: BigDecimal}
     pending = @db.query_all("SELECT id, from_id, address, amount FROM withdrawals WHERE status = 'pending'", as: record)
     pending.each do |x|
       begin
-        @coin_api.withdraw(x[:address], x[:amount], "Withdrawal for #{x[:from_id]}")
+        hash = @coin_api.withdraw(x[:address], x[:amount], "Withdrawal for #{x[:from_id]}")
       rescue ex
         @log.error(ex)
         @log.error("#{@config.coinname_short}: Something went wrong while processing withdrawals")
@@ -85,7 +85,7 @@ class TipBot
       end
       @db.exec("UPDATE withdrawals SET status = 'processed' WHERE id = $1", x[:id])
       @log.debug("#{@config.coinname_short}: Processed withdrawal of #{x[:amount]} for #{x[:from_id]} to #{x[:address]}")
-      users << x[:from_id].to_u64
+      users[x[:from_id].to_u64] = hash.to_s
     end
     users
   end
