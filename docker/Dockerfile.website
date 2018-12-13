@@ -12,5 +12,6 @@ RUN apt-get update \
 COPY --from=0 /src/website /
 EXPOSE 8080
 
+RUN adduser --disabled-password --gecos "" docker
 USER docker
 ENTRYPOINT ["/website", "config.json", "-p 8080"]
