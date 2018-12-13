@@ -17,4 +17,4 @@ deploy:
   script: bash scripts/deploy_to_docker.bash
   skip_cleanup: true
   on:
-    branch: remaster
+    branch: master
