@@ -5,29 +5,39 @@ class PremiumCmd
   end
 
   def call(msg, ctx)
-    # TODO
     client = ctx[Discord::Client]
     cmd = ctx[Command].command
 
+    return client.create_message(msg.channel_id, "Invalid Usage. `premium [type] [id] [cmd] [time]?`") unless cmd.size >= 3
+    # type, id, cmd, time?
+    case cmd[0]
+    when "user"            then premium_type = Premium::Kind::User
+    when "server", "guild" then premium_type = Premium::Kind::Guild
+    else                        return
+    end
+
     begin
-      method = cmd[1]? if guild_id = cmd[0]?.try &.to_u64
+      id = cmd[1].to_u64
     rescue
     end
 
-    return unless guild_id = get_channel(client, msg.channel_id).guild_id unless guild_id
-    guild_id = guild_id.to_u64
+    if cmd[1] == "this" && id.nil?
+      channel = get_channel(client, msg.channel_id)
+      id = channel.guild_id.not_nil!.to_u64 if premium_type.guild?
+      id = msg.author.id.to_u64 unless id
+    end
+    return unless id
 
     @tip.clear_expired_premium
 
-    case method || cmd[0]?
+    case cmd[2]
     when "status"
     when "extend"
-      time_array = method ? cmd[2..3] : cmd[1..2]
-      @tip.extend_premium(Premium::Kind::Guild, guild_id, time(time_array[0], time_array[1]))
+      @tip.extend_premium(premium_type, id, time(cmd[3], cmd[4]))
     end
 
-    human = ctx[ConfigMiddleware].get_premium_string(Premium::Kind::Guild, guild_id)
-    string = human ? "The guild has premium for another **#{human}**" : "The guild does **not** have premium"
+    human = ctx[ConfigMiddleware].get_premium_string(premium_type, id)
+    string = human ? "The guild/user has premium for another **#{human}**" : "The guild/user does **not** have premium"
     client.create_message(msg.channel_id, string)
     yield
   end
