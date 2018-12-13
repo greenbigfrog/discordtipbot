@@ -2,7 +2,7 @@ require "./utilities"
 require "discordcr-middleware/middleware/cached_routes"
 require "discordcr-middleware/middleware/permissions"
 require "humanize_time"
-require "discord-bot-lists"
+require "bot_list"
 
 USER_REGEX      = /<@!?(?<id>\d+)>/
 START_TIME      = Time.now
@@ -14,7 +14,6 @@ SUPPORT         = "http://tipbot.gbf.re"
 
 class DiscordBot
   include Utilities
-  include Dbl
 
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
@@ -192,13 +191,11 @@ class DiscordBot
     end
 
     @bot.on_ready(error) do
-      post_stats(
-        {
-          "discordbots.org" => @config.dbl_stats,
-          "discord.bots.gg" => @config.botsgg_token,
-        },
-        @cache
-      )
+      bot_list = BotList::Client.new(@bot)
+      bot_list.add_provider(BotList::DBotsDotOrgProvider.new(@config.dbl_stats))
+      bot_list.add_provider(BotList::DBotsDotGGProvider.new(@config.botsgg_token))
+
+      bot_list.update_every(30.minutes)
     end
 
     # Add user to active_users_cache on new message unless bot user
