@@ -47,6 +47,7 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - Wallet: `docker run -d --name dogecoind --network dtb -v ~/.dogecoin/:/dogecoin/.dogecoin/ greenbigfrog/dogecoin -printtoconsole`
 
 - cli: `docker run --rm -ti --network dtb -v ~/.dogecoin/:/dogecoin/.dogecoin/ greenbigfrog/dogecoin dogecoin-cli -rpcconnect=dogecoind -rpcuser=a -rpcpassword=b getinfo`
+- psql: `docker run --rm -ti --network dtb postgres:11.1-alpine psql -h database -U docker dogecoin`
 
 ## Development
 
