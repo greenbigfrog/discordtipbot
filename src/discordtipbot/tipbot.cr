@@ -4,7 +4,7 @@ class TipBot
   getter db : DB::Database
 
   def initialize(@config : Config, @log : Logger)
-    @db = DB.open(@config.database_url + "?initial_pool_size=10&max_pool_size=10&max_idle_pool_size=10")
+    @db = DB.open(@config.database_url) # + "?initial_pool_size=10&max_pool_size=10&max_idle_pool_size=10")
     @coin_api = CoinApi.new(@config, @log)
   end
 
@@ -194,6 +194,10 @@ class TipBot
 
   def add_server(id : UInt64)
     @db.exec("INSERT INTO config (serverid) VALUES($1) ON CONFLICT DO NOTHING", id)
+  end
+
+  def contacted(guild : UInt64)
+    @db.query_one?("SELECT contacted FROM config WHERE serverid = $1", guild, as: Bool?) || false
   end
 
   def db_balance

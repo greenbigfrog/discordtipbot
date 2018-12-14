@@ -231,7 +231,7 @@ class DiscordBot
           # Process guilds at a rate
           @cache.guilds.each do |_id, guild|
             handle_new_guild(guild)
-            sleep 0.1
+            sleep 1
           end
 
           # Any guild after this is new, not streaming anymore
@@ -331,16 +331,18 @@ class DiscordBot
   end
 
   private def handle_new_guild(guild : Discord::Guild | Discord::Gateway::GuildCreatePayload)
-    @tip.add_server(guild.id.to_u64)
+    id = guild.id.to_u64
 
-    unless @tip.db.query_one?("SELECT contacted FROM config WHERE serverid = $1", guild.id.to_u64, as: Bool?)
+    @tip.add_server(id)
+
+    unless @tip.contacted(id)
       string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@config.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at http://tipbot.gbf.re"
       begin
         contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
       rescue
         @log.error("#{@config.coinname_short}: Failed contacting #{guild.owner_id}")
       end
-      @tip.update_config("contacted", true, guild.id.to_u64) if contact
+      @tip.update_config("contacted", true, id) if contact
       return true
     end
     false
