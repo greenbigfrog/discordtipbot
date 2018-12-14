@@ -50,7 +50,7 @@ shards:
 
   pg:
     github: greenbigfrog/crystal-pg
-    commit: 5a01c3e38be055df648e5744b3c03a8d7d4d57bc
+    commit: d8082a2f3f9f8625a1284d71b52c147ccd96c10f
 
   radix:
     github: luislavena/radix
