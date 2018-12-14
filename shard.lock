@@ -9,12 +9,12 @@ shards:
     version: 0.2.2
 
   bitcoin_rpc:
-    github: greenbigfrog/bitcoin_rpc
-    commit: c43d9ee9bb1ec25ca14322a06d3709f5a414fe3d
+    github: citizen428/bitcoin_rpc
+    version: 0.4.0
 
   bot_list:
     github: z64/bot_list
-    commit: 5bd3c8ff8bc2b94d9e4ae9f880b0f9498b0f424c
+    commit: 0c58d5e5e693750b0080cf374908ba22cccb79b1
 
   db:
     github: crystal-lang/crystal-db
@@ -22,7 +22,7 @@ shards:
 
   discordcr:
     github: greenbigfrog/discordcr
-    commit: 2370641dfc66268aeb1bd963a187bcf8a884dc8c
+    commit: 8257524e28539d2e285a5db065fd386763480946
 
   discordcr-middleware:
     github: z64/discordcr-middleware

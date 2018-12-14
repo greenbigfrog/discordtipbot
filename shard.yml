@@ -20,8 +20,7 @@ dependencies:
     github: greenbigfrog/discordcr
     branch: special
   bitcoin_rpc:
-    github: greenbigfrog/bitcoin_rpc
-    branch: master
+    github: citizen428/bitcoin_rpc
   raven:
     github: greenbigfrog/raven.cr
     branch: new-cr
