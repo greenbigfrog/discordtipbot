@@ -47,7 +47,7 @@ spawn do
 end
 
 Config.current.each do |_, config|
-  db = DB.open(config.database_url + "?initial_pool_size=1&max_pool_size=1&max_idle_pool_size=1")
+  db = DB.open(config.database_url.split('?')[0] + "?initial_pool_size=1&max_pool_size=1&max_idle_pool_size=1")
   bot = Discord::Client.new(token: config.discord_token, client_id: config.discord_client_id)
   cache = Discord::Cache.new(bot)
   bot.cache = cache
