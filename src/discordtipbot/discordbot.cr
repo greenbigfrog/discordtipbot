@@ -271,7 +271,7 @@ class DiscordBot
         next unless context.request.method == "POST"
         @tip.insert_tx(context.request.query_params["tx"])
       end
-      server.bind_tcp(@config.walletnotify_port)
+      server.bind_tcp("0.0.0.0", @config.walletnotify_port)
       server.listen
     end
 
