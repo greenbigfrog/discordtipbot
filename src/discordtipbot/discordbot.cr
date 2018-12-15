@@ -191,9 +191,10 @@ class DiscordBot
     end
 
     @bot.on_ready(error) do
+      sleep 1.minute
       bot_list = BotList::Client.new(@bot)
-      bot_list.add_provider(BotList::DBotsDotOrgProvider.new(@config.dbl_stats))
-      bot_list.add_provider(BotList::DBotsDotGGProvider.new(@config.botsgg_token))
+      bot_list.add_provider(BotList::DBotsDotOrgProvider.new(@config.dbl_stats)) if @config.dbl_stats
+      bot_list.add_provider(BotList::DBotsDotGGProvider.new(@config.botsgg_token)) if @config.botsgg_token
 
       bot_list.update_every(30.minutes)
     end
@@ -228,11 +229,10 @@ class DiscordBot
 
         # Done streaming
         if @available_guilds == @unavailable_guilds
-          # Process guilds at a rate
           @cache.guilds.each do |_id, guild|
             handle_new_guild(guild)
-            sleep 1
           end
+          sleep 1
 
           # Any guild after this is new, not streaming anymore
           @streaming = false

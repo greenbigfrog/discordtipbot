@@ -47,11 +47,12 @@ spawn do
 end
 
 Config.current.each do |_, config|
+  next unless auth = config.dbl_auth
   db = DB.open(config.database_url.split('?')[0] + "?initial_pool_size=1&max_pool_size=1&max_idle_pool_size=1")
   bot = Discord::Client.new(token: config.discord_token, client_id: config.discord_client_id)
   cache = Discord::Cache.new(bot)
   bot.cache = cache
-  data[config.coinname_full.downcase] = Coin.new(db, bot, cache, config.dbl_auth)
+  data[config.coinname_full.downcase] = Coin.new(db, bot, cache, auth)
 end
 
 get "/" do

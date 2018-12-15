@@ -57,13 +57,13 @@ class Config
     discord_token: String,
     discord_client_id: UInt64,
 
-    dbl_auth: String,
-    dbl_stats: String,
-    botsgg_token: String,
+    dbl_auth: String?,
+    dbl_stats: String?,
+    botsgg_token: String?,
 
     coin_api_type: String,
 
-    blockio_api_key: String,
+    blockio_api_key: String?,
 
     rpc_url: String,
     rpc_username: String,
