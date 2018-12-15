@@ -4,7 +4,7 @@ RUN apt-get update \
 	&& apt-get install --no-install-recommends -y software-properties-common \
 	&& add-apt-repository ppa:bitcoin/bitcoin \
 	&& apt-get update \
-	&& apt-get --no-install-recommends -y install build-essential libssl-dev libdb4.8-dev libdb4.8++-dev libminiupnpc-dev qt5-default qt5-qmake qtbase5-dev-tools qttools5-dev-tools libboost-dev libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev git curl \
+	&& apt-get --no-install-recommends -y install build-essential libssl-dev libdb4.8-dev libdb4.8++-dev libminiupnpc-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev git curl \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 RUN dpkg-reconfigure locales && \
