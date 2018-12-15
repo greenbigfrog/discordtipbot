@@ -31,7 +31,13 @@ module Premium
     if kind == Kind::Guild
       @db.exec("UPDATE config SET premium = true, premium_till = $1 WHERE serverid = $2", till, id)
     else
-      @db.exec("UPDATE accounts SET premium = true, premium_till = $1 WHERE userid = $2", till, id)
+      @db.exec(<<-SQL, id, till)
+      INSERT INTO accounts(userid, premium, premium_till)
+        VALUES ($1, true, $2)
+      ON CONFLICT (userid) DO
+        UPDATE SET premium = true, premium_till = $2
+        WHERE accounts.userid = $1
+      SQL
     end
   end
 
