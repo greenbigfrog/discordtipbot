@@ -69,7 +69,15 @@ class Soak
 
       string = build_user_string(ctx[ConfigMiddleware].get_config(msg, "mention") || false, targets)
 
-      client.create_message(msg.channel_id, "**#{msg.author.username}** soaked a total of **#{amount_each * targets.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
+      channel_id = msg.channel_id
+
+      reply = "**#{msg.author.username}** soaked a total of **#{amount_each * targets.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}"
+      if reply.size > 2000
+        msgs = split(reply)
+        msgs.each { |x| client.create_message(channel_id, x) }
+      else
+        client.create_message(channel_id, reply)
+      end
     end
     yield
   end
