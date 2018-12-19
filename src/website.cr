@@ -89,6 +89,11 @@ post "/webhook/:coin" do |env|
   queue.push(Msg.new(coin, user, msg))
 end
 
+get "/qr/:link" do |env|
+  link = env.params.url["link"]
+  env.redirect("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{link}")
+end
+
 Kemal.run do |conf|
   conf.env = "production"
 end

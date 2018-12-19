@@ -15,7 +15,7 @@ class Deposit
       address = @tip.get_address(msg.author.id.to_u64)
       embed = Discord::Embed.new(
         footer: Discord::EmbedFooter.new("I love you! ❤"),
-        image: Discord::EmbedImage.new("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{@config.uri_scheme}:#{address}")
+        image: Discord::EmbedImage.new("https://tipbot.info/qr/#{@config.uri_scheme}:#{address}")
       )
       client.create_message(cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
