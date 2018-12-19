@@ -55,8 +55,12 @@ Config.current.each do |_, config|
   data[config.coinname_full.downcase] = Coin.new(db, bot, cache, auth)
 end
 
-get "/" do
-  "Discord Tip Bot Website. WIP"
+get "/" do |env|
+  env.redirect("/index.html")
+end
+
+get "/docs" do |env|
+  env.redirect("/docs/index.html")
 end
 
 SQL = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', 163607982473609216, $1, $2)"

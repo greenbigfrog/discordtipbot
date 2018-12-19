@@ -10,6 +10,7 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=0 /src/website /
+COPY --from=0 /src/docs/_site/ /public/
 EXPOSE 8080
 
 RUN adduser --disabled-password --gecos "" docker
