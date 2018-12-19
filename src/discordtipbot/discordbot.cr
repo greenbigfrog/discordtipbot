@@ -15,13 +15,15 @@ SUPPORT         = "http://tipbot.gbf.re"
 class DiscordBot
   include Utilities
 
+  @cache : Discord::Cache
+
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
 
-  def initialize(@config : Config, @log : Logger)
+  def initialize(@config : Config, @log : Logger, @bot : Discord::Client, cache : Discord::Cache?)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
-    @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
-    @cache = Discord::Cache.new(@bot)
+    cache = Discord::Cache.new(@bot) unless cache
+    @cache = cache.not_nil!
     @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)

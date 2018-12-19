@@ -29,9 +29,12 @@ class DiscordTipBot
       log.debug("Tipbot network getting started")
 
       log.debug("starting forking")
+      cache = nil
       Config.current.each do |name, config|
         raven_spawn(name: "#{name} Bot") do
-          DiscordBot.new(config, log).run
+          bot = Discord::Client.new(token: config.discord_token, client_id: config.discord_client_id)
+          cache = Discord::Cache.new(bot) unless cache
+          DiscordBot.new(config, log, bot, cache).run
         end
       end
       log.debug("finished forking")
