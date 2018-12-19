@@ -21,7 +21,7 @@ class Soak
 
     # cmd[0]: amount
     cmd = ctx[Command].command
-    return client.create_message(msg.channel_id, cmd_usage) unless cmd.size > 0
+    return client.create_message(msg.channel_id, "Invalid Command usage: #{cmd_usage}") unless cmd.size > 0
 
     amount = parse_amount(msg, cmd[0])
     return client.create_message(msg.channel_id, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount

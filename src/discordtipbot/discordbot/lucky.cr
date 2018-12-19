@@ -7,7 +7,7 @@ class DiscordBot
     # cmd[0]: amount
     cmd = ctx[Command].command
 
-    return reply(msg, cmd_usage) if cmd.empty?
+    return reply(msg, "Invalid command usage: #{cmd_usage}") if cmd.empty?
 
     amount = parse_amount(msg, cmd[0])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
