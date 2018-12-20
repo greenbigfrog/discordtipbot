@@ -72,10 +72,6 @@ a:link, a:visited {
 	padding: 20px;
 }
 
-.outer_card_wrapper {
-	grid-column: 2 / -2;
-}
-
 .card {
   	box-shadow: 0 5px 8px 0 rgba(0,0,0,0.4);
   	transition: 0.3s;
@@ -135,8 +131,7 @@ a:link, a:visited {
 	background-color: #7289DA;
 
 	margin: 30px;
-	min-width: 140px;
-	max-width: 180px;
+	width: 150px;
 
 	display: flex;
 	flex-direction: column;
@@ -167,6 +162,10 @@ a:link, a:visited {
 @media (max-width:480px)  {
 	.wrapper {
 		grid-template-columns: [wrapper-start] repeat(30, 1fr) [wrapper-end];
+	}
+
+	.bot_card {
+		margin: 15px;
 	}
 }
 
