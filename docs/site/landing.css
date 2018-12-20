@@ -1,0 +1,178 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+	background-color: #2C2F33;
+	color: white;
+    font-family: 'PT Sans', sans-serif;
+    cursor: default;
+}
+
+a:link, a:visited {
+  color: #7289DA;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.wrapper {
+	display: grid;
+	grid-template-columns: [wrapper-start] repeat(12, 1fr) [wrapper-end];
+	grid-row-gap: 1%;
+}
+
+.header {
+	background-color: #7289DA;
+	grid-column: wrapper;
+
+  	box-shadow: 0 5px 20px 10px rgba(0,0,0,0.4);
+  
+	display: flex;
+	justify-content: flex-end;
+	flex-direction: row;
+	height: 30px;
+}
+
+.header a {
+	color: #23272A;
+	/* color: white; */
+
+	text-decoration: none;
+}
+
+.header_support_link {
+	padding: 5px;
+}
+
+.header_docs_link {
+	padding: 5px;
+}
+
+.title {
+	margin: 30px;
+	
+	text-align: center;
+
+	grid-column: 4 / -4;
+
+	background-color: #23272A;
+	color: #7289DA;
+	border-radius: 4px;
+  	box-shadow: 0 10px 16px 0 rgba(0,0,0,0.6);
+}
+
+.sub_title {
+	font-family: monospace;
+	padding: 10px;
+}
+
+.mega_title {
+	font-size: 300%;
+	padding: 20px;
+}
+
+.outer_card_wrapper {
+	grid-column: 2 / -2;
+}
+
+.card {
+  	box-shadow: 0 5px 8px 0 rgba(0,0,0,0.4);
+  	transition: 0.3s;
+  	border-radius: 5px;
+  	padding: 5px 16px;
+}
+
+.card:hover {
+  	box-shadow: 0 8px 16px 0 rgba(0,0,0,0.5);
+}
+
+.card_wrapper {
+	grid-column: 2 / -2;
+
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	align-items: center;
+}
+
+.features_wrapper {
+	align-items: flex-start;
+}
+
+.features_card {
+	background-color: #23272A;
+
+	max-width: 420px;
+  	min-height: 80px;
+  	margin: 10px 10px;
+  	margin-top: 20px;
+}
+
+.avatar {
+ 	max-width: 100%;
+  	height: auto;
+  	margin: 5px;
+
+  	align-self: center;
+}
+
+.name {
+	align-self: center;
+}
+
+.id {
+	padding: 2px;
+	align-self: center;
+	font-size: x-small;
+}
+
+.id:hover {
+	font-size: small;
+}
+
+.bot_card {	
+	background-color: #7289DA;
+
+	margin: 30px;
+	min-width: 140px;
+	max-width: 180px;
+
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.links {
+	grid-column: wrapper;
+	
+	background-color: #99AAB5;
+}
+
+.footer {
+	grid-column: wrapper;
+	
+	background-color: #23272A;
+}
+
+.reason_card {
+	background-color: #7289DA;
+
+	max-width: 250px;
+  	min-height: 150px;
+  	margin: 10px 10px;
+}
+
+@media (max-width:480px)  {
+	.wrapper {
+		grid-template-columns: [wrapper-start] repeat(30, 1fr) [wrapper-end];
+	}
+}
+
+@media (max-width:845px)  {
+	.title {
+		margin: 15px;
+		grid-column: 2 / -2;
+	}
+}
