@@ -295,20 +295,19 @@ picture.coin_logo {
 		margin: 15px;
 	}
 
+	.statistics {
+		margin: 10px;
+	}
+
 	.statistics_card {
 		min-width: auto;
 		padding: 20px;
-
-	/* 	display: flex;
-		flex-direction: column; */
 	}
 
-	.stats {
-		padding: 10px;
-	}
+	picture.coin_logo {
+		max-height: 30px;
 
-	.coin_logo {
-		display: none;
+		padding: 0;
 	}
 }
 
