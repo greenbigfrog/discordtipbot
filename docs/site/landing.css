@@ -115,8 +115,8 @@ a:link, a:visited {
 	/* background-color: #23272A; */
 	background-color: #2f3136;
 
-	max-width: 420px;
-  	min-height: 80px;
+	min-height: 80px;
+  	width: 420px;
   	margin: 10px 10px;
   	margin-top: 20px;
 }
@@ -188,11 +188,14 @@ a.card {
 
 	/* color: black; */
 	color: white;
+	box-shadow: 2px 9px 12px 0 rgba(0,0,0,0.6);
 
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	justify-items: center;
 	grid-auto-flow: row dense;
+
+	transition: 0.1s;
 
 	margin: 10px;
 	margin-right: 5px;
@@ -204,13 +207,20 @@ a.card {
 }
 
 .statistics_date {
-	display: none;
-	grid-column: 2 / -1;
-	width: 100%;
+  	transition: 0.1s;
+    display: inline;
+  	font-size: 0;
+    grid-column: 2 / -1;
+    width: 100%;
+
 }
 
 .statistics_card:hover .statistics_date {
-	display: inline;
+    font-size: smaller;
+}
+
+.statistics_card:hover {
+	padding: 10px;
 }
 
 .coin {
@@ -279,9 +289,16 @@ picture.coin_logo {
 	padding-right: 30px;
 	padding-left: 30px;
 	vertical-align: middle;
+
+	height: 20px;
 }
 
-.crystal {
+.footer div a {
+	text-decoration: none;
+	color: white;
+}
+
+.crystal_img {
 	max-height: 20px;
 	vertical-align: bottom;
 }
@@ -308,6 +325,10 @@ picture.coin_logo {
 		max-height: 30px;
 
 		padding: 0;
+	}
+
+	.features .card {
+		padding: 10px 16px;
 	}
 }
 
