@@ -59,6 +59,8 @@ get "/" do
   "Discord Tip Bot Website. WIP"
 end
 
+SQL = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', 163607982473609216, $1, $2)"
+
 post "/webhook/:coin" do |env|
   headers = env.request.headers
   json = env.params.json
@@ -79,12 +81,23 @@ post "/webhook/:coin" do |env|
   user = user.to_u64
 
   if server
-    data[coin].extend_premium(Premium::Kind::Guild, server.to_u64, 15.minutes)
-    msg = "Thanks for voting. Extended premium of #{server} by 15 minutes"
+    data[coin].extend_premium(Premium::Kind::Guild, server.to_u64, 30.minutes)
+    msg = "Thanks for voting. Extended premium of #{server} by 15 **x2** minutes"
   else
-    data[coin].extend_premium(Premium::Kind::User, user, 1.hour)
-    msg = "Thanks for voting. Extended your own personal global premium by 1 hour"
+    data[coin].extend_premium(Premium::Kind::User, user, 2.hour)
+    msg = "Thanks for voting. Extended your own personal global premium by 1 **x2** hours"
   end
+
+  if coin == "dogecoin"
+    str = "1 DOGE"
+    amount = 1
+  else
+    str = "5 ECA"
+    amount = 5
+  end
+  data[coin].db.exec(SQL, user, amount)
+
+  msg = "#{msg}\nAs a christmas present you've received twice as much premium time as well as #{str} courtesy of <@163607982473609216>"
 
   queue.push(Msg.new(coin, user, msg))
 end
