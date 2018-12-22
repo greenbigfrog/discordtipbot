@@ -2,8 +2,7 @@
 <html lang="en">
 	<head>
 		<title>Discord Tip Bot</title>
-		<link rel="stylesheet" href="./landing.css">
-		<link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
+		<link rel="stylesheet" href="../landing.css">
 		<meta name="viewport" content="width=320, initial-scale=1">
 		<meta charset="utf-8"/>
 	</head>
@@ -18,64 +17,130 @@
 				<h2 class="sub_title">Tip other Users Cryptocurrency on Discord</h2>
 			</div>
 			<div class="reasons card_wrapper">
-				<div class="card reason_card">
+				<div class="card">
 					<h4><b>State of the Art Security</b></h4>
 					<p>We only store as many coins as required for daily operation on site. The rest of the coins are stored offsite. This means, that even if we get hacked, they can only steal part of the coins.</p>
 				</div>
-				<div class="card reason_card">
+				<div class="card">
 					<h4><b>Free to use</b></h4>
 					<p>There are no fees or the like, except for coin withdrawal fees.<br>
 					<small>There is a Premium tier, which unlocks special/extra features. This does not affect the basic user though</small></p>
 				</div>
-				<div class="card reason_card">
+				<div class="card">
 					<h4><b>High Availibility</b></h4>
 					<p>We strive for an uptime of over 99%</p>
 					<p>If we're unable to meet this for a longer time period, we'll give everyone premium for a month</p>
 				</div>
 			</div>
-			<div class="features card_wrapper features_wrapper">
-				<div class="card features_card">
-					<b>Multiple Currencies</b><br>
+			<div class="statistics card_wrapper">
+				<div class="statistics_card">
+					<picture class="coin_logo">
+						<source srcset="/img/dogecoin.webp" type="image/webp">
+						<img src="/img/dogecoin.png" alt="Dogecoin Logo">
+					</picture>
+					<div class="coin">
+						<h2>Dogecoin</h2>
+					</div>
+					<div class="stats">
+						<div class="key">tipped</div>
+						<div class="value">≫ 1.500.000</div>
+					</div>
+					<div class="stats">
+						<div class="key">rained</div>
+						<div class="value">≫ 1.000.000</div>
+					</div>
+					<div class="stats">
+						<div class="key">soaked</div>
+						<div class="value">≫ 120.000</div>
+					</div>
+					<div class="statistics_date">
+						<small>Updated December 2018</small>
+					</div>
+				</div>
+				<div class="statistics_card">
+					<picture class="coin_logo">
+						<source srcset="/img/electra.webp" type="image/webp">
+						<img src="/img/electra.png" alt="Electra Logo">
+					</picture>
+					<div class="coin"><h2>Electra</h2></div>
+					<div class="stats">
+						<div class="key">tipped</div>
+						<div class="value">≫ 14.000.000</div>
+					</div>
+					<div class="stats">
+						<div class="key">rained</div>
+						<div class="value">≫ 26.000.000</div>
+					</div>
+					<div class="stats">
+						<div class="key">soaked</div>
+						<div class="value">≫ 100.000</div>
+					</div>
+					<div class="statistics_date">
+						<small>Updated December 2018</small>
+					</div>
+				</div>
+			</div>
+			<div class="features card_wrapper">
+				<div class="card">
+					<h4>Multiple Currencies</h4>
 					Currently there are tip bots available for <a href="https://dogecoin.com/">Dogecoin</a> and <a href="https://electraproject.org/">Electra</a>
 					<small>If you're interested in a tip bot for a other currency, <a href="https://contact.tipbot.info">get in touch with us</a></small>
 				</div>
-				<div class="card features_card">
-					<b>Engage with your community</b><br>
+				<div class="card">
+					<h4>Engage with your community</h4>
 					Use the <code>soak</code> command to distribute crypto across all online users or use <code>rain</code> to reward active chatters
 				</div>
-				<div class="card features_card">
-					<b>Support</b><br>
+				<div class="card">
+					<h4>Support</h4>
 					If you run into any issues, we'll try to solve your issue within 48h. Simply join our <a href="https://contact.tipbot.info">Discord Support Guild</a>
 				</div>
-				<div class="card features_card">
-					<b>Lorem Ipsum</b><br>
+				<div class="card">
+					<h4>Lorem Ipsum</h4>
 					Some random message here that is at least 400 pixels long. Are we there yet?
 				</div>
 			</div>
 			<div class="bot_list card_wrapper">
-				<div class="card bot_card">
-					<img class= "avatar" src="https://images.discordapp.net/avatars/168248887721721856/2af52815a34612eaae4a12c9a762ac09.png?size=128" alt="Dogecoin Tip Bot Avatar" srcset="https://images.discordapp.net/avatars/168248887721721856/2af52815a34612eaae4a12c9a762ac09.png?size=256 2x">
+				<a class="card" href="https://discordapp.com/oauth2/authorize?&client_id=168248115793494018&scope=bot">
+					<picture class= "avatar">
+						<source srcset="https://images.discordapp.net/avatars/168248887721721856/2af52815a34612eaae4a12c9a762ac09.webp?size=128 1x, https://images.discordapp.net/avatars/168248887721721856/2af52815a34612eaae4a12c9a762ac09.webp?size=256 2x" type="image/webp">
+						<source srcset="https://images.discordapp.net/avatars/168248887721721856/2af52815a34612eaae4a12c9a762ac09.png?size=256 2x" type="image/png">
+						<img src="https://images.discordapp.net/avatars/168248887721721856/2af52815a34612eaae4a12c9a762ac09.png?size=128" alt="Dogecoin Tip Bot Avatar">
+					</picture>
 					<div class="name">
 						<b>dogecointipbot</b>#2543
 					</div>
 					<div class="id">168248887721721856</div>
-				</div>
-				<div class="card bot_card">
-					<img class= "avatar" src="https://images.discordapp.net/avatars/403432315688189952/c5790fa36a1de9ae46de26eeedcbbdb1.png?size=128" alt="Electra Tip Bot Avatar" srcset="https://images.discordapp.net/avatars/403432315688189952/c5790fa36a1de9ae46de26eeedcbbdb1.png?size=256 2x">
+				</a>
+				<a class="card" href="https://discordapp.com/oauth2/authorize?&client_id=403432315688189952&scope=bot">
+					<picture class= "avatar">
+						<source srcset="https://images.discordapp.net/avatars/403432315688189952/c5790fa36a1de9ae46de26eeedcbbdb1.webp?size=128 1x, https://images.discordapp.net/avatars/403432315688189952/c5790fa36a1de9ae46de26eeedcbbdb1.webp?size=256 2x" type="image/webp">
+						<source srcset="https://images.discordapp.net/avatars/403432315688189952/c5790fa36a1de9ae46de26eeedcbbdb1.png?size=256 2x" type="image/png">
+						<img src="https://images.discordapp.net/avatars/403432315688189952/c5790fa36a1de9ae46de26eeedcbbdb1.png?size=128" alt="Dogecoin Tip Bot Avatar">
+					</picture>
 					<div class="name">
 						<b>electratipbot</b>#8455
 					</div>
 					<div class="id">403432315688189952</div>
-				</div>
+				</a>
 			</div>
-			<!-- <li class="nav-item">
-							<a class="nav-link" href="github.com/greenbigfrog/discordtipbot"><i class="fab fa-github"></i> GitHub</a>
-			</li>
-			<li class="nav-item">
-							<a class="nav-link" href="tipbot.gbf.re"><i class="fab fa-discord"></i> Discord</a>
-			</li> -->
-			<div class="links">Link to Github and Discord</div>
-			<div class="footer">Footer</div>
+			<!-- <div class="links">
+				<div class="link">
+					<a href="github.com/greenbigfrog/discordtipbot">
+						<img src="/img/github.png">
+						GitHub
+					</a>
+				</div>
+				<div class="link">
+					<a href="https://contact.tipbot.info">
+						<img src="/img/discord.png">
+						Discord
+					</a>
+				</div>
+			</div> -->
+			<div class="footer">
+				<div>Made with 💻 and 🍺 by 🐸</div>
+				<div>Powered by <img class="crystal" src="/img/crystal.png"></div>
+			</div>
 		</div>
 	</body>
 </html>
