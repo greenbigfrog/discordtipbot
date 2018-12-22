@@ -10,7 +10,7 @@ TERMS           = "In no event shall this bot or its dev be responsible for any 
 ZWS             = "​" # There is a zero width space stored here
 PREMIUM_CONFIG  = ["min_soak", "min_soak_total", "min_rain", "min_rain_total", "min_tip", "prefix"]
 CONFIG_COLLUMNS = ["soak", "rain", "mention", "contacted"] + PREMIUM_CONFIG
-SUPPORT         = "http://tipbot.gbf.re"
+SUPPORT         = "<https://contact.tipbot.info>"
 
 class DiscordBot
   include Utilities
