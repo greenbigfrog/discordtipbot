@@ -3,12 +3,6 @@ ADD . /src
 WORKDIR /src
 RUN crystal build --static --release -s src/website.cr
 
-FROM jekyll/jekyll:latest
-COPY --from=0 /src/docs /src
-WORKDIR /src
-RUN bundle
-RUN jekyll build
-
 FROM debian:stretch-slim
 RUN apt-get update \
 	&& apt-get --no-install-recommends -y install ca-certificates \
@@ -16,9 +10,9 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=0 /src/website /
-COPY --from=1 /src/_site/ /public/
+COPY --from=0 /src/docs/site /public/
 EXPOSE 8080
 
 RUN adduser --disabled-password --gecos "" docker
 USER docker
-ENTRYPOINT ["/website", "config.json", "-p 8080"]
+CMD ["/website", "config.json", "-p 8080", "--ssl", "--ssl-key-file", "/origin_cert.priv", "--ssl-cert-file", "/origin_cert.pub"]
