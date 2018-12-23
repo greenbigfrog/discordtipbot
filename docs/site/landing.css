@@ -11,11 +11,17 @@ body {
 }
 
 h4 {
+	margin-top: 4px;
 	margin-bottom: 10px;
+	margin-left: 5px;
 }
 
 ul {
 	padding-left: 10px;
+}
+
+small {
+	font-size: .8em;
 }
 
 a:link, a:visited {
@@ -45,22 +51,18 @@ a:link, a:visited {
 	text-decoration: none;
 	margin: 8px;
 	line-height: 20px;
+
+	padding: 5px;
 }
 
 .header a:hover {
-	font-size: 120%;
-}
-
-.header_support_link {
-	padding: 5px;
-}
-
-.header_docs_link {
-	padding: 5px;
+	transform: scale(1.2);
 }
 
 .title {
-	margin: 30px;
+	margin: 100px;
+	margin-left: 50px;
+	margin-right: 50px;
 	
 	text-align: center;
 
@@ -87,7 +89,7 @@ a:link, a:visited {
   	transition: 0.3s;
   	border-radius: 5px;
   	padding: 5px 16px;
-  	margin: 5px;
+  	margin: 10px;
 }
 
 .card:hover {
@@ -96,6 +98,9 @@ a:link, a:visited {
 
 .card_wrapper {
 	grid-column: 3 / -3;
+
+	margin-top: 50px;
+	margin-bottom: 50px;
 
 	display: flex;
 	flex-wrap: wrap;
@@ -112,10 +117,9 @@ a:link, a:visited {
 }
 
 .features .card {
-	/* background-color: #23272A; */
 	background-color: #2f3136;
 
-	min-height: 80px;
+	height: 80px;
   	width: 420px;
   	margin: 10px 10px;
   	margin-top: 20px;
@@ -147,7 +151,8 @@ a:link, a:visited {
 	background-color: #7289DA;
 
 	margin: 30px;
-	width: 150px;
+
+	min-width: 165px;
 
 	display: flex;
 	flex-direction: column;
@@ -159,6 +164,10 @@ a:link, a:visited {
 
 .bot_list .card:hover {
 	background-color: #5F78D4;
+}
+
+.bot_list {
+	grid-column: 5 / -5;
 }
 
 a.card {
@@ -175,18 +184,12 @@ a.card {
 
 
 	max-width: 250px;
-  	min-height: 150px;
-  	margin: 10px 10px;
-}
-
-.statistics {
-	margin: 50px;
+  	min-height: 170px;
 }
 
 .statistics_card {
 	background-color: #4C69D4	;
 
-	/* color: black; */
 	color: white;
 	box-shadow: 2px 9px 12px 0 rgba(0,0,0,0.6);
 
@@ -197,30 +200,27 @@ a.card {
 
 	transition: 0.1s;
 
-	margin: 10px;
-	margin-right: 5px;
-	margin-left: 5px;
-
 	min-width: 450px;
+	margin: 10px;
+	padding: 10px;
 
 	text-align: center;
 }
 
 .statistics_date {
-  	transition: 0.1s;
-    display: inline;
-  	font-size: 0;
+  	transition: 0.2s;
+  	opacity: 0;
     grid-column: 2 / -1;
-    width: 100%;
-
+    margin: -5px;
+    font-size: small;
 }
 
 .statistics_card:hover .statistics_date {
-    font-size: smaller;
+    opacity: 1;
 }
 
 .statistics_card:hover {
-	padding: 10px;
+	transform: scale(1.05);
 }
 
 .coin {
@@ -241,7 +241,7 @@ a.card {
 picture.coin_logo {
 	align-self: center;
 	grid-column: 1;
-	grid-row: 1 / 3;
+	grid-row: 1 / 4;
 
 	max-height: 100px;
 
@@ -279,8 +279,9 @@ picture.coin_logo {
 
 	display: flex;
 	justify-content: center;
+	flex-wrap: wrap;
 
-	height: 40px;
+	min-height: 40px;
 }
 
 .footer div {
@@ -289,6 +290,8 @@ picture.coin_logo {
 	padding-right: 30px;
 	padding-left: 30px;
 	vertical-align: middle;
+
+	margin: 5px;
 
 	height: 20px;
 }
@@ -329,6 +332,7 @@ picture.coin_logo {
 
 	.features .card {
 		padding: 10px 16px;
+		min-width: 80%;
 	}
 }
 
@@ -344,6 +348,13 @@ picture.coin_logo {
 
 		display: flex;
 		flex-direction: column;
+	}
+
+	.features .card {
+		min-height: 80px;
+		height: auto;
+		min-width: 90%;
+		width: auto;
 	}
 }
 
