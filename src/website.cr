@@ -60,7 +60,8 @@ get "/" do |env|
 end
 
 get "/docs" do |env|
-  env.redirect("/docs/index.html")
+  # env.redirect("/docs/index.html")
+  env.redirect("https://github.com/greenbigfrog/discordtipbot/tree/master/docs")
 end
 
 SQL = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ('tip', 163607982473609216, $1, $2)"
