@@ -29,7 +29,7 @@ class Offsite
       client.create_message(msg.channel_id, "Send coins here to put them back in the bot: **#{@tip.get_offsite_address(id)}**")
     when "send"
       # cmd[1]: address, cmd[2]: amount
-      return client.create_message(msg.channel_id, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 4
+      return client.create_message(msg.channel_id, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 3
 
       amount = parse_amount(msg, cmd[2])
       return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount") if amount.nil?
