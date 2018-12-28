@@ -6,7 +6,7 @@ require "discordcr"
 require "big"
 require "big/json"
 require "discordcr-middleware"
-require "./shared_cache"
+require "./cache"
 require "./discordtipbot/**"
 
 class DiscordTipBot
@@ -29,7 +29,7 @@ class DiscordTipBot
 
       log.debug("Tipbot network getting started")
 
-      shared_cache = Discord::SharedCache.new
+      shared_cache = Discord::Cache.new(Discord::Client.new(""))
 
       log.debug("starting forking")
       Config.current.each do |name, config|
