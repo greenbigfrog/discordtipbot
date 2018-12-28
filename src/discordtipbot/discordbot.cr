@@ -98,7 +98,7 @@ class DiscordBot
       cached_users = @cache.users.size
       users = @cache.guilds.values.map { |x| x.member_count || 0 }.sum
 
-      reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)")
+      reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)\n*(This is for all bots running in this process on this shard. TL;DR It's broken)*")
     end
     @bot.on_message_create(error, config,
       Command.new(["reload_conf", "load_conf"]), rl, BotAdmin.new(@config)) do |msg, ctx|
