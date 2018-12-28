@@ -52,8 +52,7 @@ class Soak
     return client.create_message(msg.channel_id, "No one wants to get wet right now :sob:") unless users.size > 1
 
     if (users.size * min_soak) > amount
-      # TODO enable user sampling as soon as crystal bug is fixed
-      targets = users # .sample((amount / min_soak).to_i64)
+      targets = users.sample((amount / min_soak).to_i64)
     else
       targets = users
     end
