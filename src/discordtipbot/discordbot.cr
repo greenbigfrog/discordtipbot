@@ -18,11 +18,8 @@ class DiscordBot
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
 
-  def initialize(@config : Config, @log : Logger)
+  def initialize(@bot : Discord::Client, @cache : Discord::Cache, @config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
-    @bot = Discord::Client.new(token: @config.discord_token, client_id: @config.discord_client_id)
-    @cache = Discord::Cache.new(@bot)
-    @bot.cache = @cache
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)
     @presence_cache = PresenceCache.new
@@ -191,6 +188,8 @@ class DiscordBot
     end
 
     @bot.on_ready(error) do
+      # Disable stats posting with `export STATS=sth`
+      next if ENV["STATS"]?
       sleep 1.minute
       bot_list = BotList::Client.new(@bot)
       bot_list.add_provider(BotList::DBotsDotOrgProvider.new(@config.dbl_stats)) if @config.dbl_stats
