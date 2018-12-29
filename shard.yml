@@ -33,6 +33,9 @@ dependencies:
     github: kemalcr/kemal
   bot_list:
     github: z64/bot_list
+  shardmaster:
+    github: greenbigfrog/shardmaster
+    branch: master
 
 development_dependencies:
   ameba:

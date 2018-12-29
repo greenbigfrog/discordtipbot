@@ -64,3 +64,7 @@ shards:
     github: greenbigfrog/raven.cr
     commit: 1060c969371e4fb4f03f75f048b9d90c0b8f77ef
 
+  shardmaster:
+    github: greenbigfrog/shardmaster
+    commit: 4a07b295dd496b969a0dfbcaa1905d9aaf6d9e6e
+

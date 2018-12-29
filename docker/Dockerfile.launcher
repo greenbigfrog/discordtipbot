@@ -12,4 +12,4 @@ RUN apt-get update \
 RUN adduser --disabled-password --gecos "" docker
 USER docker
 COPY --from=0 /src/launcher /
-ENTRYPOINT ["/launcher", "config.json"]
+CMD ["/launcher", "config.json"]
