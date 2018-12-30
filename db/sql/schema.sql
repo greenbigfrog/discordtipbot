@@ -15,12 +15,19 @@ CREATE TABLE accounts (
 
 INSERT INTO accounts (userid) VALUES (0);
 
+CREATE TYPE transaction_memo AS ENUM('deposit', 'tip', 'soak', 'rain', 'withdrawal', 'sponsored');
+CREATE TYPE coin_type AS ENUM('doge', 'eca');
+
 CREATE TABLE transactions (
        id serial PRIMARY KEY,
-       memo text NOT NULL,
-       from_id bigint NOT NULL REFERENCES accounts(userid),
-       to_id bigint NOT NULL REFERENCES accounts(userid),
+       coin coin_type NOT NULL,
+       memo transaction_memo NOT NULL,
+       from_id bigint NOT NULL REFERENCES accounts(id),
+       to_id bigint NOT NULL REFERENCES accounts(id),
        amount numeric(64, 8) NOT NULL CONSTRAINT positive_amount CHECK (amount > 0),
+
+       address text,
+       coin_transaction_id text,
 
        time timestamptz NOT NULL DEFAULT now()
 );
@@ -52,12 +59,10 @@ CREATE TABLE coin_transactions (
        created_time timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TYPE withdrawal_status AS ENUM ('pending', 'processed');
-
 CREATE TABLE withdrawals (
        id serial PRIMARY KEY,
-       status withdrawal_status DEFAULT 'pending',
-       from_id bigint NOT NULL REFERENCES accounts(userid),
+       pending boolean DEFAULT true,
+       from_id bigint NOT NULL REFERENCES accounts(id),
        address text NOT NULL,
        amount numeric(64, 8) CONSTRAINT positive_amount CHECK (amount > 0),
 
