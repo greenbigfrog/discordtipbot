@@ -204,14 +204,6 @@ class DiscordBot
       @active_users_cache.touch(msg.channel_id.to_u64, msg.author.id.to_u64, msg.timestamp.to_utc) unless msg.author.bot
     end
 
-    # Check if it's time to send off (or on) site
-    raven_spawn do
-      Discord.every(10.seconds) do
-        check_and_notify_if_its_time_to_send_back_onsite
-        check_and_notify_if_its_time_to_send_offsite
-      end
-    end
-
     # Handle new guilds and owner notifying etc
     @streaming = false
 
@@ -417,91 +409,11 @@ class DiscordBot
     @bot.run
   end
 
-  private def post_embed_to_webhook(embed : Discord::Embed, webhook : Webhook)
-    @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
-  end
-
   private def bot?(user : Discord::User)
     bot_status = user.bot
     if bot_status
       return false if @config.whitelisted_bots.includes?(user.id)
     end
     bot_status
-  end
-
-  private def check_and_notify_if_its_time_to_send_offsite
-    wallet = @tip.node_balance(@config.confirmations)
-    users = @tip.db_balance
-    return if wallet == 0 || users == 0
-    goal_percentage = BigDecimal.new(0.25)
-
-    if (wallet / users) > 0.4
-      return if @tip.pending_withdrawal_sum > @tip.node_balance
-      missing = wallet - (users * goal_percentage)
-      return if @tip.pending_coin_transactions
-      current_percentage = ((wallet / users) * 100).round(4)
-      embed = Discord::Embed.new(
-        title: "It's time to send some coins off site",
-        description: "Please remove **#{missing} #{@config.coinname_short}** from the bot and to your own wallet! `#{@config.prefix}offsite send`",
-        colour: 0x0066ff_u32,
-        timestamp: Time.now,
-        fields: offsite_fields(users, wallet, current_percentage, goal_percentage * 100)
-      )
-      post_embed_to_webhook(embed, @config.admin_webhook)
-      wait_for_balance_change(wallet, Compare::Smaller)
-    end
-  end
-
-  private def check_and_notify_if_its_time_to_send_back_onsite
-    wallet = @tip.node_balance(0)
-    users = @tip.db_balance
-    return if wallet == 0 || users == 0
-    goal_percentage = BigDecimal.new(0.35)
-
-    if (wallet / users) < 0.2 || @tip.pending_withdrawal_sum > @tip.node_balance
-      missing = wallet - (users * goal_percentage)
-      missing = missing - @tip.pending_withdrawal_sum if @tip.pending_withdrawal_sum > @tip.node_balance
-      current_percentage = ((wallet / users) * 100).round(4)
-      embed = Discord::Embed.new(
-        title: "It's time to send some coins back to the bot",
-        description: "Please deposit **#{missing} #{@config.coinname_short}** to the bot (your own `#{@config.prefix}offsite address`)",
-        colour: 0xff0066_u32,
-        timestamp: Time.now,
-        fields: offsite_fields(users, wallet, current_percentage, goal_percentage * 100)
-      )
-      post_embed_to_webhook(embed, @config.admin_webhook)
-      wait_for_balance_change(wallet, Compare::Bigger)
-    end
-  end
-
-  private def offsite_fields(user_balance : BigDecimal, wallet_balance : BigDecimal, current_percentage, goal_percentage)
-    [
-      Discord::EmbedField.new(name: "Current Total User Balance", value: "#{user_balance} #{@config.coinname_short}"),
-      Discord::EmbedField.new(name: "Current Wallet Balance", value: "#{wallet_balance} #{@config.coinname_short}"),
-      Discord::EmbedField.new(name: "Current Percentage", value: "#{current_percentage}%"),
-      Discord::EmbedField.new(name: "Goal Percentage", value: "#{goal_percentage}%"),
-    ]
-  end
-
-  private def wait_for_balance_change(old_balance : BigDecimal, compare : Compare)
-    time = Time.now
-
-    new_balance = 0
-
-    loop do
-      return if (Time.now - time) > 10.minutes
-      new_balance = @tip.node_balance(0)
-      break if new_balance > old_balance if compare.bigger?
-      break if new_balance < old_balance if compare.smaller?
-      sleep 1
-    end
-
-    embed = Discord::Embed.new(
-      title: "Success",
-      colour: 0x00ff00_u32,
-      timestamp: Time.now,
-      fields: [Discord::EmbedField.new(name: "New wallet balance", value: "#{new_balance} #{@config.coinname_short}")]
-    )
-    post_embed_to_webhook(embed, @config.admin_webhook)
   end
 end

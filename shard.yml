@@ -36,6 +36,8 @@ dependencies:
   shardmaster:
     github: greenbigfrog/shardmaster
     branch: master
+  mosquito:
+    github: robacarp/mosquito
 
 development_dependencies:
   ameba:

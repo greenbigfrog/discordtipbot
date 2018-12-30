@@ -45,4 +45,8 @@ module Utilities
     end
     bot_status
   end
+
+  def post_embed_to_webhook(embed : Discord::Embed, webhook : Webhook)
+    @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
+  end
 end
