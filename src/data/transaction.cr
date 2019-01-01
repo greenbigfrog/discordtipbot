@@ -1,13 +1,4 @@
-struct Transaction
-  enum TransactionMemo
-    DEPOSIT
-    TIP
-    SOAK
-    RAIN
-    WITHDRAWAL
-    SPONSORED
-  end
-
+struct Data::Transaction
   DB.mapping(
     id: Int64,
 

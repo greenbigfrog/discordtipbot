@@ -1,9 +1,8 @@
-struct DepositAddress
+struct Data::Balance
   DB.mapping(
     id: Int64,
-    active: Bool,
     userid: Int64,
     coin: Coin,
-    address: String
+    balance: BigDecimal
   )
 end
