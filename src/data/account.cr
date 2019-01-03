@@ -57,6 +57,30 @@ module Data
       SQL
     end
 
+    def link_other_to_self(other : Account)
+      discord = other.discord_id
+      twitch = other.twitch_id
+      kind = "discord_id" if discord
+      kind = "twitch_id" if twitch
+      DATA.transaction do |tx|
+        begin
+          db = tx.connection
+          db.exec(<<-SQL, other.id, kind, discord || twitch, @id)
+          UPDATE accounts SET active = false, $2 = NULL WHERE id = $1;
+          UPDATE accounts SET $2 = $3 WHERE id = $4;
+          INSERT INTO transactions(coin, memo, amount, account_id)
+            SELECT coin, 'IMPORT_FOR_LINK', amount, $1 FROM transactions WHERE account_id = $1;
+          SQL
+
+          # TODO update_balance for all coins
+          update_balance(:doge, db)
+        rescue ex : PQ::PQError
+          tx.rollback
+          LOG.error("Unable to link Account #{@id} with #{other.id}. Exception: #{ex}")
+        end
+      end
+    end
+
     def self.transfer(amount : BigDecimal, coin : Coin, from : Int64, to : Int64, platform : UserType, memo : TransactionMemo)
       multi_transfer(amount, coin, from, [to], platform, memo)
     end
