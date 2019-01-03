@@ -3,7 +3,7 @@ class Soak
   include Utilities
   include Amount
 
-  def initialize(@tip : TipBot, @config : Config, @cache : Discord::Cache, @presence_cache : PresenceCache)
+  def initialize(@config : Config, @cache : Discord::Cache, @presence_cache : PresenceCache)
   end
 
   def call(msg, ctx)
@@ -30,7 +30,7 @@ class Soak
     min_soak_total = ctx[ConfigMiddleware].get_decimal_config(msg, "min_soak_total")
     return client.create_message(msg.channel_id, "**ERROR**: You have to soak at least **#{min_soak_total} #{@config.coinname_short}**") unless amount >= min_soak_total
 
-    users = Array(UInt64).new
+    users = Array(Int64).new
     last_id = 0_u64
 
     loop do
@@ -40,7 +40,7 @@ class Soak
       new_users.reject!(&.user.bot)
       new_users.each do |x|
         next unless @presence_cache.online?(x.user.id.to_u64)
-        users << x.user.id.to_u64 unless x.user.id.to_u64 == msg.author.id.to_u64
+        users << x.user.id.to_u64.to_i64 unless x.user.id.to_u64 == msg.author.id.to_u64
         cache.cache(x.user)
       end
     end
@@ -58,12 +58,11 @@ class Soak
     end
     targets.reject! { |x| x == nil }
 
-    case @tip.multi_transfer(from: msg.author.id.to_u64, users: targets, total: amount, memo: "soak")
-    when "insufficient balance"
-      client.create_message(msg.channel_id, "**ERROR**: Insufficient balance")
-    when false
+    res = Data::Account.multi_transfer(total: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: targets, platform: :discord, memo: :soak)
+    if res.is_a?(Data::TransferError)
+      return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    when true
+    else
       amount_each = BigDecimal.new(amount / targets.size).round(8)
 
       string = build_user_string(ctx[ConfigMiddleware].get_config(msg, "mention") || false, targets)

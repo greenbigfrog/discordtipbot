@@ -1,4 +1,4 @@
-require "./coin"
+require "./enum"
 
 struct Data::DepositAddress
   DB.mapping(

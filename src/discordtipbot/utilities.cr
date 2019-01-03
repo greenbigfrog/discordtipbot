@@ -27,12 +27,12 @@ module Utilities
   end
 
   # Builds a comma seperated list of user names or mentions
-  def build_user_string(mention : Bool, users : Set(UInt64) | Array(UInt64))
+  def build_user_string(mention : Bool, users : Set(Int64) | Array(Int64))
     string = String.build do |str|
       if mention
         users.each { |x| str << "<@#{x}>, " }
       else
-        users.each { |x| str << "#{@cache.resolve_user(x).username}, " }
+        users.each { |x| str << "#{@cache.resolve_user(x.to_u64).username}, " }
       end
     end
     string.rchop(", ")

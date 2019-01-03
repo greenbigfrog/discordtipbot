@@ -2,7 +2,7 @@ class Tip
   include Utilities
   include Amount
 
-  def initialize(@tip : TipBot, @config : Config)
+  def initialize(@config : Config)
   end
 
   def call(msg, ctx)
@@ -36,17 +36,15 @@ class Tip
     amount = parse_amount(msg, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
-    min_tip = ctx[ConfigMiddleware].get_decimal_config(msg, "min_tip")
-    return client.create_message(msg.channel_id, "**ERROR**: You have to tip at least #{min_tip} #{@config.coinname_short}") if amount < min_tip
-
-    case @tip.transfer(from: msg.author.id.to_u64, to: id, amount: amount, memo: "tip")
-    when true
+    # TODO get rid of static coin
+    res = Data::Account.transfer(amount, :doge, msg.author.id.to_u64.to_i64, id.to_u64.to_i64, :discord, :tip)
+    if res.is_a?(Data::TransferError)
+      return client.create_message(msg.channel_id, "**ERROR**: Insufficient Balance") if res.reason == "insufficient balance"
+      client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{SUPPORT}")
+    else
       client.create_message(msg.channel_id, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
-    when "insufficient balance"
-      client.create_message(msg.channel_id, "**ERROR**: Insufficient balance")
-    when "error"
-      client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     end
+
     yield
   end
 end
