@@ -1,6 +1,7 @@
 
 CREATE TABLE accounts (
        id serial PRIMARY KEY,
+       active boolean NOT NULL DEFAULT true,
        twitch_id bigint UNIQUE,
        discord_id bigint UNIQUE,
 
@@ -12,20 +13,19 @@ INSERT INTO accounts (id) VALUES (0);
 CREATE TYPE coin_type AS ENUM('DOGE', 'ECA');
 
 CREATE TABLE balances (
-       user_id bigint NOT NULL REFERENCES accounts(id),
+       account_id bigint NOT NULL REFERENCES accounts(id),
        coin coin_type NOT NULL,
        balance numeric(64, 8) NOT NULL CONSTRAINT positive_amount CHECK (balance > 0),
-       PRIMARY KEY (user_id, coin)
+       PRIMARY KEY (account_id, coin)
 );
 
-CREATE TYPE transaction_memo AS ENUM('DEPOSIT', 'TIP', 'SOAK', 'RAIN', 'WITHDRAWAL', 'SPONSORED');
+CREATE TYPE transaction_memo AS ENUM('DEPOSIT', 'TIP', 'SOAK', 'RAIN', 'WITHDRAWAL', 'SPONSORED', 'IMPORT_FOR_LINK');
 CREATE TABLE transactions (
        id serial PRIMARY KEY,
        coin coin_type NOT NULL,
        memo transaction_memo NOT NULL,
-       from_id bigint NOT NULL REFERENCES accounts(id),
-       to_id bigint NOT NULL REFERENCES accounts(id),
-       amount numeric(64, 8) NOT NULL CONSTRAINT positive_amount CHECK (amount > 0),
+       account_id bigint NOT NULL REFERENCES accounts(id),
+       amount numeric(64, 8) NOT NULL,
 
        address text,
        coin_transaction_id text,

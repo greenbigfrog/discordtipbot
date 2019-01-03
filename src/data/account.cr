@@ -25,22 +25,21 @@ module Data
     )
 
     def balance(coin : Coin)
-      DATA.query_one?("SELECT balance FROM balances WHERE user_id = $1 AND coin = '#{coin}'", @id, as: BigDecimal) || BigDecimal.new(0)
+      DATA.query_one?("SELECT balance FROM balances WHERE account_id = $1 AND coin = '#{coin}'", @id, as: BigDecimal) || BigDecimal.new(0)
     end
 
     def balances
-      DATA.query_all?("SELECT * FROM balances WHERE id = $1", @id, as: Balance)
+      DATA.query_all?("SELECT * FROM balances WHERE account_id = $1", @id, as: Balance)
     end
 
     def update_balance(coin : Coin, db : DB::Connection)
       db.exec(<<-SQL, @id)
-      INSERT INTO balances(coin, user_id, balance)
+      INSERT INTO balances(coin, account_id, balance)
       SELECT
         '#{coin}',
         $1,
-        (SELECT COALESCE( SUM (amount), 0) FROM transactions WHERE to_id = $1 AND coin = '#{coin}')
-          - (SELECT COALESCE( SUM (amount), 0) FROM transactions WHERE from_id = $1 AND coin = '#{coin}')
-      ON CONFLICT(user_id, coin) DO
+        (SELECT COALESCE( SUM (amount), 0) FROM transactions WHERE account_id = $1 AND coin = '#{coin}')
+      ON CONFLICT(account_id, coin) DO
       UPDATE SET balance = excluded.balance;
       SQL
     end
@@ -49,8 +48,13 @@ module Data
       DATA.query_one("INSERT INTO accounts(#{user_type}) VALUES ($1) ON CONFLICT (#{user_type}) DO UPDATE SET #{user_type} = accounts.#{user_type} RETURNING *", id, as: self)
     end
 
-    def transfer(amount : BigDecimal, coin : Coin, to : Account, memo : TransactionMemo, *, db : DB::Connection)
-      db.exec("INSERT INTO transactions(coin, memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4, $5)", coin, memo, @id, to.id, amount)
+    def transfer(amount : BigDecimal, coin : Coin, to : Array(Account), memo : TransactionMemo, *, db : DB::Connection)
+      db.exec(<<-SQL, coin, memo, amount)
+      INSERT INTO transactions(coin, memo, amount, account_id)
+      VALUES
+        #{to.each { |x| "($1, $2, $3, #{x.id},\n" }}
+        ($1, $2, -1 * $3, '{#{@id}}')
+      SQL
     end
 
     def self.transfer(amount : BigDecimal, coin : Coin, from : Int64, to : Int64, platform : UserType, memo : TransactionMemo)
@@ -70,8 +74,8 @@ module Data
 
       DATA.transaction do |tx|
         begin
+          from.transfer(amount, coin, to, memo, db: tx.connection)
           to.each do |target|
-            from.transfer(amount, coin, target, memo, db: tx.connection)
             target.update_balance(coin, db: tx.connection)
           end
           from.update_balance(coin, db: tx.connection)
