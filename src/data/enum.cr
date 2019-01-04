@@ -9,6 +9,7 @@ module Data
     TIP
     SOAK
     RAIN
+    DONATION
     WITHDRAWAL
     SPONSORED
   end

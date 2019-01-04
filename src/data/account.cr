@@ -113,5 +113,9 @@ module Data
         end
       end
     end
+
+    def self.donate(amount : BigDecimal, coin : Coin, from : Int64, platform : UserType)
+      transfer(amount: amount, coin: :doge, from: from, to: 163607982473609216, platform: platform, memo: :donation)
+    end
   end
 end

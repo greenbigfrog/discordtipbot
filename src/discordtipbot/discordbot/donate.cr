@@ -1,7 +1,7 @@
 class Donate
   include Amount
 
-  def initialize(@tip : TipBot, @config : Config, @webhook : Discord::Client)
+  def initialize(@config : Config, @webhook : Discord::Client)
   end
 
   def call(msg, ctx)
@@ -18,8 +18,12 @@ class Donate
 
     return client.create_message(msg.channel_id, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[0] == "all"
 
-    case @tip.transfer(from: msg.author.id.to_u64, to: 163607982473609216_u64, amount: amount, memo: "donation")
-    when true
+    # TODO do not hard code currency
+    res = Data::Account.donate(amount: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, platform: :discord)
+    if res.is_a?(Data::TransferError)
+      return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
+      client.create_message(msg.channel_id, "**ERROR**: Please try again later")
+    else
       client.create_message(msg.channel_id, "**#{msg.author.username} donated #{amount} #{@config.coinname_short}!**")
 
       fields = [Discord::EmbedField.new(name: "Amount", value: "#{amount} #{@config.coinname_short}"),
@@ -35,10 +39,6 @@ class Donate
       )
       webhook = @config.general_webhook
       @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
-    when "insufficient balance"
-      client.create_message(msg.channel_id, "**ERROR**: Insufficient balance")
-    when "error"
-      client.create_message(msg.channel_id, "**ERROR**: Please try again later")
     end
     yield
   end

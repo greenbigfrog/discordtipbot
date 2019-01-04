@@ -37,7 +37,7 @@ class Tip
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
     # TODO get rid of static coin
-    res = Data::Account.transfer(amount, :doge, msg.author.id.to_u64.to_i64, id.to_u64.to_i64, :discord, :tip)
+    res = Data::Account.transfer(amount: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: id.to_u64.to_i64, platform: :discord, memo: :tip)
     if res.is_a?(Data::TransferError)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient Balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{SUPPORT}")
