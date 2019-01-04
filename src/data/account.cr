@@ -19,6 +19,7 @@ module Data
   struct Account
     DB.mapping(
       id: Int32,
+      active: Bool,
       twitch_id: Int64?,
       discord_id: Int64?,
       created_time: Time
@@ -49,11 +50,12 @@ module Data
     end
 
     def transfer(amount : BigDecimal, coin : Coin, to : Array(Account), memo : TransactionMemo, *, db : DB::Connection)
-      db.exec(<<-SQL, coin, memo, amount)
+      to_string = to.map { |x| "($1, $2, $3, #{x.id})," }.join('\n')
+      db.exec(<<-SQL, coin, memo, amount, @id)
       INSERT INTO transactions(coin, memo, amount, account_id)
       VALUES
-        #{to.each { |x| "($1, $2, $3, #{x.id},\n" }}
-        ($1, $2, -1 * $3, '{#{@id}}')
+        #{to_string}
+        ($1, $2, -1 * $3 * #{to.size}, $4)
       SQL
     end
 

@@ -15,7 +15,7 @@ CREATE TYPE coin_type AS ENUM('DOGE', 'ECA');
 CREATE TABLE balances (
        account_id bigint NOT NULL REFERENCES accounts(id),
        coin coin_type NOT NULL,
-       balance numeric(64, 8) NOT NULL CONSTRAINT positive_amount CHECK (balance > 0),
+       balance numeric(64, 8) NOT NULL CONSTRAINT positive_amount CHECK (balance >= 0),
        PRIMARY KEY (account_id, coin)
 );
 
