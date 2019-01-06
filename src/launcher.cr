@@ -1,3 +1,0 @@
-require "./discordtipbot"
-
-DiscordTipBot.run

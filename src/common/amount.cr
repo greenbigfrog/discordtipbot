@@ -1,7 +1,6 @@
 module Amount
   def parse_amount(msg, string) : BigDecimal?
     if string == "all"
-      # @tip.get_balance(msg.author.id.to_u64)
       get_balance(msg)
     elsif string == "half"
       BigDecimal.new(get_balance(msg) / 2).round(8)
