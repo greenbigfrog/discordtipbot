@@ -8,38 +8,38 @@ class TipBot
     @coin_api = CoinApi.new(@config, @log)
   end
 
-  # def transfer(from : UInt64, to : UInt64, amount : BigDecimal, memo : String)
-  #   @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
-  #   ensure_user(from)
-  #   ensure_user(to)
+  def transfer(from : UInt64, to : UInt64, amount : BigDecimal, memo : String)
+    @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
+    ensure_user(from)
+    ensure_user(to)
 
-  #   return "insufficient balance" if balance(from) < amount
+    return "insufficient balance" if balance(from) < amount
 
-  #   @db.transaction do |tx|
-  #     begin
-  #       sql = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4)"
-  #       transaction = tx.connection.exec(sql, memo, from, to, amount)
+    @db.transaction do |tx|
+      begin
+        sql = "INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, $3, $4)"
+        transaction = tx.connection.exec(sql, memo, from, to, amount)
 
-  #       if transaction.rows_affected == 1
-  #         @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
-  #       else
-  #         @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
-  #         return "error"
-  #       end
+        if transaction.rows_affected == 1
+          @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
+        else
+          @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
+          return "error"
+        end
 
-  #       update_balance(from, tx.connection)
-  #       update_balance(to, tx.connection)
+        update_balance(from, tx.connection)
+        update_balance(to, tx.connection)
 
-  #       @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
-  #     rescue ex : PQ::PQError
-  #       @log.error(ex)
-  #       tx.rollback
-  #       @log.error("#{@config.coinname_short}: PQError during transfer #{memo} from #{from} to #{to}")
-  #       return "error"
-  #     end
-  #   end
-  #   true
-  # end
+        @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
+      rescue ex : PQ::PQError
+        @log.error(ex)
+        tx.rollback
+        @log.error("#{@config.coinname_short}: PQError during transfer #{memo} from #{from} to #{to}")
+        return "error"
+      end
+    end
+    true
+  end
 
   def withdraw(from : UInt64, address : String, amount : BigDecimal)
     @log.debug("#{@config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")

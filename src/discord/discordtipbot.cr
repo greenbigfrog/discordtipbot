@@ -6,8 +6,14 @@ require "discordcr"
 require "big"
 require "big/json"
 require "discordcr-middleware"
-require "./cache"
-require "./discordtipbot/**"
+
+require "../data/**"
+
+require "../common/amount"
+require "../common/coin_api"
+require "../common/raven_spawn"
+
+require "./**"
 
 class DiscordTipBot
   def self.run

@@ -22,7 +22,8 @@ class ConfigMiddleware
   def get_premium(msg : Discord::Message)
     guild = get_config(msg, "premium")
     return true if guild
-    @db.query_one?("SELECT premium FROM accounts WHERE userid = $1", msg.author.id, as: Bool?) || false
+    # @db.query_one?("SELECT premium FROM accounts WHERE userid = $1", msg.author.id, as: Bool?) || false
+    true
   end
 
   def get_premium_string(kind : Premium::Kind, id)

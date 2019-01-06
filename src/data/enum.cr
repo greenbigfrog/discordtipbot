@@ -12,6 +12,7 @@ module Data
     DONATION
     WITHDRAWAL
     SPONSORED
+    LUCKY
   end
 
   enum DepositStatus

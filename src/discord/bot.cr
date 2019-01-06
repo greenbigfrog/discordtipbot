@@ -41,13 +41,13 @@ class DiscordBot
     @bot.on_message_create(error, config, Command.new(["deposit", "address"]),
       rl, Deposit.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("soak"),
-      rl, NoPrivate.new, typing, Soak.new(@tip, @config, @cache, @presence_cache))
+      rl, NoPrivate.new, typing, Soak.new(@config, @cache, @presence_cache))
     @bot.on_message_create(error, config, Command.new("tip"),
-      rl, NoPrivate.new, Tip.new(@tip, @config))
+      rl, NoPrivate.new, Tip.new(@config))
     @bot.on_message_create(error, config, Command.new("donate"),
-      rl, Donate.new(@tip, @config, @webhook))
+      rl, Donate.new(@config, @webhook))
     @bot.on_message_create(error, config, Command.new(["balance", "bal"]),
-      rl, Balance.new(@tip, @config))
+      rl, Balance.new(@config))
     @bot.on_message_create(error, config, Command.new("\u{1f4be}"),
       rl, SystemStats.new)
     @bot.on_message_create(error, config, Command.new("offsite"),
