@@ -19,7 +19,7 @@ CREATE TABLE balances (
        PRIMARY KEY (account_id, coin)
 );
 
-CREATE TYPE transaction_memo AS ENUM('DEPOSIT', 'TIP', 'SOAK', 'RAIN', 'WITHDRAWAL', 'SPONSORED', 'DONATION', 'IMPORT_FOR_LINK');
+CREATE TYPE transaction_memo AS ENUM('DEPOSIT', 'LUCKY', 'TIP', 'SOAK', 'RAIN', 'WITHDRAWAL', 'SPONSORED', 'DONATION', 'IMPORT_FOR_LINK');
 CREATE TABLE transactions (
        id serial PRIMARY KEY,
        coin coin_type NOT NULL,

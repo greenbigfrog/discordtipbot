@@ -1,4 +1,4 @@
-require "../../data/**"
+# require "../../data/**"
 
 class DiscordBot
   include Amount
@@ -40,14 +40,15 @@ class DiscordBot
     #   reply(msg, "**#{msg.author.username}** rained a total of **#{amount_each * authors.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
     # end
 
+    authors = authors.map { |x| x.to_i64 }
+
     # TODO get rid of static coin
-    res = Data::Account.multi_transfer(total: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: authors, platform: :discord, memo: :soak)
-    # res = Data::Account.multi_transfer(total: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: authors, platform: :discord, memo: :rain)
+    res = Data::Account.multi_transfer(total: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: authors, platform: :discord, memo: :rain)
     if res.is_a?(Data::TransferError)
-      return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
-      client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
+      return reply(msg, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
+      reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
     else
-      amount_each = BigDecimal.new(amount / targets.size).round(8)
+      amount_each = BigDecimal.new(amount / authors.size).round(8)
 
       string = build_user_string(ctx[ConfigMiddleware].get_config(msg, "mention") || false, authors)
 
@@ -56,9 +57,9 @@ class DiscordBot
       reply = "**#{msg.author.username}** rained a total of **#{amount_each * authors.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}"
       if reply.size > 2000
         msgs = split(reply)
-        msgs.each { |x| client.create_message(channel_id, x) }
+        msgs.each { |x| @bot.create_message(channel_id, x) }
       else
-        client.create_message(channel_id, reply)
+        reply(msg, reply)
       end
     end
   end
