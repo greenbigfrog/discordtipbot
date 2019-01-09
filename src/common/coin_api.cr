@@ -1,13 +1,10 @@
 require "bitcoin_rpc"
 
 class CoinApi
-  @type : String
   @rpc : BitcoinRpc
 
   def initialize(@config : Config, @log : Logger)
-    @log.debug("#{config.coinname_short}: Initializing Coin Interaction API for #{@config.coinname_full} with type #{@config.coin_api_type}")
-
-    @type = @config.coin_api_type
+    @log.debug("#{config.coinname_short}: Initializing RPC interface for #{@config.coinname_full}")
 
     rpc = nil
     retry_delay = 1

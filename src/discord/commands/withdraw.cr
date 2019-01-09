@@ -13,7 +13,7 @@ class Withdraw
 
     return client.create_message(msg.channel_id, "**ERROR**: Usage: #{cmd_usage}") if cmd.size < 2
 
-    amount = parse_amount(msg, cmd[1])
+    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") if amount.nil?
 
     amount = amount - @config.txfee if cmd[1] == "all"

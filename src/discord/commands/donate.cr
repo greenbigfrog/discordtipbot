@@ -13,7 +13,7 @@ class Donate
 
     return client.create_message(msg.channel_id, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 0
 
-    amount = parse_amount(msg, cmd[0])
+    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[0])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
     return client.create_message(msg.channel_id, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[0] == "all"

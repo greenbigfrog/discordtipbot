@@ -11,6 +11,7 @@ require "../data/**"
 
 require "../common/amount"
 require "../common/coin_api"
+require "../common/string_split"
 require "../common/raven_spawn"
 
 require "./**"

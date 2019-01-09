@@ -33,7 +33,7 @@ class Tip
 
     return client.create_message(msg.channel_id, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
 
-    amount = parse_amount(msg, cmd[1])
+    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
     # TODO get rid of static coin

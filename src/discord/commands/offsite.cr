@@ -31,7 +31,7 @@ class Offsite
       # cmd[1]: address, cmd[2]: amount
       return client.create_message(msg.channel_id, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 3
 
-      amount = parse_amount(msg, cmd[2])
+      amount = parse_amount(:discord, msg.author.id.to_u64, cmd[2])
       return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount") if amount.nil?
 
       case @tip.offsite_withdrawal(id, amount, cmd[1])

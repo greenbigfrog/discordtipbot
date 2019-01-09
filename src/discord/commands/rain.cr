@@ -15,7 +15,7 @@ class DiscordBot
 
     return reply(msg, "Invalid Command usage: `#{cmd_usage}`") if cmd.empty?
 
-    amount = parse_amount(msg, cmd[0])
+    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[0])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     min_rain = ctx[ConfigMiddleware].get_decimal_config(msg, "min_rain")

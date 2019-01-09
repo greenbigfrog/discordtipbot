@@ -3,6 +3,7 @@ require "discordcr-middleware/middleware/cached_routes"
 require "discordcr-middleware/middleware/permissions"
 require "humanize_time"
 require "bot_list"
+require "../common/string_split"
 
 USER_REGEX      = /<@!?(?<id>\d+)>/
 START_TIME      = Time.now
@@ -14,6 +15,7 @@ SUPPORT         = "<https://contact.tipbot.info>"
 
 class DiscordBot
   include Utilities
+  include StringSplit
 
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
