@@ -180,7 +180,7 @@ class TipBot
   end
 
   def update_config(memo : String, status : Bool | BigDecimal | String, server : UInt64)
-    return false unless CONFIG_COLLUMNS.includes?(memo)
+    return false unless CONFIG_COLUMNS.includes?(memo)
     begin
       @db.exec("UPDATE config SET #{memo} = $1 WHERE serverid = $2", status, server)
     rescue PQ::PQError
