@@ -4,6 +4,7 @@ require "discordcr-middleware/middleware/permissions"
 require "humanize_time"
 require "bot_list"
 require "../common/string_split"
+require "../../jobs/webhook"
 
 USER_REGEX     = /<@!?(?<id>\d+)>/
 ZWS            = "​" # There is a zero width space stored here
@@ -249,7 +250,7 @@ class DiscordBot
             Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s),
           ]
         )
-        post_embed_to_webhook(embed, @config.general_webhook) if handle_new_guild(payload)
+        WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue if handle_new_guild(payload)
       end
     end
 
@@ -410,10 +411,6 @@ class DiscordBot
     @bot.run
   end
 
-  private def post_embed_to_webhook(embed : Discord::Embed, webhook : Webhook)
-    @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
-  end
-
   private def bot?(user : Discord::User)
     bot_status = user.bot
     if bot_status
@@ -440,7 +437,7 @@ class DiscordBot
         timestamp: Time.now,
         fields: offsite_fields(users, wallet, current_percentage, goal_percentage * 100)
       )
-      post_embed_to_webhook(embed, @config.admin_webhook)
+      WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
       wait_for_balance_change(wallet, Compare::Smaller)
     end
   end
@@ -462,7 +459,7 @@ class DiscordBot
         timestamp: Time.now,
         fields: offsite_fields(users, wallet, current_percentage, goal_percentage * 100)
       )
-      post_embed_to_webhook(embed, @config.admin_webhook)
+      WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
       wait_for_balance_change(wallet, Compare::Bigger)
     end
   end
@@ -495,6 +492,6 @@ class DiscordBot
       timestamp: Time.now,
       fields: [Discord::EmbedField.new(name: "New wallet balance", value: "#{new_balance} #{@config.coinname_short}")]
     )
-    post_embed_to_webhook(embed, @config.admin_webhook)
+    WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
   end
 end

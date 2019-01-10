@@ -2,7 +2,7 @@ version: 1.0
 shards:
   ameba:
     github: veelenga/ameba
-    version: 0.8.1
+    version: 0.9.0
 
   any_hash:
     github: Sija/any_hash.cr
@@ -15,6 +15,10 @@ shards:
   bot_list:
     github: z64/bot_list
     commit: 0c58d5e5e693750b0080cf374908ba22cccb79b1
+
+  crirc:
+    github: greenbigfrog/crirc
+    commit: 6f22059f87b4346960d4ee7345ad6595bb28c0d2
 
   db:
     github: crystal-lang/crystal-db
@@ -48,13 +52,25 @@ shards:
     github: jeromegn/kilt
     version: 0.4.0
 
+  micrate:
+    github: amberframework/micrate
+    version: 0.3.3
+
+  mosquito:
+    github: robacarp/mosquito
+    version: 0.3.0
+
   pg:
     github: greenbigfrog/crystal-pg
     commit: d8082a2f3f9f8625a1284d71b52c147ccd96c10f
 
+  pool:
+    github: ysbaddaden/pool
+    version: 0.2.3
+
   radix:
     github: luislavena/radix
-    version: 0.3.8
+    version: 0.3.9
 
   rate_limiter:
     github: z64/rate_limiter
@@ -63,4 +79,8 @@ shards:
   raven:
     github: greenbigfrog/raven.cr
     commit: 1060c969371e4fb4f03f75f048b9d90c0b8f77ef
+
+  redis:
+    github: stefanwille/crystal-redis
+    version: 2.1.1
 

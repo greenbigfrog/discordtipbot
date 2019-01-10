@@ -1,3 +1,5 @@
+require "../../jobs/webhook"
+
 class Donate
   include Amount
 
@@ -37,8 +39,7 @@ class Donate
         timestamp: Time.now,
         fields: fields
       )
-      webhook = @config.general_webhook
-      @webhook.execute_webhook(webhook.id, webhook.token, embeds: [embed])
+      WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue
     end
     yield
   end

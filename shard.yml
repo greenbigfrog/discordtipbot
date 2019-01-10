@@ -33,6 +33,13 @@ dependencies:
     github: kemalcr/kemal
   bot_list:
     github: z64/bot_list
+  micrate:
+    github: amberframework/micrate
+  crirc:
+    github: greenbigfrog/crirc
+    branch: twitch
+  mosquito:
+    github: robacarp/mosquito
 
 development_dependencies:
   ameba:
