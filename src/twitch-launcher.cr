@@ -8,9 +8,11 @@ require "./twitch/config"
 
 raise "Please specify a valid Config file" unless ARGV[0]?
 
+require "./common/constants"
+
 # TODO improve this
 LOG  = Logger.new(STDOUT)
-DATA = PG.connect("postgresql://frog@localhost:5432/new")
+DATA = PG.connect(ENV["POSTGRES"]? || POSTGRES)
 
 config = File.open(ARGV[0], "r") do |file|
   Config.from_json(file)

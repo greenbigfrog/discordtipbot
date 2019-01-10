@@ -1,6 +1,5 @@
 require "crirc"
 
-SUPPORT    = "https://discord.gg/e9vBd3V"
 PRIVWHISP  = ["PRIVMSG", "WHISPER"]
 NO_USER_ID = Exception.new("There was no user_id sent")
 NO_ROOM_ID = Exception.new("No Room ID was specified")
