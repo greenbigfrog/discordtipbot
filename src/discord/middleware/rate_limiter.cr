@@ -19,27 +19,23 @@ class MW::RateLimiter
   def call(payload, ctx)
     client = ctx[Discord::Client]
 
-    premium = ctx[ConfigMiddleware].get_premium(payload)
+    if @limiter.rate_limited?(:user, payload.author.id)
+      reply(client, payload.channel_id)
+      return
+    end
 
-    unless premium
-      if @limiter.rate_limited?(:user, payload.author.id)
-        reply(client, payload.channel_id)
-        return
-      end
+    intense = @intense.includes?(ctx[Command].name)
 
-      intense = @intense.includes?(ctx[Command].name)
-
-      if guild_id = get_channel(client, payload.channel_id).guild_id
-        if intense
-          if @limiter.rate_limited?(:intense, guild_id)
-            reply(client, payload.channel_id)
-            return
-          end
-        end
-        if @limiter.rate_limited?(:guild, guild_id)
+    if guild_id = get_channel(client, payload.channel_id).guild_id
+      if intense
+        if @limiter.rate_limited?(:intense, guild_id)
           reply(client, payload.channel_id)
           return
         end
+      end
+      if @limiter.rate_limited?(:guild, guild_id)
+        reply(client, payload.channel_id)
+        return
       end
     end
 

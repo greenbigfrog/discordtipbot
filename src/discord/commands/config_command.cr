@@ -14,11 +14,6 @@ class ConfigCommand
 
     memo = cmd[0]
     return client.create_message(msg.channel_id, "Settings available: #{CONFIG_COLUMNS}}") unless CONFIG_COLUMNS.includes?(memo)
-    if PREMIUM_CONFIG.includes?(memo)
-      unless ctx[ConfigMiddleware].get_config(msg, "premium")
-        return client.create_message(msg.channel_id, "This is a premium only config command. Visit <https://tipbot.gbf.re> for more info")
-      end
-    end
 
     case cmd[1]
     when "on"

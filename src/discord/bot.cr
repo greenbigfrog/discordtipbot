@@ -8,8 +8,8 @@ require "../../jobs/webhook"
 
 USER_REGEX     = /<@!?(?<id>\d+)>/
 ZWS            = "​" # There is a zero width space stored here
-PREMIUM_CONFIG = ["min_soak", "min_soak_total", "min_rain", "min_rain_total", "min_tip", "prefix"]
-CONFIG_COLUMNS = ["soak", "rain", "mention", "contacted"] + PREMIUM_CONFIG
+CONFIG_COLUMNS = ["min_soak", "min_soak_total", "min_rain", "min_rain_total", "min_tip", "prefix",
+                  "soak", "rain", "mention", "contacted"]
 
 class DiscordBot
   include Utilities
@@ -18,7 +18,7 @@ class DiscordBot
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
 
-  def initialize(@bot : Discord::Client, @cache : Discord::Cache, @config : Config, @log : Logger)
+  def initialize(@coin : Data::Coin, @bot : Discord::Client, @cache : Discord::Cache, @config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)
@@ -31,27 +31,27 @@ class DiscordBot
     admin = DiscordMiddleware::Permissions.new(Discord::Permissions::Administrator, "**Permission Denied.** User must have %permissions%")
     rl = MW::RateLimiter.new
     error = ErrorCatcher.new
-    config = ConfigMiddleware.new(@tip, @config)
+    config = ConfigMiddleware.new(@coin, @tip, @config)
     typing = TriggerTyping.new
 
     @bot.on_message_create(error, config, Command.new("ping"),
       rl, Ping.new)
     @bot.on_message_create(error, config, Command.new("withdraw"),
-      rl, Withdraw.new(@tip, @config))
+      rl, Withdraw.new(@coin, @tip, @config))
     @bot.on_message_create(error, config, Command.new(["deposit", "address"]),
       rl, Deposit.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("soak"),
-      rl, NoPrivate.new, typing, Soak.new(@config, @cache, @presence_cache))
+      rl, NoPrivate.new, typing, Soak.new(@coin, @config, @cache, @presence_cache))
     @bot.on_message_create(error, config, Command.new("tip"),
-      rl, NoPrivate.new, Tip.new(@config))
+      rl, NoPrivate.new, Tip.new(@coin, @config))
     @bot.on_message_create(error, config, Command.new("donate"),
-      rl, Donate.new(@config, @webhook))
+      rl, Donate.new(@coin, @config, @webhook))
     @bot.on_message_create(error, config, Command.new(["balance", "bal"]),
-      rl, Balance.new(@config))
+      rl, Balance.new(@coin, @config))
     @bot.on_message_create(error, config, Command.new("\u{1f4be}"),
       rl, SystemStats.new)
     @bot.on_message_create(error, config, Command.new("offsite"),
-      rl, OnlyPrivate.new, BotAdmin.new(@config), Offsite.new(@tip, @config))
+      rl, OnlyPrivate.new, BotAdmin.new(@config), Offsite.new(@coin, @tip, @config))
     @bot.on_message_create(error, config, Command.new("admin"),
       rl, OnlyPrivate.new, BotAdmin.new(@config), Admin.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new("config"),
@@ -59,9 +59,7 @@ class DiscordBot
     @bot.on_message_create(error, config, Command.new("checkconfig"),
       rl, CheckConfig.new)
     @bot.on_message_create(error, config, Command.new("prefix"),
-      rl, NoPrivate.new, admin, PremiumOnly.new, Prefix.new(@tip))
-    @bot.on_message_create(error, config, Command.new("premium"),
-      rl, BotAdmin.new(@config), PremiumCmd.new(@tip))
+      rl, NoPrivate.new, admin, Prefix.new(@tip))
     @bot.on_message_create(error, config, Command.new("vote"),
       rl, Vote.new)
     @bot.on_message_create(error, config, Command.new("psql"),
@@ -324,7 +322,6 @@ class DiscordBot
     raven_spawn do
       Discord.every(60.minutes) do
         @active_users_cache.prune
-        @tip.clear_expired_premium
       end
     end
   end

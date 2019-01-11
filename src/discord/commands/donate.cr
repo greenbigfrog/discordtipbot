@@ -3,7 +3,7 @@ require "../../jobs/webhook"
 class Donate
   include Amount
 
-  def initialize(@config : Config, @webhook : Discord::Client)
+  def initialize(@coin : Data::Coin, @config : Config, @webhook : Discord::Client)
   end
 
   def call(msg, ctx)
@@ -15,13 +15,12 @@ class Donate
 
     return client.create_message(msg.channel_id, "**ERROR**: Usage: #{cmd_usage}") unless cmd.size > 0
 
-    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[0])
+    amount = parse_amount(@coin, :discord, msg.author.id.to_u64, cmd[0])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
 
     return client.create_message(msg.channel_id, "**ERROR**: Please donate at least #{@config.min_tip} #{@config.coinname_short} at once!") if amount < @config.min_tip unless cmd[0] == "all"
 
-    # TODO do not hard code currency
-    res = Data::Account.donate(amount: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, platform: :discord)
+    res = Data::Account.donate(amount: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, platform: :discord)
     if res.is_a?(Data::TransferError)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: Please try again later")

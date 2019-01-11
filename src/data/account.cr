@@ -26,7 +26,7 @@ module Data
     )
 
     def balance(coin : Coin)
-      DATA.query_one?("SELECT balance FROM balances WHERE account_id = $1 AND coin = '#{coin}'", @id, as: BigDecimal) || BigDecimal.new(0)
+      DATA.query_one?("SELECT balance FROM balances WHERE account_id = $1 AND coin = $2", @id, coin.id, as: BigDecimal) || BigDecimal.new(0)
     end
 
     def balances
@@ -34,12 +34,12 @@ module Data
     end
 
     def update_balance(coin : Coin, db : DB::Connection)
-      db.exec(<<-SQL, @id)
+      db.exec(<<-SQL, @id, coin.id)
       INSERT INTO balances(coin, account_id, balance)
       SELECT
-        '#{coin}',
+        $2,
         $1,
-        (SELECT COALESCE( SUM (amount), 0) FROM transactions WHERE account_id = $1 AND coin = '#{coin}')
+        (SELECT COALESCE( SUM (amount), 0) FROM transactions WHERE account_id = $1 AND coin = $2)
       ON CONFLICT(account_id, coin) DO
       UPDATE SET balance = excluded.balance;
       SQL
@@ -51,7 +51,7 @@ module Data
 
     def transfer(amount : BigDecimal, coin : Coin, to : Array(Account), memo : TransactionMemo, *, db : DB::Connection)
       to_string = to.map { |x| "($1, $2, $3, #{x.id})," }.join('\n')
-      db.exec(<<-SQL, coin, memo, amount, @id)
+      db.exec(<<-SQL, coin.id, memo, amount, @id)
       INSERT INTO transactions(coin, memo, amount, account_id)
       VALUES
         #{to_string}
@@ -74,8 +74,9 @@ module Data
             SELECT coin, 'IMPORT_FOR_LINK', amount, $1 FROM transactions WHERE account_id = $1;
           SQL
 
-          # TODO update_balance for all coins
-          update_balance(:doge, db)
+          Data::Coin.read.each do |coin|
+            update_balance(coin, db)
+          end
         rescue ex : PQ::PQError
           tx.rollback
           LOG.error("Unable to link Account #{@id} with #{other.id}. Exception: #{ex}")
@@ -107,7 +108,7 @@ module Data
           from.update_balance(coin, db: tx.connection)
         rescue ex : PQ::PQError
           puts ex.inspect_with_backtrace
-          LOG.warn("Rolling back transfer of type #{memo} of #{total} #{coin} from #{from} to #{to}")
+          LOG.warn("Rolling back transfer of type #{memo} of #{total} #{coin.name_short} from #{from} to #{to}")
           tx.rollback
           return TransferError.new
         end
@@ -115,7 +116,7 @@ module Data
     end
 
     def self.donate(amount : BigDecimal, coin : Coin, from : Int64, platform : UserType)
-      transfer(amount: amount, coin: :doge, from: from, to: 163607982473609216, platform: platform, memo: :donation)
+      transfer(amount: amount, coin: coin, from: from, to: 163607982473609216, platform: platform, memo: :donation)
     end
   end
 end

@@ -1,9 +1,4 @@
 module Data
-  enum Coin
-    DOGE
-    ECA
-  end
-
   enum TransactionMemo
     DEPOSIT
     TIP

@@ -15,7 +15,7 @@ class DiscordBot
 
     return reply(msg, "Invalid Command usage: `#{cmd_usage}`") if cmd.empty?
 
-    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[0])
+    amount = parse_amount(@coin, :discord, msg.author.id.to_u64, cmd[0])
     return reply(msg, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     min_rain = ctx[ConfigMiddleware].get_decimal_config(msg, "min_rain")
@@ -27,23 +27,9 @@ class DiscordBot
 
     authors = authors.sample((amount / min_rain).to_i32) if (authors.size * min_rain) > amount
 
-    # case @tip.multi_transfer(from: msg.author.id.to_u64, users: authors, total: amount, memo: "rain")
-    # when "insufficient balance"
-    #   reply(msg, "**ERROR**: Insufficient balance")
-    # when false
-    #   reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")
-    # when true
-    #   amount_each = BigDecimal.new(amount / authors.size).round(8)
-
-    #   string = build_user_string(ctx[ConfigMiddleware].get_config(msg, "mention"), authors)
-
-    #   reply(msg, "**#{msg.author.username}** rained a total of **#{amount_each * authors.size} #{@config.coinname_short}** (#{amount_each} #{@config.coinname_short} each) onto #{string}")
-    # end
-
     authors = authors.map { |x| x.to_i64 }
 
-    # TODO get rid of static coin
-    res = Data::Account.multi_transfer(total: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: authors, platform: :discord, memo: :rain)
+    res = Data::Account.multi_transfer(total: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: authors, platform: :discord, memo: :rain)
     if res.is_a?(Data::TransferError)
       return reply(msg, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")

@@ -4,7 +4,7 @@ class Soak
   include Amount
   include StringSplit
 
-  def initialize(@config : Config, @cache : Discord::Cache, @presence_cache : PresenceCache)
+  def initialize(@coin : Data::Coin, @config : Config, @cache : Discord::Cache, @presence_cache : PresenceCache)
   end
 
   def call(msg, ctx)
@@ -24,7 +24,7 @@ class Soak
     cmd = ctx[Command].command
     return client.create_message(msg.channel_id, "Invalid Command usage: #{cmd_usage}") unless cmd.size > 0
 
-    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[0])
+    amount = parse_amount(@coin, :discord, msg.author.id.to_u64, cmd[0])
     return client.create_message(msg.channel_id, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     min_soak = ctx[ConfigMiddleware].get_decimal_config(msg, "min_soak")
@@ -59,7 +59,7 @@ class Soak
     end
     targets.reject! { |x| x == nil }
 
-    res = Data::Account.multi_transfer(total: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: targets, platform: :discord, memo: :soak)
+    res = Data::Account.multi_transfer(total: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: targets, platform: :discord, memo: :soak)
     if res.is_a?(Data::TransferError)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@config.prefix}support")

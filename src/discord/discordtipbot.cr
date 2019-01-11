@@ -46,7 +46,9 @@ class DiscordTipBot
           shared_cache.bind(cache)
           bot.cache = cache
 
-          DiscordBot.new(bot, cache, config, log).run
+          # TODO
+          coin = Data::Coin.read.first
+          DiscordBot.new(coin, bot, cache, config, log).run
         end
       end
       log.debug("finished forking")

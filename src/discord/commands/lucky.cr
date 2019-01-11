@@ -11,7 +11,7 @@ class DiscordBot
 
     return client.create_message(msg.channel_id, "Invalid command usage: #{cmd_usage}") if cmd.empty?
 
-    amount = parse_amount(:discord, msg.author.id.to_u64, cmd[0])
+    amount = parse_amount(@coin, :discord, msg.author.id.to_u64, cmd[0])
     return client.create_message(msg.channel_id, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     min_tip = ctx[ConfigMiddleware].get_decimal_config(msg, "min_tip")
@@ -23,8 +23,7 @@ class DiscordBot
 
     user = users.sample
 
-    # TODO get rid of static coin
-    res = Data::Account.transfer(amount: amount, coin: :doge, from: msg.author.id.to_u64.to_i64, to: user.to_i64, platform: :discord, memo: :lucky)
+    res = Data::Account.transfer(amount: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: user.to_i64, platform: :discord, memo: :lucky)
     if res.is_a?(Data::TransferError)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient Balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{SUPPORT}")

@@ -1,6 +1,4 @@
 class TipBot
-  include Premium
-
   getter db : DB::Database
 
   def initialize(@config : Config, @log : Logger)
