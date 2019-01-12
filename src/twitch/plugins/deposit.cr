@@ -2,7 +2,7 @@ module ChatBot::Plugins::Deposit
   extend self
 
   def bind(bot, config, coin)
-    bot.on(PRIVWHISP, message: /^#{config.prefix}deposit/, doc: {"deposit", "Tells the user their address to deposit coins to the bot to"}) do |msg|
+    bot.on(PRIVWHISP, message: /^#{coin.prefix}deposit/, doc: {"deposit", "Tells the user their address to deposit coins to the bot to"}) do |msg|
       name = msg.display_name || ChatBot.extract_nick(msg.source)
 
       raise NO_USER_ID unless id = msg.user_id

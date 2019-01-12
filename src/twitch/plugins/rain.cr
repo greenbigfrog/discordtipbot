@@ -3,14 +3,14 @@ module ChatBot::Plugins::Rain
   include Amount
   include StringSplit
 
-  def bind(bot, config, twitch, active_users_cache)
+  def bind(bot, coin, twitch, active_users_cache)
     bot.on do |msg|
       raise NO_USER_ID unless id = msg.user_id
       raise NO_ROOM_ID unless room = msg.room_id
       active_users_cache.touch(room, id)
     end
 
-    bot.on(message: /^#{config.prefix}active/, doc: {"active", "Displays the amount of currently active users"}) do |msg|
+    bot.on(message: /^#{coin.prefix}active/, doc: {"active", "Displays the amount of currently active users"}) do |msg|
       raise NO_USER_ID unless id = msg.user_id
       raise NO_ROOM_ID unless room = msg.room_id
 
@@ -23,12 +23,12 @@ module ChatBot::Plugins::Rain
       bot.reply(msg, "There are currently #{authors.size} active users")
     end
 
-    bot.on(message: /^#{config.prefix}rain/, doc: {"rain", "rain [amount]. Splits the amount equally between all active users"}) do |msg|
+    bot.on(message: /^#{coin.prefix}rain/, doc: {"rain", "rain [amount]. Splits the amount equally between all active users"}) do |msg|
       name = msg.display_name || ChatBot.extract_nick(msg.source)
       raise NO_USER_ID unless from = msg.user_id
       raise NO_ROOM_ID unless room = msg.room_id
 
-      cmd_usage = "#{config.prefix}rain [amount]"
+      cmd_usage = "#{coin.prefix}rain [amount]"
 
       # cmd[0]: trigger, cmd[1]: amount
       cmd = msg.message.try &.split(" ")
@@ -39,15 +39,15 @@ module ChatBot::Plugins::Rain
 
       next bot.reply(msg, "You can't rain right now, because there's no one to make wet!") if authors.nil? || authors.empty?
 
-      amount = parse_amount(:twitch, from, cmd[1])
+      amount = parse_amount(coin, :twitch, from, cmd[1])
       next bot.reply(msg, ChatBot.mention(name, "Please specify a valid amount")) unless amount
-      next bot.reply(msg, ChatBot.mention(name, "You have to tip at least #{config.min_tip} #{config.short}")) unless amount >= config.min_tip
+      next bot.reply(msg, ChatBot.mention(name, "You have to tip at least #{coin.default_min_tip} #{coin.name_short}")) unless amount >= coin.default_min_tip
 
       # TODO get rid of static coin
-      res = Data::Account.multi_transfer(total: amount, coin: :doge, from: from, to: authors, platform: :twitch, memo: :rain)
+      res = Data::Account.multi_transfer(total: amount, coin: coin, from: from, to: authors, platform: :twitch, memo: :rain)
       if res.is_a?(Data::TransferError)
         next bot.reply(msg, ChatBot.mention(name, "Insufficient balance")) if res.reason == "insufficient balance"
-        bot.reply(msg, ChatBot.mention(name, "There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{config.prefix}support"))
+        bot.reply(msg, ChatBot.mention(name, "There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{coin.prefix}support"))
       else
         amount_each = BigDecimal.new(amount / authors.size).round(8)
 
@@ -61,7 +61,7 @@ module ChatBot::Plugins::Rain
         end
         string = string.rchop(", ")
 
-        reply = "rained a total of #{amount_each * authors.size} #{config.coinname_short} (#{amount_each} #{config.coinname_short} each) onto #{string}"
+        reply = "rained a total of #{amount_each * authors.size} #{coin.name_short} (#{amount_each} #{coin.name_short} each) onto #{string}"
         if reply.bytesize > 510 # compare to 512 Bytes
           msgs = split(reply)
           msgs.each { |x| bot.reply(msg, ChatBot.mention(name, x)) }

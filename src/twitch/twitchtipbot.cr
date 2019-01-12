@@ -4,47 +4,32 @@ require "pg/pg_ext/big_decimal"
 require "big"
 require "big/json"
 
+require "raven"
+
+require "../data/**"
 require "../common/**"
 
-require "./**"
+require "./bot"
 
 class TwitchTipBot
-  @db : DB::Database
+  def self.run
+    Raven.configure do |raven_config|
+      raven_config.async = true
+    end
 
-  def initialize(@config : Config)
-    @db = DB.open(@config.database_url + "?max_pool_size=10")
-    @twitch = Twitch::Client.new(@config.oauth_token, @config.oauth_id)
-    @coin = CoinApi.new(config, Logger.new(STDOUT))
-  end
+    Raven.capture do
+      Data::Coin.read.each do |coin|
+        raven_spawn(name: "#{coin.name_short} Bot") do
+          chat_password = coin.twitch_chat_password
+          oauth_token = coin.twitch_oauth_token
+          oauth_id = coin.twitch_oauth_id
+          raise "Missing a Twitch related config value" unless chat_password && oauth_token && oauth_id
 
-  def start
-    spawn do
-      begin
-        ChatBot.start(@config, @twitch, @coin)
-      rescue e
-        puts e
-        sleep 1
+          TwitchBot.new(coin).start
+        end
       end
     end
 
-    spawn do
-      ChatBot.start_listening(@config, @coin)
-    end
-
-    spawn do
-      ChatBot.insert_history_deposits(@coin)
-    end
-
-    spawn do
-      sleep 5
-      loop do
-        ChatBot.check_pending_deposits(@coin, @config, @twitch)
-        ChatBot.process_pending_withdrawals(@coin)
-        sleep 30
-      end
-    end
-
-    # Block from exiting
     sleep
   end
 end

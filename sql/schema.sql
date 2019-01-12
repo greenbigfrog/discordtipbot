@@ -15,7 +15,10 @@ CREATE TABLE coins (
 
        discord_token text,
        discord_client_id text,
-       twitch_token text,
+
+       twitch_chat_password text,
+       twitch_oauth_id text,
+       twitch_oauth_token text,
 
        prefix text NOT NULL,
 
@@ -23,9 +26,9 @@ CREATE TABLE coins (
        dbl_stats text,
        botsgg_token text,
 
-       admins bigint[],
-       ignored_users bigint[],
-       whitelisted_bots bigint[],
+       admins bigint[] DEFAULT '{}',
+       ignored_users bigint[] DEFAULT '{}',
+       whitelisted_bots bigint[] DEFAULT '{}',
 
        rpc_url text NOT NULL,
        rpc_username text NOT NULL,

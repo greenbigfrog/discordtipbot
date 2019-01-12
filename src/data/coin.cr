@@ -20,7 +20,10 @@ struct Data::Coin
 
     discord_token: String?,
     discord_client_id: String?,
-    twitch_token: String?,
+
+    twitch_chat_password: String?,
+    twitch_oauth_token: String?,
+    twitch_oauth_id: String?,
 
     prefix: String,
 

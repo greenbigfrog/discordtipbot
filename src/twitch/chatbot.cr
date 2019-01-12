@@ -5,31 +5,32 @@ NO_USER_ID = Exception.new("There was no user_id sent")
 NO_ROOM_ID = Exception.new("No Room ID was specified")
 
 module ChatBot
-  def start(config : Config, twitch : Twitch::Client, coin : CoinApi)
+  def start(twitch : Twitch::Client, coin : Data::Coin)
+    raise "Missing twitch chat password" unless pass = coin.twitch_chat_password
     client = Crirc::Network::Client.new(
       ip: "irc.chat.twitch.tv",
       port: 6667,
       ssl: false,
       nick: "greenbigfrog",
-      pass: config.chat_password,
+      pass: pass,
       limiter: RateLimiter(String).new)
 
     client.connect
 
     active_users_cache = ActivityCache.new(10.minutes)
 
-    prefix = config.prefix
+    prefix = coin.prefix
     client.start do |bot|
       Plugins::Ping.bind(bot, prefix)
       Plugins::Channels.bind(bot, prefix, twitch)
-      Plugins::Balance.bind(bot, config)
-      Plugins::Tip.bind(bot, config, twitch)
-      Plugins::Withdraw.bind(bot, config, coin)
-      Plugins::Deposit.bind(bot, config, coin)
-      Plugins::Support.bind(bot, config)
-      Plugins::Donation.bind(bot, config)
+      Plugins::Balance.bind(bot, coin)
+      Plugins::Tip.bind(bot, coin, twitch)
+      # Plugins::Withdraw.bind(bot, coin)
+      # Plugins::Deposit.bind(bot, coin)
+      Plugins::Support.bind(bot, coin)
+      Plugins::Donation.bind(bot, coin)
       Plugins::Whisper.bind(bot)
-      Plugins::Rain.bind(bot, config, twitch, active_users_cache)
+      Plugins::Rain.bind(bot, coin, twitch, active_users_cache)
 
       # bot.join(Crirc::Protocol::Chan.new("#monstercat"))
 
@@ -61,6 +62,8 @@ module ChatBot
         end
       end
     end
+
+    sleep
   end
 
   extend self
@@ -125,7 +128,7 @@ module ChatBot
     #     db.update_balance(user)
     #     db.update_coin_transaction_status(transaction, "credited")
     #     login = twitch.get_user_by_id(db.get_account_twitch_id_by_id(user))
-    #     # bot.whisper(login, "Your deposit of #{amount} #{config.short} just got confirmed.")
+    #     # bot.whisper(login, "Your deposit of #{amount} #{coin.name_short} just got confirmed.")
     #   end
     # end
   end
@@ -167,24 +170,24 @@ module ChatBot
     address.split('!')[0]
   end
 
-  # Takes a String and parses a BigDecimal Amount
-  def amount(balance : BigDecimal, string : String) : BigDecimal?
-    if string == "all"
-      balance
-    elsif string == "half"
-      BigDecimal.new(balance / 2).round(8)
-    elsif string == "rand"
-      BigDecimal.new(Random.rand(1..6))
-    elsif string == "bigrand"
-      BigDecimal.new(Random.rand(1..42))
-    elsif m = /(?<amount>^[0-9,\.]+)/.match(string)
-      begin
-        return nil unless string == m["amount"]
-        BigDecimal.new(m["amount"]).round(8)
-      rescue InvalidBigDecimalException
-      end
-    end
-  end
+  # # Takes a String and parses a BigDecimal Amount
+  # def amount(balance : BigDecimal, string : String) : BigDecimal?
+  #   if string == "all"
+  #     balance
+  #   elsif string == "half"
+  #     BigDecimal.new(balance / 2).round(8)
+  #   elsif string == "rand"
+  #     BigDecimal.new(Random.rand(1..6))
+  #   elsif string == "bigrand"
+  #     BigDecimal.new(Random.rand(1..42))
+  #   elsif m = /(?<amount>^[0-9,\.]+)/.match(string)
+  #     begin
+  #       return nil unless string == m["amount"]
+  #       BigDecimal.new(m["amount"]).round(8)
+  #     rescue InvalidBigDecimalException
+  #     end
+  #   end
+  # end
 
   def mention(login : String, string : String)
     "@#{login} #{string}"

@@ -4,7 +4,7 @@ class CoinApi
   @rpc : BitcoinRpc
 
   def initialize(@coin : Data::Coin, @log : Logger)
-    @log.debug("#{config.coinname_short}: Initializing RPC interface for #{@coin.name_long}")
+    @log.debug("#{coin.name_short}: Initializing RPC interface for #{@coin.name_long}")
 
     rpc = nil
     retry_delay = 1
@@ -20,7 +20,7 @@ class CoinApi
     end
     @rpc = rpc.not_nil!
 
-    @log.debug("#{config.coinname_short}: #{@rpc.getinfo}")
+    @log.debug("#{coin.name_short}: #{@rpc.getinfo}")
   end
 
   def get_info
