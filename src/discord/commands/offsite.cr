@@ -9,7 +9,7 @@ class Offsite
     id = msg.author.id.to_u64
 
     cmd_usage = <<-DOC
-    Usage: `#{@config.prefix}offsite [detail]`
+    Usage: `#{@coin.prefix}offsite [detail]`
     This command allows the storage of coins off site
 
     - `address` Send coins here to deposit them again
@@ -29,7 +29,7 @@ class Offsite
       client.create_message(msg.channel_id, "Send coins here to put them back in the bot: **#{@tip.get_offsite_address(id)}**")
     when "send"
       # cmd[1]: address, cmd[2]: amount
-      return client.create_message(msg.channel_id, "`#{@config.prefix}offsite send [address] [amount]`") unless cmd.size == 3
+      return client.create_message(msg.channel_id, "`#{@coin.prefix}offsite send [address] [amount]`") unless cmd.size == 3
 
       amount = parse_amount(@coin, :discord, msg.author.id.to_u64, cmd[2])
       return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount") if amount.nil?
@@ -45,12 +45,12 @@ class Offsite
         client.create_message(msg.channel_id, "Something went horribly wrong.")
       end
     when .starts_with?("bal")
-      client.create_message(msg.channel_id, "Your current offsite balance is **#{@tip.get_offsite_balance(msg.author.id.to_u64)} #{@config.coinname_short}**\n*(This does not include unconfirmed transactions)*")
+      client.create_message(msg.channel_id, "Your current offsite balance is **#{@tip.get_offsite_balance(msg.author.id.to_u64)} #{@coin.name_short}**\n*(This does not include unconfirmed transactions)*")
     when "info"
       fields = Array(Discord::EmbedField).new
 
       @tip.get_offsite_balances.each do |user|
-        fields << Discord::EmbedField.new(name: ZWS, value: "<@#{user[:userid]}>: #{user[:balance]} #{@config.coinname_short}")
+        fields << Discord::EmbedField.new(name: ZWS, value: "<@#{user[:userid]}>: #{user[:balance]} #{@coin.name_short}")
       end
 
       embed = Discord::Embed.new(
@@ -69,8 +69,8 @@ class Offsite
         colour: 0x00ccff_u32,
         timestamp: Time.now,
         fields: [
-          Discord::EmbedField.new(name: "Wallet Balance", value: "#{wallet} #{@config.coinname_short}"),
-          Discord::EmbedField.new(name: "Users Balance", value: "#{users} #{@config.coinname_short}"),
+          Discord::EmbedField.new(name: "Wallet Balance", value: "#{wallet} #{@coin.name_short}"),
+          Discord::EmbedField.new(name: "Users Balance", value: "#{users} #{@coin.name_short}"),
           Discord::EmbedField.new(name: "Ideal Wallet Balance Range", value: "#{users * BigDecimal.new(0.25)}..#{users * BigDecimal.new(0.35)}"),
           Discord::EmbedField.new(name: "Current Percentage", value: "#{((wallet / users) * 100).round(4)}%"),
         ]

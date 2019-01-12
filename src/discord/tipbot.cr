@@ -1,13 +1,13 @@
 class TipBot
   getter db : DB::Database
 
-  def initialize(@config : Config, @log : Logger)
+  def initialize(@log : Logger)
     @db = DB.open(@config.database_url) # + "?initial_pool_size=10&max_pool_size=10&max_idle_pool_size=10")
     @coin_api = CoinApi.new(@config, @log)
   end
 
   def transfer(from : UInt64, to : UInt64, amount : BigDecimal, memo : String)
-    @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
+    @log.debug("#{@coin.name_short}: Attempting to transfer #{amount} #{@coin.name_long} from #{from} to #{to}")
     ensure_user(from)
     ensure_user(to)
 
@@ -19,20 +19,20 @@ class TipBot
         transaction = tx.connection.exec(sql, memo, from, to, amount)
 
         if transaction.rows_affected == 1
-          @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
+          @log.debug("#{@coin.name_short}: Transfered #{amount} #{@coin.name_long} from #{from} to #{to}")
         else
-          @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
+          @log.error("#{@coin.name_short}: Failed to transfer #{amount} from #{from} to #{to}")
           return "error"
         end
 
         update_balance(from, tx.connection)
         update_balance(to, tx.connection)
 
-        @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
+        @log.debug("#{@coin.name_short}: Calculated balances for #{from} and #{to}")
       rescue ex : PQ::PQError
         @log.error(ex)
         tx.rollback
-        @log.error("#{@config.coinname_short}: PQError during transfer #{memo} from #{from} to #{to}")
+        @log.error("#{@coin.name_short}: PQError during transfer #{memo} from #{from} to #{to}")
         return "error"
       end
     end
@@ -40,7 +40,7 @@ class TipBot
   end
 
   def withdraw(from : UInt64, address : String, amount : BigDecimal)
-    @log.debug("#{@config.coinname_short}: Attempting to withdraw #{amount} #{@config.coinname_full} from #{from} to #{address}")
+    @log.debug("#{@coin.name_short}: Attempting to withdraw #{amount} #{@coin.name_long} from #{from} to #{address}")
     ensure_user(from)
     return "insufficient balance" if balance(from) < amount + @config.txfee
 
@@ -52,7 +52,7 @@ class TipBot
     @db.transaction do |tx|
       begin
         memo = "withdrawal: #{address}"
-        @log.debug("#{@config.coinname_short}: Added withdrawal of #{amount} from #{from} to #{address} to queue")
+        @log.debug("#{@coin.name_short}: Added withdrawal of #{amount} from #{from} to #{address} to queue")
 
         tx.connection.exec("INSERT INTO transactions(memo, from_id, to_id, amount) VALUES ($1, $2, 0, $3)", memo, from, amount + @config.txfee)
         tx.connection.exec("INSERT INTO withdrawals(from_id, amount, address) VALUES ($1, $2, $3)", from, amount, address)
@@ -60,7 +60,7 @@ class TipBot
       rescue ex : PQ::PQError
         tx.rollback
         @log.error(ex)
-        @log.error("#{@config.coinname_short}: PQError while attempting to withdraw #{amount} #{@config.coinname_short} to #{address} for #{from}")
+        @log.error("#{@coin.name_short}: PQError while attempting to withdraw #{amount} #{@coin.name_short} to #{address} for #{from}")
         return false
       end
     end
@@ -78,11 +78,11 @@ class TipBot
         hash = @coin_api.withdraw(x[:address], x[:amount], "Withdrawal for #{x[:from_id]}")
       rescue ex
         @log.error(ex)
-        @log.error("#{@config.coinname_short}: Something went wrong while processing withdrawals")
+        @log.error("#{@coin.name_short}: Something went wrong while processing withdrawals")
         next
       end
       @db.exec("UPDATE withdrawals SET status = 'processed' WHERE id = $1", x[:id])
-      @log.debug("#{@config.coinname_short}: Processed withdrawal of #{x[:amount]} for #{x[:from_id]} to #{x[:address]}")
+      @log.debug("#{@coin.name_short}: Processed withdrawal of #{x[:amount]} for #{x[:from_id]} to #{x[:address]}")
       users[x[:from_id].to_u64] = hash.to_s
     end
     users
@@ -101,12 +101,12 @@ class TipBot
 
     @db.exec("INSERT INTO offsite(memo, userid, amount) VALUES ('withdrawal', $1, $2)", user, amount)
 
-    @log.debug("#{@config.coinname_short}: Offsite withdrawal for #{user}, with #{amount} to #{address}")
+    @log.debug("#{@coin.name_short}: Offsite withdrawal for #{user}, with #{amount} to #{address}")
     true
   end
 
   def multi_transfer(from : UInt64, users : Set(UInt64) | Array(UInt64), total : BigDecimal, memo : String)
-    @log.debug("#{@config.coinname_short}: Attempting to multitransfer #{total} #{@config.coinname_full} from #{from} to #{users}")
+    @log.debug("#{@coin.name_short}: Attempting to multitransfer #{total} #{@coin.name_long} from #{from} to #{users}")
     # We don't have to ensure_user here, since it's redundant
     # For performance reasons we still can check for sufficient balance
     balance = balance(from)
@@ -122,12 +122,12 @@ class TipBot
     users.each do |x|
       return false unless self.transfer(from, x, amount, memo)
     end
-    @log.debug("#{@config.coinname_short}: Multitransfered #{total} from #{from} to #{users}")
+    @log.debug("#{@coin.name_short}: Multitransfered #{total} from #{from} to #{users}")
     true
   end
 
   def get_address(user : UInt64)
-    @log.debug("#{@config.coinname_short}: Attempting to get deposit address for #{user}")
+    @log.debug("#{@coin.name_short}: Attempting to get deposit address for #{user}")
     ensure_user(user)
 
     address = @db.query_one("SELECT address FROM accounts WHERE userid=$1", user, as: String?)
@@ -144,13 +144,13 @@ class TipBot
       SQL
 
       @db.exec(sql, address, user)
-      @log.debug("#{@config.coinname_short}: New address for #{user}: #{address}")
+      @log.debug("#{@coin.name_short}: New address for #{user}: #{address}")
     end
     return address
   end
 
   def get_offsite_address(user : UInt64)
-    @log.debug("#{@config.coinname_short}: Attempting to get new offsite address for #{user}")
+    @log.debug("#{@coin.name_short}: Attempting to get new offsite address for #{user}")
     ensure_user(user)
 
     address = @db.query_one?("SELECT address FROM offsite_addresses WHERE userid=$1", user, as: String?)
@@ -159,7 +159,7 @@ class TipBot
       address = @coin_api.new_address
 
       @db.exec("INSERT INTO offsite_addresses (address, userid) VALUES ($1, $2)", address, user)
-      @log.debug("#{@config.coinname_short}: New offsite address for #{user}: #{address}")
+      @log.debug("#{@coin.name_short}: New offsite address for #{user}: #{address}")
     end
     address
   end
@@ -276,10 +276,10 @@ class TipBot
         if (query == [0] || query.empty?)
           if check_offsite_deposits(address, amount)
             update = update_coin_transaction(transaction, "offsite")
-            @log.debug("#{@config.coinname_short}: Returned offsite deposit at #{transaction}")
+            @log.debug("#{@coin.name_short}: Returned offsite deposit at #{transaction}")
           else
             update = update_coin_transaction(transaction, "never")
-            @log.debug("#{@config.coinname_short}: Invalid deposit at #{transaction}")
+            @log.debug("#{@coin.name_short}: Invalid deposit at #{transaction}")
           end
         end
 
@@ -298,7 +298,7 @@ class TipBot
           delete_deposit_address(userid.to_u64)
 
           users << userid.to_u64
-          @log.debug("#{@config.coinname_short}: #{userid} deposited #{amount} #{@config.coinname_short} in TX #{transaction}")
+          @log.debug("#{@coin.name_short}: #{userid} deposited #{amount} #{@coin.name_short} in TX #{transaction}")
         end
       end
     end
@@ -371,7 +371,7 @@ class TipBot
   end
 
   private def ensure_user(user : UInt64)
-    @log.debug("#{@config.coinname_short}: Ensuring user: #{user}")
+    @log.debug("#{@coin.name_short}: Ensuring user: #{user}")
     @db.exec("INSERT INTO accounts(userid) VALUES ($1) ON CONFLICT DO NOTHING", user)
   end
 

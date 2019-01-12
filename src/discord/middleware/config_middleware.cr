@@ -1,9 +1,7 @@
 class ConfigMiddleware
   getter cache : Discord::Cache | Nil
-  @db : DB::Database
 
-  def initialize(@coin : Data::Coin, @tip : TipBot, @config : Config)
-    @db = @tip.db
+  def initialize(@coin : Data::Coin)
   end
 
   def call(msg, ctx)
@@ -12,17 +10,17 @@ class ConfigMiddleware
   end
 
   def get_prefix(msg)
-    Data::GuildConfig.read_prefix(guild_id(msg), @coin) || @config.prefix
+    Data::Guild.read_prefix(guild_id(msg), @coin) || @coin.prefix
   end
 
   def get_config(msg : Discord::Message, memo : String)
-    Data::GuildConfig.read_config(guild_id(msg), @coin, memo) || false
-    # DATA.query_one?("SELECT #{memo} FROM guild_configs WHERE guild = $1 AND coin = $2", server_id(msg), @coin, as: Bool?) || false
+    Data::Guild.read_config(guild_id(msg), @coin, memo) || false
   end
 
   def get_decimal_config(msg : Discord::Message, memo : String)
-    res = Data::GuildConfig.read_decimal_config(guild_id(msg), @coin, memo)
-    res || @config.get(memo)
+    res = Data::Guild.read_decimal_config(guild_id(msg), @coin, memo)
+    # TODO `get` macro
+    res || @coin.get("default_#{memo}")
   end
 
   private def guild_id(msg)

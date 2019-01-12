@@ -4,7 +4,7 @@ class DiscordBot
   def lucky(msg, ctx)
     client = ctx[Discord::Client]
 
-    cmd_usage = "#{@config.prefix}lucky [amount]"
+    cmd_usage = "#{@coin.prefix}lucky [amount]"
 
     # cmd[0]: amount
     cmd = ctx[Command].command
@@ -15,7 +15,7 @@ class DiscordBot
     return client.create_message(msg.channel_id, "**ERROR**: You have to specify an amount! #{cmd_usage}") unless amount
 
     min_tip = ctx[ConfigMiddleware].get_decimal_config(msg, "min_tip")
-    return client.create_message(msg.channel_id, "**ERROR**: You have to lucky rain at least #{min_tip} #{@config.coinname_short}") if amount < min_tip
+    return client.create_message(msg.channel_id, "**ERROR**: You have to lucky rain at least #{min_tip} #{@coin.name_short}") if amount < min_tip
 
     users = active_users(msg)
 
@@ -28,7 +28,7 @@ class DiscordBot
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient Balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{SUPPORT}")
     else
-      client.create_message(msg.channel_id, "#{msg.author.username} luckily rained **#{amount} #{@config.coinname_short}** onto **<@#{user}>**")
+      client.create_message(msg.channel_id, "#{msg.author.username} luckily rained **#{amount} #{@coin.name_short}** onto **<@#{user}>**")
     end
   end
 end

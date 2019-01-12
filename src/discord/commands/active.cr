@@ -13,7 +13,7 @@ class DiscordBot
     authors = @active_users_cache.resolve_to_id(msg.channel_id.to_u64)
     return unless authors
     authors.delete(msg.author.id.to_u64)
-    authors - @config.ignored_users.to_a
+    authors - @coin.ignored_users.to_a
   end
 
   private def cache_users(msg : Discord::Message)

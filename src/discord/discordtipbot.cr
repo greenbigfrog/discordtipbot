@@ -18,13 +18,7 @@ require "./**"
 
 class DiscordTipBot
   def self.run
-    abort "No Config File specified! Exiting!" if ARGV.size == 0
-
     log = Logger.new(STDOUT)
-
-    log.debug("Attempting to load config from #{ARGV[0].inspect}")
-    Config.load(ARGV[0])
-    log.info("Loaded config from #{ARGV[0].inspect}")
 
     Raven.configure do |raven_config|
       raven_config.async = true
@@ -39,16 +33,17 @@ class DiscordTipBot
       shared_cache = Discord::Cache.new(Discord::Client.new(""))
 
       log.debug("starting forking")
-      Config.current.each do |name, config|
-        raven_spawn(name: "#{name} Bot") do
-          bot = Discord::Client.new(config.discord_token)
+
+      Data::Coin.read.each do |coin|
+        raven_spawn(name: "#{coin.name_short} Bot") do
+          token = coin.discord_token
+          raise "Missing Discord Token" unless token
+          bot = Discord::Client.new(token)
           cache = Discord::Cache.new(bot)
           shared_cache.bind(cache)
           bot.cache = cache
 
-          # TODO
-          coin = Data::Coin.read.first
-          DiscordBot.new(coin, bot, cache, config, log).run
+          DiscordBot.new(coin, bot, cache, log).run
         end
       end
       log.debug("finished forking")

@@ -11,14 +11,13 @@ struct Statistics
 
   class_getter last = Time.utc_now
 
-  def self.get(db : DB::Database)
-    update(db)
-    Statistics.from_rs(db.query("SELECT * FROM statistics")).last
+  def self.read
+    Statistics.from_rs(DATA.query("SELECT * FROM statistics")).last
   end
 
-  def self.update(db : DB::Database)
+  def self.update
     return unless Time.utc_now > @@last + @@ttl
-    db.exec("REFRESH MATERIALIZED VIEW statistics")
+    DATA.exec("REFRESH MATERIALIZED VIEW statistics")
     @@last = Time.utc_now
   end
 end

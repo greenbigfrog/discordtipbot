@@ -2,13 +2,13 @@ class Tip
   include Utilities
   include Amount
 
-  def initialize(@coin : Data::Coin, @config : Config)
+  def initialize(@coin : Data::Coin)
   end
 
   def call(msg, ctx)
     client = ctx[Discord::Client].not_nil!
 
-    cmd_usage = "`#{@config.prefix}tip [@user] [amount]`"
+    cmd_usage = "`#{@coin.prefix}tip [@user] [amount]`"
     # cmd[0]: user, cmd[1]: amount
     cmd = ctx[Command].command
 
@@ -31,7 +31,7 @@ class Tip
 
     return client.create_message(msg.channel_id, "**ERROR**: Are you trying to tip yourself!?") if id == msg.author.id.to_u64
 
-    return client.create_message(msg.channel_id, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @config.ignored_users.includes?(id)
+    return client.create_message(msg.channel_id, "**ERROR**: The user you are trying to tip isn't able to receive tips") if @coin.ignored_users.includes?(id)
 
     amount = parse_amount(@coin, :discord, msg.author.id.to_u64, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") unless amount
@@ -45,7 +45,7 @@ class Tip
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient Balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{SUPPORT}")
     else
-      client.create_message(msg.channel_id, "#{msg.author.username} tipped **#{amount} #{@config.coinname_short}** to **#{to.username}**")
+      client.create_message(msg.channel_id, "#{msg.author.username} tipped **#{amount} #{@coin.name_short}** to **#{to.username}**")
     end
 
     yield

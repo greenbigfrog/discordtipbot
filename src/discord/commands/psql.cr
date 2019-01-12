@@ -9,7 +9,7 @@ class PSQL
     return client.create_message(msg.channel_id, "No SQL query specified") if cmd.empty?
     return client.create_message(msg.channel_id, "DROPing isn't allowed") if cmd.match /drop/i
 
-    # args = ["-d#{@config.coinname_full.downcase}"]
+    # args = ["-d#{@coin.name_long.downcase}"]
     # args.push "-c#{cmd}"
     # str = Process.new("psql", args: args, input: Process::Redirect::Inherit,
     #   output: Process::Redirect::Pipe, error: Process::Redirect::Inherit).output.gets_to_end

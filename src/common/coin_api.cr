@@ -3,14 +3,14 @@ require "bitcoin_rpc"
 class CoinApi
   @rpc : BitcoinRpc
 
-  def initialize(@config : Config, @log : Logger)
-    @log.debug("#{config.coinname_short}: Initializing RPC interface for #{@config.coinname_full}")
+  def initialize(@coin : Data::Coin, @log : Logger)
+    @log.debug("#{config.coinname_short}: Initializing RPC interface for #{@coin.name_long}")
 
     rpc = nil
     retry_delay = 1
     while rpc.nil?
       begin
-        rpc = BitcoinRpc.new(@config.rpc_url, @config.rpc_username, @config.rpc_password).tap(&.getinfo)
+        rpc = BitcoinRpc.new(@coin.rpc_url, @coin.rpc_username, @coin.rpc_password).tap(&.getinfo)
         break
       rescue ex
         @log.warn("Unable to connect to Coin Daemon (#{ex.class}: #{ex.message}). Retrying after #{retry_delay} seconds.")

@@ -1,7 +1,7 @@
 class Deposit
   include DiscordMiddleware::CachedRoutes
 
-  def initialize(@tip : TipBot, @config : Config)
+  def initialize(@coin : Coin)
   end
 
   def call(msg, ctx)
@@ -12,10 +12,10 @@ class Deposit
       notif = client.create_message(msg.channel_id, "Sent deposit address in a DM")
     end
     begin
-      address = @tip.get_address(msg.author.id.to_u64)
+      address = "" # @tip.get_address(msg.author.id.to_u64)
       embed = Discord::Embed.new(
         footer: Discord::EmbedFooter.new("I love you! ❤"),
-        image: Discord::EmbedImage.new("https://tipbot.info/qr/#{@config.uri_scheme}:#{address}")
+        image: Discord::EmbedImage.new("https://tipbot.info/qr/#{@coin.uri_scheme}:#{address}")
       )
       client.create_message(cache.resolve_dm_channel(msg.author.id.to_u64), "Your deposit address is: **#{address}**\nPlease keep in mind, that this address is for **one time use only**. After every deposit your address will reset! Don't use this address to receive from faucets, pools, etc.\nDeposits take **#{@config.confirmations} confirmations** to get credited!\n*#{TERMS}*", embed)
     rescue
