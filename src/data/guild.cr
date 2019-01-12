@@ -1,4 +1,4 @@
-struct Data::Guild
+struct Data::Discord::Guild
   DB.mapping(
     id: Int32,
     coin: Int32,

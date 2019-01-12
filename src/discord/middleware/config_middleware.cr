@@ -10,15 +10,15 @@ class ConfigMiddleware
   end
 
   def get_prefix(msg)
-    Data::Guild.read_prefix(guild_id(msg), @coin) || @coin.prefix
+    Data::Discord::Guild.read_prefix(guild_id(msg), @coin) || @coin.prefix
   end
 
   def get_config(msg : Discord::Message, memo : String)
-    Data::Guild.read_config(guild_id(msg), @coin, memo) || false
+    Data::Discord::Guild.read_config(guild_id(msg), @coin, memo) || false
   end
 
   def get_decimal_config(msg : Discord::Message, memo : String)
-    res = Data::Guild.read_decimal_config(guild_id(msg), @coin, memo)
+    res = Data::Discord::Guild.read_decimal_config(guild_id(msg), @coin, memo)
     # TODO `get` macro
     res || @coin.get("default_#{memo}")
   end

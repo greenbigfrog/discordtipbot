@@ -18,10 +18,10 @@ class Prefix
     string = cmd.join(' ').strip('"')
 
     if string.starts_with?("clear")
-      return client.create_message(msg.channel_id, "Successfully cleared prefix. Only prefix is mentioning now") if Data::Guild.update_prefix(guild_id, @coin, nil)
+      return client.create_message(msg.channel_id, "Successfully cleared prefix. Only prefix is mentioning now") if Data::Discord::Guild.update_prefix(guild_id, @coin, nil)
     end
 
-    return client.create_message(msg.channel_id, "Successfully set the prefix to **`#{string + ZWS}`**") if Data::Guild.update_prefix(guild_id, @coin, string)
+    return client.create_message(msg.channel_id, "Successfully set the prefix to **`#{string + ZWS}`**") if Data::Discord::Guild.update_prefix(guild_id, @coin, string)
     client.create_message(msg.channel_id, "**ERROR:** Please try again or get support at <http://tipbot.gbf.re>")
     yield
   end
