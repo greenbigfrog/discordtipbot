@@ -76,18 +76,11 @@ CREATE TABLE transactions (
        time timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE TABLE guilds (
+CREATE TABLE configs (
     id bigint PRIMARY KEY,
-    coin int NOT NULL REFERENCES coins,
-    UNIQUE(id, coin),
-
-    contacted boolean NOT NULL DEFAULT false,
-
-    created_time timestamptz NOT NULL DEFAULT now(),
 
     prefix text,
 
-    mention boolean NOT NULL DEFAULT false,
     soak boolean NOT NULL DEFAULT false,
     rain boolean NOT NULL DEFAULT false,
 
@@ -99,6 +92,32 @@ CREATE TABLE guilds (
 
     min_tip numeric(64, 8),
     min_lucky numeric(64, 8)
+);
+
+CREATE SEQUENCE config_id;
+
+CREATE TABLE guilds (
+    id integer PRIMARY KEY NOT NULL DEFAULT nextval('config_id'),
+
+    guild_id bigint NOT NULL,    
+    coin int NOT NULL REFERENCES coins,
+    UNIQUE(guild_id, coin),
+
+    contacted boolean NOT NULL DEFAULT false,
+
+    mention boolean NOT NULL DEFAULT false,
+
+    created_time timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE channels (
+    id integer PRIMARY KEY NOT NULL DEFAULT nextval('config_id'),
+
+    name text NOT NULL,
+    coin int NOT NULL REFERENCES coins,
+    UNIQUE(name, coin),
+
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TYPE deposit_status AS ENUM('NEW', 'CREDITED', 'NEVER');

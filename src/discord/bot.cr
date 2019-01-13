@@ -5,6 +5,7 @@ require "humanize_time"
 require "bot_list"
 require "../common/string_split"
 require "../../jobs/webhook"
+require "../../jobs/new_guild_job"
 
 USER_REGEX     = /<@!?(?<id>\d+)>/
 ZWS            = "​" # There is a zero width space stored here
@@ -14,9 +15,6 @@ CONFIG_COLUMNS = ["min_soak", "min_soak_total", "min_rain", "min_rain_total", "m
 class DiscordBot
   include Utilities
   include StringSplit
-
-  @unavailable_guilds = Set(UInt64).new
-  @available_guilds = Set(UInt64).new
 
   def initialize(@coin : Data::Coin, @bot : Discord::Client, @cache : Discord::Cache, @log : Logger)
     @log.debug("#{@coin.name_short}: starting bot: #{@coin.name_long}")
@@ -193,33 +191,11 @@ class DiscordBot
     #   end
     # end
 
-    # Handle new guilds and owner notifying etc
-    @streaming = false
-
-    @bot.on_ready(error) do |payload|
-      # Only fire on first READY, or if ID cache was cleared
-      next unless @unavailable_guilds.empty? && @available_guilds.empty?
-      @streaming = true
-      @unavailable_guilds.concat payload.guilds.map(&.id.to_u64)
-    end
-
     @bot.on_guild_create(error) do |payload|
-      if @streaming
-        @available_guilds.add payload.id.to_u64
+      id = payload.id.to_u64.to_i64
+      if Data::Discord::Guild.new?(id, @coin)
+        NewGuildJob.new(guild_id: id, coin: @coin.id, owner: payload.owner_id.to_u64.to_i64).enqueue
 
-        # Done streaming
-        if @available_guilds == @unavailable_guilds
-          @cache.guilds.each do |_id, guild|
-            handle_new_guild(guild)
-          end
-          sleep 1
-
-          # Any guild after this is new, not streaming anymore
-          @streaming = false
-          @log.debug("#{@coin.name_short}: Done streaming/Cacheing guilds after #{Time.now - START_TIME}")
-        end
-      else
-        # Brand new guild
         owner = @cache.resolve_user(payload.owner_id)
         embed = Discord::Embed.new(
           title: payload.name,
@@ -231,7 +207,7 @@ class DiscordBot
             Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s),
           ]
         )
-        WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue if handle_new_guild(payload)
+        WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue
       end
     end
 
