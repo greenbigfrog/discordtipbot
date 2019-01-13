@@ -1,6 +1,3 @@
-require "mosquito"
-require "http/client"
-
 class WebhookJob < Mosquito::QueuedJob
   params embed : String, webhook_type : String
 
