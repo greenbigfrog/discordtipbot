@@ -97,7 +97,7 @@ CREATE TABLE configs (
 CREATE SEQUENCE config_id;
 
 CREATE TABLE guilds (
-    id integer PRIMARY KEY NOT NULL DEFAULT nextval('config_id'),
+    id bigint PRIMARY KEY NOT NULL DEFAULT nextval('config_id'),
 
     guild_id bigint NOT NULL,    
     coin int NOT NULL REFERENCES coins,
@@ -111,7 +111,7 @@ CREATE TABLE guilds (
 );
 
 CREATE TABLE channels (
-    id integer PRIMARY KEY NOT NULL DEFAULT nextval('config_id'),
+    id bigint PRIMARY KEY NOT NULL DEFAULT nextval('config_id'),
 
     name text NOT NULL,
     coin int NOT NULL REFERENCES coins,
