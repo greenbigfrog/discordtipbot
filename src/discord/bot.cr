@@ -194,7 +194,8 @@ class DiscordBot
     @bot.on_guild_create(error) do |payload|
       id = payload.id.to_u64.to_i64
       if Data::Discord::Guild.new?(id, @coin)
-        NewGuildJob.new(guild_id: id, coin: @coin.id, owner: payload.owner_id.to_u64.to_i64).enqueue
+        guild = Data::Discord::Guild.read_config_id(id, @coin)
+        NewGuildJob.new(config_id: guild, coin: @coin.id, guild_name: payload.name, owner: payload.owner_id.to_u64.to_i64).enqueue
 
         owner = @cache.resolve_user(payload.owner_id)
         embed = Discord::Embed.new(
@@ -283,24 +284,6 @@ class DiscordBot
         @active_users_cache.prune
       end
     end
-  end
-
-  private def handle_new_guild(guild : Discord::Guild | Discord::Gateway::GuildCreatePayload)
-    id = guild.id.to_u64
-
-    # @tip.add_server(id)
-
-    # unless @tip.contacted(id)
-    #   string = "Hey! Someone just added me to your guild (#{guild.name}). By default, raining and soaking are disabled. Configure the bot using `#{@coin.prefix}config [rain/soak/mention] [on/off]`. If you have any further questions, please join the support guild at http://tipbot.gbf.re"
-    #   begin
-    #     contact = @bot.create_message(@cache.resolve_dm_channel(guild.owner_id), string)
-    #   rescue
-    #     @log.error("#{@coin.name_short}: Failed contacting #{guild.owner_id}")
-    #   end
-    #   @tip.update_config("contacted", true, id) if contact
-    #   return true
-    # end
-    false
   end
 
   # Since there is no easy way, just to reply to a message

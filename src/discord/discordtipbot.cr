@@ -8,6 +8,7 @@ require "big/json"
 require "discordcr-middleware"
 
 require "../data/**"
+require "mosquito"
 
 require "../common/amount"
 require "../common/coin_api"
