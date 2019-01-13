@@ -1,11 +1,9 @@
 struct Data::Discord::Guild
   DB.mapping(
-    config_id: Int64,
+    id: Int64,
 
     guild_id: Int64,
     coin: Int32,
-
-    contacted: Bool,
 
     created_time: Time,
 
@@ -25,8 +23,8 @@ struct Data::Discord::Guild
     min_lucky: BigDecimal?
   )
 
-  def self.read(id : Int64, coin : Coin)
-    DATA.query_one?("SELECT * FROM guilds, configs WHERE guild_id = $1 AND coin = $2", id, coin, as: self)
+  def self.read_config_id(id : Int64, coin : Coin)
+    DATA.query_one("SELECT id FROM guilds WHERE guild_id = $1 AND coin = $2", id, coin.id, as: Int64)
   end
 
   def self.new?(id : Int64, coin : Coin)
@@ -47,14 +45,18 @@ struct Data::Discord::Guild
   end
 
   def self.update_prefix(id : Int64, coin : Coin, prefix : String?)
-    DATA.exec(<<-SQL, prefix, id, coin.id)
-    INSERT INTO configs(id, prefix)
+    update_config(id, coin, "prefix", prefix)
+  end
+
+  def self.update_config(id : Int64, coin : Coin, key : String, value : String?)
+    DATA.exec(<<-SQL, value, id, coin.id)
+    INSERT INTO configs(id, #{key})
     VALUES (
       (SELECT id FROM guilds WHERE guild_id = $2 AND coin = $3),
       $1
     )
     ON CONFLICT (id) DO
-      UPDATE SET prefix = $1;
+      UPDATE SET #{key} = $1;
     SQL
   end
 
