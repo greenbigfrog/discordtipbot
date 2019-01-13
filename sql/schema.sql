@@ -102,9 +102,7 @@ CREATE TABLE guilds (
     guild_id bigint NOT NULL,    
     coin int NOT NULL REFERENCES coins,
     UNIQUE(guild_id, coin),
-
-    contacted boolean NOT NULL DEFAULT false,
-
+    
     mention boolean NOT NULL DEFAULT false,
 
     created_time timestamptz NOT NULL DEFAULT now()
