@@ -1,8 +1,7 @@
 struct Data::Balance
   DB.mapping(
-    id: Int64,
-    userid: Int64,
-    coin: Coin,
+    account_id: Int64,
+    coin: Int32,
     balance: BigDecimal
   )
 end

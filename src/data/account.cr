@@ -30,7 +30,7 @@ module Data
     end
 
     def balances
-      DATA.query_all?("SELECT * FROM balances WHERE account_id = $1", @id, as: Balance)
+      DATA.query_all("SELECT * FROM balances WHERE account_id = $1", @id, as: Balance)
     end
 
     def update_balance(coin : Coin, db : DB::Connection)
@@ -47,6 +47,10 @@ module Data
 
     def self.read(user_type : UserType, id : Int64) : self
       DATA.query_one("INSERT INTO accounts(#{user_type}) VALUES ($1) ON CONFLICT (#{user_type}) DO UPDATE SET #{user_type} = accounts.#{user_type} RETURNING *", id, as: self)
+    end
+
+    def self.read(id : Int64) : self
+      DATA.query_one("SELECT * FROM accounts WHERE id = $1", id, as: self)
     end
 
     def transfer(amount : BigDecimal, coin : Coin, to : Array(Account), memo : TransactionMemo, *, db : DB::Connection)

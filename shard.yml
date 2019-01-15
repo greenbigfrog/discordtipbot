@@ -31,6 +31,11 @@ dependencies:
     github: mamantoha/humanize_time
   kemal:
     github: kemalcr/kemal
+    branch: master
+  # kemal-csrf:
+    # github: exploitd/kemal-csrf
+  kemal-session:
+    github: kemalcr/kemal-session
   bot_list:
     github: z64/bot_list
   micrate:
