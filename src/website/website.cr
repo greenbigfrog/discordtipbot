@@ -25,9 +25,11 @@ end
 
 class Website
   def self.run
-    redirect_uri = "http://127.0.0.1:3000/auth/callback/"
+    # redirect_uri = "http://127.0.0.1:3000/auth/callback/"
+    redirect_uri = "https://01e9bcae.ngrok.io/auth/callback/"
 
     discord_auth = DiscordOAuth2.new(ENV["CLIENT_ID"], ENV["CLIENT_SECRET"], redirect_uri + "discord")
+    twitch_auth = TwitchOAuth2.new(ENV["TWITCH_CLIENT_ID"], ENV["TWITCH_CLIENT_SECRET"], redirect_uri + "twitch")
 
     get "/" do
       render("src/website/views/index.ecr") # , "src/discordtipbot/website/views/layouts/layout.ecr")
@@ -56,14 +58,19 @@ class Website
     #   # HTML
     # end
 
-    get "/auth" do |env|
-      env.redirect(discord_auth.authorize_uri("identify"))
+    get "/auth/:platform" do |env|
+      case env.params.url["platform"]
+      when "discord" then env.redirect(discord_auth.authorize_uri("identify"))
+      when "twitch"  then env.redirect(twitch_auth.authorize_uri(""))
+      else                halt env, status_code: 400
+      end
     end
 
     get "/auth/callback/:platform" do |env|
       case env.params.url["platform"]
       when "twitch"
-        user_id = 10.to_i64
+        user = twitch_auth.get_user_id_with_authorization_code(env.params.query)
+        user_id = Data::Account.read(:twitch, user).id.to_i64
       when "discord"
         user = discord_auth.get_user_id_with_authorization_code(env.params.query)
         user_id = Data::Account.read(:discord, user).id.to_i64
