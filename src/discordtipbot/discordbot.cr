@@ -18,7 +18,7 @@ class DiscordBot
   @unavailable_guilds = Set(UInt64).new
   @available_guilds = Set(UInt64).new
 
-  def initialize(@bot : Discord::Client, @cache : Discord::Cache, @config : Config, @log : Logger)
+  def initialize(@bot : Discord::Client, @cache : Discord::Cache, @shard_id : Int32, @config : Config, @log : Logger)
     @log.debug("#{@config.coinname_short}: starting bot: #{@config.coinname_full}")
     @tip = TipBot.new(@config, @log)
     @active_users_cache = ActivityCache.new(10.minutes)
@@ -35,7 +35,7 @@ class DiscordBot
     typing = TriggerTyping.new
 
     @bot.on_message_create(error, config, Command.new("ping"),
-      rl, Ping.new)
+      rl, Ping.new(@shard_id))
     @bot.on_message_create(error, config, Command.new("withdraw"),
       rl, Withdraw.new(@tip, @config))
     @bot.on_message_create(error, config, Command.new(["deposit", "address"]),
@@ -262,6 +262,12 @@ class DiscordBot
       @presence_cache.handle_presence(presence)
 
       @cache.cache(Discord::User.new(presence.user)) if presence.user.full?
+    end
+
+    raven_spawn do
+      Discord.every(1.minutes) do
+        Shardmaster::Peer.post_ping(@shard_id)
+      end
     end
 
     # receive wallet transactions and insert into coin_transactions

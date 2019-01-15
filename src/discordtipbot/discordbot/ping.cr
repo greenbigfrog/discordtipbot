@@ -1,4 +1,7 @@
 class Ping
+  def initialize(@shard_id : Int32)
+  end
+
   def call(payload, ctx)
     client = ctx[Discord::Client]
     latency = Discord::EmbedField.new("Latency", "#{(Time.utc_now - payload.timestamp).total_milliseconds} ms")
@@ -7,8 +10,16 @@ class Ping
     return unless m.is_a?(Discord::Message)
     roundtrip = Discord::EmbedField.new("Roundtrip", "#{(Time.utc_now - payload.timestamp).total_milliseconds} ms")
     footer = Discord::EmbedFooter.new("Processing of the whole command took #{(Time.utc_now - ctx[Command].time).total_milliseconds} ms")
+
+    string = String.build do |io|
+      io.puts "Pong! Deatils below are for **Shard #{@shard_id}**"
+      Shardmaster::Peer.get_ping.each do |x|
+        io.puts x
+      end
+    end
+
     client.edit_message(m.channel_id, m.id,
-      "Pong!",
+      string,
       Discord::Embed.new(footer: footer,
         fields: [latency, processing_time, roundtrip]))
     yield
