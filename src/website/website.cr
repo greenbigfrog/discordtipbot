@@ -23,10 +23,11 @@ Kemal::Session.config do |config|
   # TODO use redis: config.engine = redis
 end
 
+public_folder "src/website/public/"
+
 class Website
   def self.run
-    # redirect_uri = "http://127.0.0.1:3000/auth/callback/"
-    redirect_uri = "https://01e9bcae.ngrok.io/auth/callback/"
+    redirect_uri = "http://127.0.0.1:3000/auth/callback/"
 
     discord_auth = DiscordOAuth2.new(ENV["CLIENT_ID"], ENV["CLIENT_SECRET"], redirect_uri + "discord")
     twitch_auth = TwitchOAuth2.new(ENV["TWITCH_CLIENT_ID"], ENV["TWITCH_CLIENT_SECRET"], redirect_uri + "twitch")
@@ -39,6 +40,10 @@ class Website
       user = env.session.bigint?("user_id")
       halt env, status_code: 403 unless user.is_a?(Int64)
       "Display Balances here. Authenticated user has ID #{user} \n #{Data::Account.read(user).balances}"
+    end
+
+    get "/statistics" do |env|
+      render("src/website/views/statistics.ecr")
     end
 
     # get "/redirect_auth" do |env|
@@ -57,6 +62,10 @@ class Website
     #   # If you are not redirected automatically, follow the <a href='http://127.0.0.1:3000/auth'>link to example</a>
     #   # HTML
     # end
+
+    get "/login" do |env|
+      render("src/website/views/login.ecr")
+    end
 
     get "/auth/:platform" do |env|
       case env.params.url["platform"]

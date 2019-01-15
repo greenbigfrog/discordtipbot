@@ -1,0 +1,14 @@
+<head>
+	<link rel="stylesheet" href="/css/login.css">
+</head>
+<div class="login_wrapper">
+	<% if env.session.bool?("show auth notif") %>
+	<div class="login_notif">
+		The page you just tried accessing requires you to be authenticated. Please login using one of the providers below.
+	</div>
+	<% end %>
+	<div class="login">
+		<a href="/auth/discord">Login with Discord</a>
+		<a href="/auth/twitch">Login with Twitch</a>
+	</div>
+</div>
