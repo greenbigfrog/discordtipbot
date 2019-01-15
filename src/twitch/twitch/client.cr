@@ -13,11 +13,9 @@ module Twitch
     end
 
     def user?(name : String)
-      begin
-        true if get_user_by_login(name)
-      rescue EMPTY_RESULT
-        false
-      end
+      true if get_user_by_login(name)
+    rescue EMPTY_RESULT
+      false
     end
 
     def user(name : String)
