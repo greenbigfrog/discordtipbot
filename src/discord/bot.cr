@@ -69,15 +69,15 @@ class DiscordBot
     @bot.on_message_create(error, config, Command.new("active"),
       rl, NoPrivate.new) { |msg, _| active(msg) }
     @bot.on_message_create(error, config, Command.new("statistics"), rl) do |msg, _|
-      stats = Statistics.read
+      stats = Data::Statistics.read
       string = String.build do |io|
         io.puts "*Currently the users of this bot have:*"
-        io.puts "Transfered a total of **#{stats.total} #{@coin.name_short}** in #{stats.transactions} transactions"
+        io.puts "Transfered a total of **#{stats.total} #{@coin.name_short}** in #{stats.transaction_sum} transactions"
         io.puts
-        io.puts "Of these **#{stats.tips} #{@coin.name_short}** were tips,"
-        io.puts "**#{stats.rains} #{@coin.name_short}** were rains and"
-        io.puts "**#{stats.soaks} #{@coin.name_short}** were soaks."
-        io.puts "*Last updated at #{Statistics.last}*"
+        io.puts "Of these **#{stats.tip_sum} #{@coin.name_short}** were tips,"
+        io.puts "**#{stats.rain_sum} #{@coin.name_short}** were rains and"
+        io.puts "**#{stats.soak_sum} #{@coin.name_short}** were soaks."
+        io.puts "*Last updated at #{Data::Statistics.last}*"
       end
 
       reply(msg, string)
