@@ -29,7 +29,7 @@ class Website
   def self.run
     redirect_uri = "http://127.0.0.1:3000/auth/callback/"
 
-    discord_auth = DiscordOAuth2.new(ENV["CLIENT_ID"], ENV["CLIENT_SECRET"], redirect_uri + "discord")
+    discord_auth = DiscordOAuth2.new(ENV["DISCORD_CLIENT_ID"], ENV["DISCORD_CLIENT_SECRET"], redirect_uri + "discord")
     twitch_auth = TwitchOAuth2.new(ENV["TWITCH_CLIENT_ID"], ENV["TWITCH_CLIENT_SECRET"], redirect_uri + "twitch")
 
     get "/" do
