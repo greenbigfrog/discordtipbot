@@ -36,6 +36,9 @@ dependencies:
     # github: exploitd/kemal-csrf
   kemal-session:
     github: kemalcr/kemal-session
+  kemal-session-redis:
+    github: codenoid/kemal-session-redis
+    branch: master
   bot_list:
     github: z64/bot_list
   micrate:

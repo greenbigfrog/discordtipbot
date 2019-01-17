@@ -52,6 +52,10 @@ shards:
     github: kemalcr/kemal-session
     version: 0.11.0
 
+  kemal-session-redis:
+    github: codenoid/kemal-session-redis
+    commit: 9515e315236d97fdf81bebb459cdac0f48beaaa0
+
   kilt:
     github: jeromegn/kilt
     version: 0.4.0
