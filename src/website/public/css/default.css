@@ -1,0 +1,26 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	display: grid;
+	grid-template-rows: [header-start] 1fr [header-end content-start] 10fr [content-end footer-start] 1fr [footer-end];
+	grid-template-columns: [full-start] 1fr [content-start] 10fr [content-end] 1fr [full-end];
+}
+
+.content {
+	grid-area: content;
+}
+
+.header {
+	grid-row: header;
+	grid-column: full;
+
+	display: flex;
+}
+
+.footer {
+	grid-row: footer;
+	grid-column: full;
+}

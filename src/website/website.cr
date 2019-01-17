@@ -2,6 +2,7 @@ require "kemal"
 require "kemal-csrf"
 require "kemal-session"
 require "oauth2"
+require "kemal-session-redis"
 
 require "../data/**"
 
@@ -20,20 +21,25 @@ add_handler AuthHandler.new
 Kemal::Session.config do |config|
   config.secret = ENV["SECRET"]
   config.timeout = 10.minutes
-  # TODO use redis: config.engine = redis
+  config.engine = Kemal::Session::RedisEngine.new(host: "localhost", port: 6379)
 end
 
 public_folder "src/website/public/"
 
+macro default_render(file)
+  render("src/website/views/#{{{file}}}", "src/website/layouts/default.ecr")
+end
+
 class Website
   def self.run
-    redirect_uri = "http://127.0.0.1:3000/auth/callback/"
+    # redirect_uri = "http://127.0.0.1:3000/auth/callback/"
+    redirect_uri = "https://34aff0e1.ngrok.io/auth/callback/"
 
     discord_auth = DiscordOAuth2.new(ENV["DISCORD_CLIENT_ID"], ENV["DISCORD_CLIENT_SECRET"], redirect_uri + "discord")
     twitch_auth = TwitchOAuth2.new(ENV["TWITCH_CLIENT_ID"], ENV["TWITCH_CLIENT_SECRET"], redirect_uri + "twitch")
 
-    get "/" do
-      render("src/website/views/index.ecr") # , "src/discordtipbot/website/views/layouts/layout.ecr")
+    get "/" do |env|
+      default_render("index.ecr")
     end
 
     get "/balance" do |env|
@@ -43,7 +49,13 @@ class Website
     end
 
     get "/statistics" do |env|
-      render("src/website/views/statistics.ecr")
+      default_render("statistics.ecr")
+    end
+
+    get "/link_accounts" do |env|
+      user = env.session.bigint?("user_id")
+      halt env, status_code: 403 unless user.is_a?(Int64)
+      default_render("link_accounts.ecr")
     end
 
     # get "/redirect_auth" do |env|
@@ -64,7 +76,7 @@ class Website
     # end
 
     get "/login" do |env|
-      render("src/website/views/login.ecr")
+      default_render("login.ecr")
     end
 
     get "/auth/:platform" do |env|
@@ -79,9 +91,11 @@ class Website
       case env.params.url["platform"]
       when "twitch"
         user = twitch_auth.get_user_id_with_authorization_code(env.params.query)
+        env.session.bigint("twitch", user)
         user_id = Data::Account.read(:twitch, user).id.to_i64
       when "discord"
         user = discord_auth.get_user_id_with_authorization_code(env.params.query)
+        env.session.bigint("discord", user)
         user_id = Data::Account.read(:discord, user).id.to_i64
       else
         halt env, status_code: 400

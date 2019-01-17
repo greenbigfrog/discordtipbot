@@ -15,6 +15,7 @@ module Data
   end
 
   record TransferError, reason : String? = nil
+  record LinkError, reason : String? = nil
 
   struct Account
     DB.mapping(
@@ -66,16 +67,19 @@ module Data
     def link_other_to_self(other : Account)
       discord = other.discord_id
       twitch = other.twitch_id
+      return LinkError.new("Account already linked") if (discord && twitch) || (@discord_id && @twitch_id)
+
       kind = "discord_id" if discord
       kind = "twitch_id" if twitch
+
       DATA.transaction do |tx|
         begin
           db = tx.connection
-          db.exec(<<-SQL, other.id, kind, discord || twitch, @id)
-          UPDATE accounts SET active = false, $2 = NULL WHERE id = $1;
-          UPDATE accounts SET $2 = $3 WHERE id = $4;
+          db.exec("UPDATE accounts SET active = false, #{kind} = NULL WHERE id = $1;", other.id)
+          db.exec("UPDATE accounts SET #{kind} = $1 WHERE id = $2;", discord || twitch, @id)
+          db.exec(<<-SQL, other.id, @id)
           INSERT INTO transactions(coin, memo, amount, account_id)
-            SELECT coin, 'IMPORT_FOR_LINK', amount, $1 FROM transactions WHERE account_id = $1;
+            SELECT coin, 'IMPORT_FOR_LINK', amount, $2 FROM transactions WHERE account_id = $1;
           SQL
 
           Data::Coin.read.each do |coin|
@@ -84,6 +88,7 @@ module Data
         rescue ex : PQ::PQError
           tx.rollback
           LOG.error("Unable to link Account #{@id} with #{other.id}. Exception: #{ex}")
+          return LinkError.new("Something went wrong unexpectedly. Please try again later.")
         end
       end
     end
@@ -121,6 +126,11 @@ module Data
 
     def self.donate(amount : BigDecimal, coin : Coin, from : Int64, platform : UserType)
       transfer(amount: amount, coin: coin, from: from, to: 163607982473609216, platform: platform, memo: :donation)
+    end
+
+    def complete?
+      true if @discord_id && @twitch_id
+      false
     end
   end
 end

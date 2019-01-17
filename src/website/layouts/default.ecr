@@ -1,0 +1,20 @@
+<html>
+<head>
+	<link rel="stylesheet" href="/css/default.css">
+</head>
+<body>
+	<div class="header">
+		<% if env.session.bigint?("user_id") %>
+		<a href="/logout">Logout</a>
+		<% else %>
+		<a href="/login">Login</a>
+		<% end %>
+	</div>
+	<div class="content">
+		<%= content %>
+	</div>
+	<div class="footer">
+		someting
+		<a href="/terms">ToS</a>
+	</div>
+</body>
