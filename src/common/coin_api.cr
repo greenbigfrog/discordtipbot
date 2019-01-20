@@ -1,4 +1,6 @@
 require "bitcoin_rpc"
+require "big"
+require "big/json"
 
 class CoinApi
   @rpc : BitcoinRpc
@@ -29,6 +31,14 @@ class CoinApi
 
   def withdraw(address : String, amount : BigDecimal, comment : String)
     @rpc.send_to_address(address, amount.to_f64, comment)
+  end
+
+  def send_many(input : Hash(String, BigDecimal))
+    hash = Hash(String, Float64).new
+    input.each do |address, amount|
+      hash[address] = amount.to_f64
+    end
+    @rpc.send_many("help", hash).as_s
   end
 
   def new_address
@@ -62,7 +72,7 @@ class CoinApi
   end
 
   def get_transaction(tx : String)
-    @rpc.get_transaction(tx)
+    res = @rpc.get_transaction(tx).as_h
   end
 
   private def address_info(address : String)
