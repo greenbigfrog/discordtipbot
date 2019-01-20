@@ -6,6 +6,7 @@ require "bot_list"
 require "../common/string_split"
 require "../../jobs/webhook"
 require "../../jobs/new_guild_job"
+require "../../jobs/withdraw"
 
 USER_REGEX     = /<@!?(?<id>\d+)>/
 ZWS            = "​" # There is a zero width space stored here
@@ -34,8 +35,8 @@ class DiscordBot
 
     @bot.on_message_create(error, config, Command.new("ping"),
       rl, Ping.new)
-    # @bot.on_message_create(error, config, Command.new("withdraw"),
-    #   rl, Withdraw.new(@coin))
+    @bot.on_message_create(error, config, Command.new("withdraw"),
+      rl, Withdraw.new(@coin))
     # @bot.on_message_create(error, config, Command.new(["deposit", "address"]),
     #   rl, Deposit.new)
     @bot.on_message_create(error, config, Command.new("soak"),

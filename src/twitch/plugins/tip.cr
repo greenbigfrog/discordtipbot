@@ -26,7 +26,7 @@ module ChatBot::Plugins::Tip
       # TODO get rid of static coin
       res = Data::Account.transfer(amount, coin, from, target_id, :twitch, :tip)
 
-      if res.is_a?(Data::TransferError)
+      if res.is_a?(Data::Error)
         next bot.reply(msg, ChatBot.mention(name, "Insufficient Balance")) if res.reason == "insufficient balance"
         next bot.reply(msg, ChatBot.mention(name, "There was an unexpected error. Please try again later"))
       else

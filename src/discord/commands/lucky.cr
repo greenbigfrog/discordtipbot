@@ -24,7 +24,7 @@ class DiscordBot
     user = users.sample
 
     res = Data::Account.transfer(amount: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: user.to_i64, platform: :discord, memo: :lucky)
-    if res.is_a?(Data::TransferError)
+    if res.is_a?(Data::Error)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient Balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{SUPPORT}")
     else

@@ -1,12 +1,17 @@
 class Withdraw
   include Amount
 
-  def initialize(@coin : Data::Coin, @tip : TipBot, @config : Config)
+  def initialize(@coin : Data::Coin)
   end
 
   def call(msg, ctx)
-    cmd_usage = "#{@coin.prefix}withdraw [address] [amount]"
     client = ctx[Discord::Client]
+
+    if client.cache.try &.resolve_channel(payload.channel_id).type != Discord::ChannelType::DM
+      client.create_message(payload.channel_id, "Withdrawing only works in DMs")
+    end
+
+    cmd_usage = "#{@coin.prefix}withdraw [address] [amount]"
 
     # cmd[0]: address, cmd[1]: amount
     cmd = ctx[Command].command
@@ -16,27 +21,13 @@ class Withdraw
     amount = parse_amount(@coin, :discord, msg.author.id.to_u64, cmd[1])
     return client.create_message(msg.channel_id, "**ERROR**: Please specify a valid amount! #{cmd_usage}") if amount.nil?
 
-    amount = amount - @config.txfee if cmd[1] == "all"
-    return client.create_message(msg.channel_id, "**ERROR**: You have to withdraw at least #{@config.min_withdraw}") if amount <= @config.min_withdraw
+    amount = amount - @coin.tx_fee if cmd[1] == "all"
+    # return client.create_message(msg.channel_id, "**ERROR**: You have to withdraw at least #{@coin.min_withdraw}") if amount <= @coin.min_withdraw
 
     address = cmd[0]
 
-    case @tip.withdraw(msg.author.id.to_u64, address, amount)
-    when "insufficient balance"
-      client.create_message(msg.channel_id, "**ERROR**: You tried withdrawing too much. Also make sure you've got enough balance to cover the Transaction fee as well: #{@config.txfee} #{@coin.name_short}")
-    when "invalid address"
-      client.create_message(msg.channel_id, "**ERROR**: Please specify a valid #{@coin.name_long} address")
-    when "internal address"
-      client.create_message(msg.channel_id, "**ERROR**: Withdrawing to an internal address isn't permitted")
-    when false
-      client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to withdraw. Please try again later. If the problem persists, please contact the dev for help in #{@coin.prefix}support")
-    when true
-      string = String.build do |io|
-        io.puts "Pending withdrawal of **#{amount} #{@coin.name_short}** to **#{address}**. *Processing shortly*" + Emoji::CURSOR
-        io.puts "For security reasons large withdrawals have to be processed manually right now" if @tip.node_balance < amount
-      end
-      client.create_message(msg.channel_id, string)
-    end
+    account = Data::Account.read(:discord, msg.author.id.to_u64.to_i64)
+    WithdrawalJob.new(platform: "discord", destination: msg.channel_id.to_s, coin: @coin.id, user: account.id, address: address, amount: amount).enqueue
     yield
   end
 end

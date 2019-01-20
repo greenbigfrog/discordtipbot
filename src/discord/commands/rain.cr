@@ -30,7 +30,7 @@ class DiscordBot
     authors = authors.map { |x| x.to_i64 }
 
     res = Data::Account.multi_transfer(total: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: authors, platform: :discord, memo: :rain)
-    if res.is_a?(Data::TransferError)
+    if res.is_a?(Data::Error)
       return reply(msg, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       reply(msg, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@coin.prefix}support")
     else

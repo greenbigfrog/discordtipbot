@@ -64,6 +64,10 @@ struct Data::Coin
     DATA.query_all("SELECT * FROM coins", as: self)
   end
 
+  def self.read(id : Int32)
+    DATA.query_one("SELECT * FROM coins WHERE id = $1", id, as: self).not_nil!
+  end
+
   def self.read_discord_token(coin : Int32)
     DATA.query_one("SELECT discord_token FROM coins WHERE id = $1", coin, as: String)
   end

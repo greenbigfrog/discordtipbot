@@ -60,7 +60,7 @@ class Soak
     targets.reject! { |x| x == nil }
 
     res = Data::Account.multi_transfer(total: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: targets, platform: :discord, memo: :soak)
-    if res.is_a?(Data::TransferError)
+    if res.is_a?(Data::Error)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@coin.prefix}support")
     else

@@ -14,8 +14,7 @@ module Data
     end
   end
 
-  record TransferError, reason : String? = nil
-  record LinkError, reason : String? = nil
+  record Error, reason : String? = nil
 
   struct Account
     DB.mapping(
@@ -50,7 +49,7 @@ module Data
       DATA.query_one("INSERT INTO accounts(#{user_type}) VALUES ($1) ON CONFLICT (#{user_type}) DO UPDATE SET #{user_type} = accounts.#{user_type} RETURNING *", id, as: self)
     end
 
-    def self.read(id : Int64) : self
+    def self.read(id : Int32) : self
       DATA.query_one("SELECT * FROM accounts WHERE id = $1", id, as: self)
     end
 
@@ -64,10 +63,28 @@ module Data
       SQL
     end
 
+    def withdraw(reserve_amount : BigDecimal, coin : Coin, address : String)
+      return Error.new("insufficient balance") unless balance(coin) >= (reserve_amount + coin.tx_fee)
+      id = nil
+      DATA.transaction do |tx|
+        db = tx.connection
+        begin
+          res = db.query_one("INSERT INTO transactions(coin, memo, amount, account_id) VALUES ($1, 'WITHDRAWAL', -1 * $2, $3) RETURNING id", coin.id, reserve_amount, @id, as: Int32)
+          id = Withdrawal.create(coin, @id, address, (reserve_amount - coin.tx_fee), res, db)
+          update_balance(coin, db)
+        rescue ex : PQ::PQError
+          puts ex.inspect_with_backtrace
+          tx.rollback
+          return Error.new
+        end
+      end
+      id
+    end
+
     def link_other_to_self(other : Account)
       discord = other.discord_id
       twitch = other.twitch_id
-      return LinkError.new("Account already linked") if (discord && twitch) || (@discord_id && @twitch_id)
+      return Error.new("Account already linked") if (discord && twitch) || (@discord_id && @twitch_id)
 
       kind = "discord_id" if discord
       kind = "twitch_id" if twitch
@@ -88,7 +105,7 @@ module Data
         rescue ex : PQ::PQError
           tx.rollback
           LOG.error("Unable to link Account #{@id} with #{other.id}. Exception: #{ex}")
-          return LinkError.new("Something went wrong unexpectedly. Please try again later.")
+          return Error.new("Something went wrong unexpectedly. Please try again later.")
         end
       end
     end
@@ -100,7 +117,7 @@ module Data
     def self.multi_transfer(total : BigDecimal, coin : Coin, from : Int64, to : Array(Int64), platform : UserType, memo : TransactionMemo)
       from = read(platform, from)
 
-      return TransferError.new("insufficient balance") unless from.balance(coin) >= total
+      return Error.new("insufficient balance") unless from.balance(coin) >= total
 
       to = to.map { |x| read(platform, x) }
 
@@ -119,7 +136,7 @@ module Data
           puts ex.inspect_with_backtrace
           LOG.warn("Rolling back transfer of type #{memo} of #{total} #{coin.name_short} from #{from} to #{to}")
           tx.rollback
-          return TransferError.new
+          return Error.new
         end
       end
     end

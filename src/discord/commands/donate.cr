@@ -21,7 +21,7 @@ class Donate
     return client.create_message(msg.channel_id, "**ERROR**: Please donate at least #{@coin.default_min_tip} #{@coin.name_short} at once!") if amount < @coin.default_min_tip unless cmd[0] == "all"
 
     res = Data::Account.donate(amount: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, platform: :discord)
-    if res.is_a?(Data::TransferError)
+    if res.is_a?(Data::Error)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: Please try again later")
     else

@@ -130,9 +130,12 @@ CREATE TABLE deposits (
 CREATE TABLE withdrawals (
        id serial PRIMARY KEY,
        pending boolean DEFAULT true,
-       from_id bigint NOT NULL REFERENCES accounts(id),
+       coin int NOT NULL REFERENCES coins,
+       user_id bigint NOT NULL REFERENCES accounts(id),
        address text NOT NULL,
        amount numeric(64, 8) CONSTRAINT positive_amount CHECK (amount > 0),
+
+       transaction bigint NOT NULL REFERENCES transactions,
 
        created_time timestamptz NOT NULL DEFAULT now()
 );

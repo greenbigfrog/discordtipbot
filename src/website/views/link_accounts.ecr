@@ -11,7 +11,7 @@
 <br>
 <% raise "Missing discord or twitch ID" unless discord && twitch %>
 <% res = Data::Account.read(:discord, discord).link_other_to_self(Data::Account.read(:twitch, twitch.not_nil!)) %>
-<% if res.is_a?(Data::LinkError) %>
+<% if res.is_a?(Data::Error) %>
 <%= "Unable to link account. #{res.reason}" %>
 <% else %>
 <%= "Successfully linked Discord and Twitch account" %>
