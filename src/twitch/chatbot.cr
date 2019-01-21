@@ -25,7 +25,7 @@ module ChatBot
       Plugins::Channels.bind(bot, prefix, twitch)
       Plugins::Balance.bind(bot, coin)
       Plugins::Tip.bind(bot, coin, twitch)
-      # Plugins::Withdraw.bind(bot, coin)
+      Plugins::Withdraw.bind(bot, coin)
       # Plugins::Deposit.bind(bot, coin)
       Plugins::Support.bind(bot, coin)
       Plugins::Donation.bind(bot, coin)
@@ -129,21 +129,6 @@ module ChatBot
     #     db.update_coin_transaction_status(transaction, "credited")
     #     login = twitch.get_user_by_id(db.get_account_twitch_id_by_id(user))
     #     # bot.whisper(login, "Your deposit of #{amount} #{coin.name_short} just got confirmed.")
-    #   end
-    # end
-  end
-
-  # TODO https://github.com/greenbigfrog/discordtipbot/blob/master/src/discordtipbot/tipbot.cr#L69
-  def process_pending_withdrawals(coin : CoinApi)
-    # TODO
-    # db.get_pending_withdrawals.each do |x|
-    #   db.db.transaction do |trans|
-    #     begin
-    #       withdrawal = coin.withdraw(x[:address], x[:amount], "Withdrawal for #{db.get_account_twitch_id_by_id(x[:from_id])}")
-    #       db.update_withdrawal_status(x[:id], "processed", trans.connection)
-    #     rescue
-    #       trans.rollback
-    #     end
     #   end
     # end
   end

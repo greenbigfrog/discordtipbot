@@ -1,7 +1,8 @@
 module ChatBot::Plugins::Withdraw
   extend self
+  include Amount
 
-  def bind(bot, config, coin)
+  def bind(bot, coin)
     bot.on(PRIVWHISP, message: /^#{coin.prefix}withdraw/, doc: {"withdraw", "withdraw [address] [amount]. Remove coins from the bot to your own wallet"}) do |msg|
       name = msg.display_name || ChatBot.extract_nick(msg.source)
       raise NO_USER_ID unless id = msg.user_id
@@ -13,29 +14,15 @@ module ChatBot::Plugins::Withdraw
       next bot.reply(msg, ChatBot.mention(name, "Please try again! #{cmd_usage}")) unless cmd && cmd.size > 2
 
       address = cmd[1]
-      next bot.reply(msg, ChatBot.mention(name, "Please specify a valid address! #{cmd_usage}")) unless coin.validate_address(address)
-      next bot.reply(msg, ChatBot.mention(name, "Currently you can't withdraw to internal addresses. Just tip the other user")) if coin.internal?(address)
 
-      # balance = db.get_account_balance_by_twitch_id(id)
+      amount = parse_amount(coin, :twitch, id, cmd[2])
 
-      # amount = ChatBot.amount(balance, cmd[2])
-      # next bot.reply(msg, ChatBot.mention(name, "Please specify a valid amount")) unless amount
+      next bot.reply(msg, ChatBot.mention(name, "Please specify a valid amount")) unless amount
       # next bot.reply(msg, ChatBot.mention(name, "You have to withdraw at least #{config.min_withdraw} #{coin.name_short}")) unless amount >= coin.default_min_tip
-      # next bot.reply(msg, ChatBot.mention(name, "Insufficient Balance")) if amount > balance
 
-      # TODO
-      # db.db.transaction do |tx|
-      #   begin
-      #     db.create_transaction("withdrawal", id, 0, amount, tx.connection)
-      #     db.create_withdrawal(id, amount, address, tx.connection)
-      #     db.update_balance(id, tx.connection)
-      #   rescue PQ::PQError
-      #     tx.rollback
-      #     next bot.reply(msg, ChatBot.mention(name, "There was an unexpected error! #{SUPPORT}"))
-      #   end
+      account = Data::Account.read(:twitch, id)
 
-      #   bot.reply(msg, ChatBot.mention(name, "Your withdrawal will be processed soon"))
-      # end
+      WithdrawalJob.new(platform: "twitch", destination: msg.arguments.to_s, coin: coin.id, user: account.id, address: address, amount: amount).enqueue
     end
   end
 end

@@ -7,8 +7,8 @@ class Withdraw
   def call(msg, ctx)
     client = ctx[Discord::Client]
 
-    if client.cache.try &.resolve_channel(payload.channel_id).type != Discord::ChannelType::DM
-      client.create_message(payload.channel_id, "Withdrawing only works in DMs")
+    if client.cache.try &.resolve_channel(msg.channel_id).type != Discord::ChannelType::DM
+      client.create_message(msg.channel_id, "Withdrawing only works in DMs")
     end
 
     cmd_usage = "#{@coin.prefix}withdraw [address] [amount]"

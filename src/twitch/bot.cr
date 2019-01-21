@@ -1,5 +1,8 @@
 require "./**"
 
+require "mosquito"
+require "../../jobs/withdraw"
+
 class TwitchBot
   def initialize(@coin : Data::Coin)
     oauth_token = coin.twitch_oauth_token
