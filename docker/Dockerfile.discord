@@ -1,7 +1,7 @@
 FROM crystallang/crystal:0.27.0
 ADD . /src
 WORKDIR /src
-RUN crystal build --release --static -s src/launcher.cr
+RUN crystal build --release --static -s src/discord-launcher.cr
 
 FROM debian:stretch-slim
 RUN apt-get update \
@@ -11,5 +11,5 @@ RUN apt-get update \
 
 RUN adduser --disabled-password --gecos "" docker
 USER docker
-COPY --from=0 /src/launcher /
-ENTRYPOINT ["/launcher", "config.json"]
+COPY --from=0 /src/discord-launcher /
+ENTRYPOINT ["/discord-launcher"]
