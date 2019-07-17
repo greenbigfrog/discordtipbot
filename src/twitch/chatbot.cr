@@ -22,7 +22,7 @@ module ChatBot
     prefix = coin.prefix
     client.start do |bot|
       Plugins::Ping.bind(bot, prefix)
-      Plugins::Channels.bind(bot, prefix, twitch)
+      Plugins::Channels.bind(bot, prefix, twitch, coin)
       Plugins::Balance.bind(bot, coin)
       Plugins::Tip.bind(bot, coin, twitch)
       Plugins::Withdraw.bind(bot, coin)

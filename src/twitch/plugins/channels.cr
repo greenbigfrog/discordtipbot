@@ -1,12 +1,12 @@
 module ChatBot::Plugins::Channels
   extend self
 
-  def bind(bot, prefix, twitch)
-    bind_join(bot, prefix, twitch)
-    bind_part(bot, prefix)
+  def bind(bot, prefix, twitch, coin)
+    bind_join(bot, prefix, twitch, coin)
+    bind_part(bot, prefix, coin)
   end
 
-  def bind_join(bot, prefix, twitch)
+  def bind_join(bot, prefix, twitch, coin)
     bot.on(PRIVWHISP, message: /^#{prefix}join/, doc: {"join", "join [#channel] a given channel"}) do |msg|
       channel = msg.message.try &.split(" ").try &.[1]?
 
@@ -17,7 +17,7 @@ module ChatBot::Plugins::Channels
 
       bot.join(Crirc::Protocol::Chan.new("##{channel}"))
 
-      Data::TwitchChannel.create(channel)
+      Data::TwitchChannel.create(channel, coin)
 
       bot.reply(msg, "Bot joined #{channel}")
 
@@ -25,7 +25,7 @@ module ChatBot::Plugins::Channels
     end
   end
 
-  def bind_part(bot, prefix)
+  def bind_part(bot, prefix, coin)
     bot.on("PRIVMSG", message: /^#{prefix}part/, doc: {"part", "part [channel]. Leave a given channel"}) do |msg|
       author = ChatBot.extract_nick(msg.source)
       next bot.reply(msg, "Only can leave channel if Owner of Channel") unless "##{author}" == msg.arguments
@@ -33,7 +33,7 @@ module ChatBot::Plugins::Channels
       bot.reply(msg, "Leaving channel!")
       bot.part(Crirc::Protocol::Chan.new("#{msg.arguments}"), "not sure if this works")
 
-      Data::TwitchChannel.delete(author)
+      Data::TwitchChannel.delete(author, coin)
     end
   end
 end

@@ -7,9 +7,9 @@ module Data
     )
 
     # Adds a new channel to join the next time
-    def self.create(name : String)
-      DATA.exec(<<-SQL, name)
-      INSERT INTO channels(name) VALUES ($1)
+    def self.create(name : String, coin : Coin)
+      DATA.exec(<<-SQL, name, coin.id)
+      INSERT INTO channels(name, coin) VALUES ($1, $2)
         ON CONFLICT DO NOTHING
       SQL
     end
@@ -24,8 +24,8 @@ module Data
     end
 
     # Deletes a channel
-    def self.delete(name : String)
-      DATA.exec("DELETE FROM channels WHERE name = $1", name)
+    def self.delete(name : String, coin : Coin)
+      DATA.exec("DELETE FROM channels WHERE name = $1 AND coin = $2", name, coin.id)
     end
   end
 end
