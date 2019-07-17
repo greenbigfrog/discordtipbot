@@ -2,61 +2,42 @@ version: "3"
 
 services:
     database:
-        networks:
-            - db_bot
-            - redis_worker
         image: "postgres:11-alpine"
         volumes:
             - ./sql/schema.sql:/schema.sql
             - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
     redis:
-        networks:
-            - redis_bot
-            - redis_worker
         image: "redis:alpine"
     worker:
-        networks:
-            - db_bot
-            - redis_worker
-        depends_on:
-            - redis
-            - database
         build: 
             context: "."
             dockerfile: "docker/Dockerfile.worker"
         volumes:
             - ./tipbot/config.json:/config.json
+        command: bash -c 'while !</dev/tcp/db/5432; do echo "waiting for database"; sleep 1; done; /worker'
+        depends_on:
+            - database
         environment:
             REDIS_URL: 'redis://redis:6379'
-    discord_bot:
-        networks:
-            - db_bot
-            - redis_bot
+    discord:
         build: 
             context: "."
             dockerfile: "docker/Dockerfile.discord"
-        depends_on:
-            - redis
-            - database
         volumes:
             - ./tipbot/config.json:/config.json
-    twitch_bot:
-        networks:
-            - db_bot
-            - redis_bot
-        build:  
+        command: bash -c 'while !</dev/tcp/db/5432; do echo "waiting for database"; sleep 1; done; /discord_launcher'
+        depends_on:
+            - database
+        environment:
+            REDIS_URL: 'redis://redis:6379'
+    twitch:
+        build:
             context: "."
             dockerfile: "docker/Dockerfile.twitch"
-        depends_on:
-            - redis
-            - database
         volumes:
             - ./tipbot/config.json:/config.json
-
-networks:
-    db_bot:
-        driver: overlay
-    redis_bot:
-        driver: overlay
-    redis_worker:
-        driver: overlay
+        command: bash -c 'while !</dev/tcp/db/5432; do echo "waiting for database"; sleep 1; done; /twitch_launcher'
+        depends_on:
+            - database
+        environment:
+            REDIS_URL: 'redis://redis:6379'
