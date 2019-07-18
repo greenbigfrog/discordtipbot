@@ -4,11 +4,7 @@ version: 0.2.0
 authors:
   - Jonathan B. <greenbigfrog@gmail.com>
 
-targets:
-  discordtipbot:
-    main: src/discordtipbot.cr
-
-crystal: 0.27.0
+crystal: 0.29.0
 
 license: MIT
 
@@ -22,8 +18,7 @@ dependencies:
   bitcoin_rpc:
     github: citizen428/bitcoin_rpc
   raven:
-    github: greenbigfrog/raven.cr
-    branch: new-cr
+    github: sija/raven.cr
   discordcr-middleware:
     github: z64/discordcr-middleware
     branch: master
@@ -36,19 +31,17 @@ dependencies:
     # github: exploitd/kemal-csrf
   kemal-session:
     github: kemalcr/kemal-session
-  kemal-session-redis:
-    github: codenoid/kemal-session-redis
-    branch: master
+  # kemal-session-redis:
+  #   github: codenoid/kemal-session-redis
+  #   branch: master
   bot_list:
     github: z64/bot_list
-  micrate:
-    github: amberframework/micrate
   crirc:
     github: greenbigfrog/crirc
     branch: twitch
   mosquito:
     github: robacarp/mosquito
 
-development_dependencies:
-  ameba:
-    github: veelenga/ameba
+# development_dependencies:
+#   ameba:
+#     github: veelenga/ameba
