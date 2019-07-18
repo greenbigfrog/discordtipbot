@@ -1,7 +1,7 @@
 require "./**"
 
 require "mosquito"
-require "../../jobs/withdraw"
+require "../jobs/withdraw"
 
 class TwitchBot
   def initialize(@coin : Data::Coin)

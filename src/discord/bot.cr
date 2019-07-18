@@ -4,9 +4,9 @@ require "discordcr-middleware/middleware/permissions"
 require "humanize_time"
 require "bot_list"
 require "../common/string_split"
-require "../../jobs/webhook"
-require "../../jobs/new_guild_job"
-require "../../jobs/withdraw"
+require "../jobs/webhook"
+require "../jobs/new_guild_job"
+require "../jobs/withdraw"
 
 USER_REGEX     = /<@!?(?<id>\d+)>/
 ZWS            = "​" # There is a zero width space stored here
