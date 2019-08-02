@@ -5,27 +5,36 @@ services:
         image: "postgres:11-alpine"
         volumes:
             - ./sql/schema.sql:/schema.sql
-            - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
+            - ./scripts/postgres-init.sh:/docker-entrypoint-initdatabase.d/postgres-init.sh
     redis:
         image: "redis:alpine"
     worker:
-        build: 
+        build:
             context: "."
             dockerfile: "docker/Dockerfile.worker"
-        volumes:
-            - ./tipbot/config.json:/config.json
-        command: bash -c 'while !</dev/tcp/db/5432; do echo "waiting for database"; sleep 1; done; /worker'
+        command: bash -c 'while !</dev/tcp/database/5432; do echo "waiting for database"; sleep 1; done; /worker'
         depends_on:
             - database
         environment:
             REDIS_URL: 'redis://redis:6379'
+    website:
+        build:
+            context: "."
+            dockerfile: "docker/Dockerfile.website"
+        command: bash -c 'while !</dev/tcp/database/5432; do echo "waiting for database"; sleep 1; done; /website-launcher'
+        depends_on:
+            - database
+            - redis
+        environment:
+            REDIS_URL: 'redis://redis:6379'
+        ports:
+            - "3000:3000"
+
     discord:
-        build: 
+        build:
             context: "."
             dockerfile: "docker/Dockerfile.discord"
-        volumes:
-            - ./tipbot/config.json:/config.json
-        command: bash -c 'while !</dev/tcp/db/5432; do echo "waiting for database"; sleep 1; done; /discord_launcher'
+        command: bash -c 'while !</dev/tcp/database/5432; do echo "waiting for database"; sleep 1; done; /discord-launcher'
         depends_on:
             - database
         environment:
@@ -34,9 +43,7 @@ services:
         build:
             context: "."
             dockerfile: "docker/Dockerfile.twitch"
-        volumes:
-            - ./tipbot/config.json:/config.json
-        command: bash -c 'while !</dev/tcp/db/5432; do echo "waiting for database"; sleep 1; done; /twitch_launcher'
+        command: bash -c 'while !</dev/tcp/database/5432; do echo "waiting for database"; sleep 1; done; /twitch-launcher'
         depends_on:
             - database
         environment:
