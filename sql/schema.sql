@@ -37,6 +37,7 @@ CREATE TABLE coins (
        uri_scheme text NOT NULL,
 
        tx_fee numeric(64, 8) NOT NULL,
+       confirmations int NOT NULL,
 
        name_short text NOT NULL,
        name_long text NOT NULL,
@@ -70,8 +71,8 @@ CREATE TABLE transactions (
        account_id bigint NOT NULL REFERENCES accounts(id),
        amount numeric(64, 8) NOT NULL,
 
-       address text,
-       coin_transaction_id text,
+       coin_transaction_hash text,
+       -- should reference withdrawals or deposits
 
        time timestamptz NOT NULL DEFAULT now()
 );
@@ -121,17 +122,27 @@ CREATE TABLE channels (
 CREATE TYPE deposit_status AS ENUM('NEW', 'CREDITED', 'NEVER');
 CREATE TABLE deposits (
        txhash text PRIMARY KEY,
+       coin int NOT NULL REFERENCES coins,
        status deposit_status NOT NULL,
-       user_id bigint,
+       account_id int REFERENCES accounts(id),
 
        created_time timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE deposit_addresses (
+      address text PRIMARY KEY,
+      coin int NOT NULL REFERENCES coins(id),
+      account_id int NOT NULL REFERENCES accounts(id),
+      active boolean NOT NULL,
+
+      created_time timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE withdrawals (
        id serial PRIMARY KEY,
        pending boolean DEFAULT true,
        coin int NOT NULL REFERENCES coins,
-       user_id bigint NOT NULL REFERENCES accounts(id),
+       user_id int NOT NULL REFERENCES accounts(id),
        address text NOT NULL,
        amount numeric(64, 8) CONSTRAINT positive_amount CHECK (amount > 0),
 
@@ -155,7 +166,7 @@ CREATE TABLE offsite (
 	id serial PRIMARY KEY,
 
 	memo offsite_memo NOT NULL,
-	user_id bigint NOT NULL REFERENCES accounts(id),
+	user_id int NOT NULL REFERENCES accounts(id),
 
 	amount numeric(64, 8) CONSTRAINT positive_amount CHECK (amount > 0),
 	created_time timestamptz NOT NULL DEFAULT now()
@@ -168,7 +179,7 @@ CREATE TABLE offsite_addresses (
 
 	address text NOT NULL,
 
-	user_id bigint NOT NULL REFERENCES accounts(id),
+	user_id int NOT NULL REFERENCES accounts(id),
 	created_time timestamptz NOT NULL DEFAULT now()
 );
 

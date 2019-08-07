@@ -6,6 +6,9 @@ require "kemal-session-redis"
 
 require "../data/**"
 
+require "mosquito"
+require "../jobs/deposit"
+
 # require "big/json"
 # require "pg"
 # require "pg/pg_ext/big_decimal"
@@ -21,7 +24,7 @@ add_handler AuthHandler.new
 Kemal::Session.config do |config|
   config.secret = ENV["SECRET"]
   config.timeout = 10.minutes
-  config.engine = Kemal::Session::RedisEngine.new(host: "localhost", port: 6379)
+  config.engine = Kemal::Session::RedisEngine.new(host: "redis", port: 6379)
 end
 
 public_folder "src/website/public/"
@@ -33,7 +36,7 @@ end
 class Website
   def self.run
     # redirect_uri = "http://127.0.0.1:3000/auth/callback/"
-    redirect_uri = "https://34aff0e1.ngrok.io/auth/callback/"
+    redirect_uri = "https://d396a3cc.ngrok.io/auth/callback/"
 
     discord_auth = DiscordOAuth2.new(ENV["DISCORD_CLIENT_ID"], ENV["DISCORD_CLIENT_SECRET"], redirect_uri + "discord")
     twitch_auth = TwitchOAuth2.new(ENV["TWITCH_CLIENT_ID"], ENV["TWITCH_CLIENT_SECRET"], redirect_uri + "twitch")
@@ -56,6 +59,15 @@ class Website
       user = env.session.bigint?("user_id")
       halt env, status_code: 403 unless user.is_a?(Int64)
       default_render("link_accounts.ecr")
+    end
+
+    get "/admin" do |env|
+      user = env.session.bigint?("user_id")
+      halt env, status_code: 403 unless user.is_a?(Int64)
+
+      # Admins only
+      halt env, status_code: 500 unless user == 163607982473609216
+      default_render("admin.cr")
     end
 
     # get "/redirect_auth" do |env|
@@ -109,6 +121,14 @@ class Website
     get "/logout" do |env|
       env.session.destroy
       env.redirect("/")
+    end
+
+    # walletnotify=curl --retry 10 -X POST http://website:3000/walletnotify?coin=0&tx=%s
+    get "/walletnotify" do |env|
+      coin = Data::Coin.read(env.params.query["coin"].to_i32)
+      tx = env.params.query["tx"]
+
+      Data::Deposit.create(tx, coin, :new)
     end
 
     # get "/docs" do |env|

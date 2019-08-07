@@ -26,7 +26,7 @@ module ChatBot
       Plugins::Balance.bind(bot, coin)
       Plugins::Tip.bind(bot, coin, twitch)
       Plugins::Withdraw.bind(bot, coin)
-      # Plugins::Deposit.bind(bot, coin)
+      Plugins::Deposit.bind(bot, coin)
       Plugins::Support.bind(bot, coin)
       Plugins::Donation.bind(bot, coin)
       Plugins::Whisper.bind(bot)
@@ -68,71 +68,6 @@ module ChatBot
 
   extend self
 
-  # receive wallet transactions and insert into coin_transactions
-  def start_listening(config : Config, coin : CoinApi)
-    spawn do
-      server = HTTP::Server.new do |context|
-        next unless context.request.method == "POST"
-        txhash = context.request.query_params["tx"]
-
-        tx = coin.get_transaction(txhash).as_h
-        next unless tx.is_a?(Hash(String, JSON::Any))
-        details_array = tx["details"].as_a
-        next unless details_array.is_a?(Array(JSON::Any))
-
-        details_array.each do |details|
-          details = details.as_h
-          next unless details.is_a?(Hash(String, JSON::Any))
-
-          if details["category"] == "receive"
-            # db.create_coin_transaction(txhash)
-            # TODO
-          end
-        end
-      end
-      server.bind_tcp(config.walletnotify_port)
-      server.listen
-    end
-  end
-
-  # Check for pending deposits and processes them
-  def check_pending_deposits(coin : CoinApi, config : Config, twitch : Twitch::Client)
-    # txlist = db.db.query_all("SELECT txhash FROM coin_transactions WHERE status = $1", "new", as: String)
-    # return if txlist.empty?
-
-    # txlist.each do |transaction|
-    #   tx = coin.get_transaction(transaction).as_h
-    #   next unless tx.is_a?(Hash(String, JSON::Any))
-
-    #   confirmations = tx["confirmations"].as_i
-    #   next unless confirmations >= config.confirmations
-
-    #   details_array = tx["details"].as_a
-    #   next unless details_array.is_a?(Array(JSON::Any))
-
-    #   details_array.each do |details|
-    #     details = details.as_h
-    #     next unless details.is_a?(Hash(String, JSON::Any))
-
-    #     next unless details["category"] == "receive"
-
-    #     # TODO the line below could use some improvement
-    #     query = db.db.query_all("SELECT id FROM accounts WHERE address = $1", details["address"], as: Int32)
-
-    #     next if db.update_coin_transaction_status(transaction, "never") if (query == [0] || query.empty?)
-
-    #     user = query[0]
-    #     amount = BigDecimal.new(details["amount"].to_s)
-
-    #     db.create_detailed_transaction("deposit", 0, user, amount, transaction)
-    #     db.update_balance(user)
-    #     db.update_coin_transaction_status(transaction, "credited")
-    #     login = twitch.get_user_by_id(db.get_account_twitch_id_by_id(user))
-    #     # bot.whisper(login, "Your deposit of #{amount} #{coin.name_short} just got confirmed.")
-    #   end
-    # end
-  end
-
   # Inserts potential deposits during downtime of walletnotify
   def insert_history_deposits(coin : CoinApi)
     txlist = coin.list_transactions(1000).as_a
@@ -154,25 +89,6 @@ module ChatBot
   def extract_nick(address : String)
     address.split('!')[0]
   end
-
-  # # Takes a String and parses a BigDecimal Amount
-  # def amount(balance : BigDecimal, string : String) : BigDecimal?
-  #   if string == "all"
-  #     balance
-  #   elsif string == "half"
-  #     BigDecimal.new(balance / 2).round(8)
-  #   elsif string == "rand"
-  #     BigDecimal.new(Random.rand(1..6))
-  #   elsif string == "bigrand"
-  #     BigDecimal.new(Random.rand(1..42))
-  #   elsif m = /(?<amount>^[0-9,\.]+)/.match(string)
-  #     begin
-  #       return nil unless string == m["amount"]
-  #       BigDecimal.new(m["amount"]).round(8)
-  #     rescue InvalidBigDecimalException
-  #     end
-  #   end
-  # end
 
   def mention(login : String, string : String)
     "@#{login} #{string}"

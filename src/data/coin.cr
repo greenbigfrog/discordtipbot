@@ -42,6 +42,7 @@ struct Data::Coin
     uri_scheme: String,
 
     tx_fee: BigDecimal,
+    confirmations: Int32,
 
     name_short: String,
     name_long: String,
@@ -66,6 +67,14 @@ struct Data::Coin
 
   def self.read(id : Int32)
     DATA.query_one("SELECT * FROM coins WHERE id = $1", id, as: self).not_nil!
+  end
+
+  def self.read_all
+    hash = Hash(Int32, Coin).new
+    DATA.query_all("SELECT * FROM coins", as: self).each do |coin|
+      hash[coin.id] = coin
+    end
+    hash
   end
 
   def self.read_discord_token(coin : Int32)

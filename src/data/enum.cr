@@ -9,10 +9,4 @@ module Data
     SPONSORED
     LUCKY
   end
-
-  enum DepositStatus
-    NEW
-    CREDITED
-    NEVER
-  end
 end

@@ -13,7 +13,7 @@ class MW::RateLimiter
   end
 
   private def reply(client, channel_id)
-    client.create_message(channel_id, "This command has been ratelimited. Please wait before trying again. You can get rid of this by getting premium. Visit #{SUPPORT} for more info.")
+    client.create_message(channel_id, "This command has been ratelimited. Please wait before trying again.") # You can get rid of this by getting premium. Visit #{SUPPORT} for more info.
   end
 
   def call(payload, ctx)

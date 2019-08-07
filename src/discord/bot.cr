@@ -37,8 +37,8 @@ class DiscordBot
       rl, Ping.new)
     @bot.on_message_create(error, config, Command.new("withdraw"),
       rl, Withdraw.new(@coin))
-    # @bot.on_message_create(error, config, Command.new(["deposit", "address"]),
-    #   rl, Deposit.new)
+    @bot.on_message_create(error, config, Command.new(["deposit", "address"]),
+      rl, Deposit.new(@coin))
     @bot.on_message_create(error, config, Command.new("soak"),
       rl, NoPrivate.new, typing, Soak.new(@coin, @cache, @presence_cache))
     @bot.on_message_create(error, config, Command.new("tip"),
@@ -97,19 +97,20 @@ class DiscordBot
 
       reply(msg, "The bot is in #{guilds} Guilds and sees #{users} users (of which #{cached_users} users are guaranteed unique)\n*(This is for all bots running in this process on this shard. TL;DR It's broken)*")
     end
-    # @bot.on_message_create(error, config,
-    #   Command.new("getinfo"), rl, bot_admin, OnlyPrivate.new) do |msg, _|
-    #   info = @tip.get_info.as_h
-    #   next unless info.is_a?(Hash(String, JSON::Any))
+    @bot.on_message_create(error, config,
+      Command.new("getinfo"), rl, bot_admin, OnlyPrivate.new) do |msg, _|
+      api = CoinApi.new(@coin, Logger.new(STDOUT))
+      info = api.get_info.as_h
+      next unless info.is_a?(Hash(String, JSON::Any))
 
-    #   embed = Array(Discord::EmbedField).new
+      embed = Array(Discord::EmbedField).new
 
-    #   info.map do |key, val|
-    #     embed << Discord::EmbedField.new(key, val.to_s, true) unless val.to_s.empty?
-    #   end
+      info.map do |key, val|
+        embed << Discord::EmbedField.new(key, val.to_s, true) unless val.to_s.empty?
+      end
 
-    #   @bot.create_message(msg.channel_id, ZWS, Discord::Embed.new(fields: embed))
-    # end
+      @bot.create_message(msg.channel_id, ZWS, Discord::Embed.new(fields: embed))
+    end
     @bot.on_message_create(error, config,
       Command.new("help"), rl) do |msg, _|
       # TODO rewrite help command
@@ -222,16 +223,6 @@ class DiscordBot
 
       @cache.cache(Discord::User.new(presence.user)) if presence.user.full?
     end
-
-    # receive wallet transactions and insert into coin_transactions
-    # raven_spawn do
-    #   server = HTTP::Server.new do |context|
-    #     next unless context.request.method == "POST"
-    #     @tip.insert_tx(context.request.query_params["tx"])
-    #   end
-    #   server.bind_tcp("0.0.0.0".walletnotify_port)
-    #   server.listen
-    # end
 
     # on launch check for deposits and insert them into coin_transactions during down time
     # raven_spawn do
