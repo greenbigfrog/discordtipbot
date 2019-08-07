@@ -12,3 +12,4 @@ RUN apt-get update \
 RUN adduser --disabled-password --gecos "" docker
 USER docker
 COPY --from=0 /src/website-launcher /
+COPY --from=0 /src/src/website/public/ /public/

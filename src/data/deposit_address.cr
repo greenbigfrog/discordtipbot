@@ -35,6 +35,10 @@ struct Data::DepositAddress
     DATA.query_one?("SELECT * FROM deposit_addresses WHERE address = $1", address, as: self)
   end
 
+  def self.read_all_active_for_account(account_id : Int32)
+    DATA.query_all("SELECT * FROM deposit_addresses WHERE active = true AND account_id = $1", account_id, as: self)
+  end
+
   def deactivate
     @active = false
     DATA.exec("UPDATE deposit_addresses SET active = false WHERE address = $1", @address)

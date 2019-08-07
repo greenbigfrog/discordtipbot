@@ -27,8 +27,6 @@ Kemal::Session.config do |config|
   config.engine = Kemal::Session::RedisEngine.new(host: "redis", port: 6379)
 end
 
-public_folder "src/website/public/"
-
 macro default_render(file)
   render("src/website/views/#{{{file}}}", "src/website/layouts/default.ecr")
 end
@@ -48,7 +46,13 @@ class Website
     get "/balance" do |env|
       user = env.session.bigint?("user_id")
       halt env, status_code: 403 unless user.is_a?(Int64)
-      "Display Balances here. Authenticated user has ID #{user} \n #{Data::Account.read(user).balances}"
+      default_render("balance.ecr")
+    end
+
+    get "/deposit" do |env|
+      user = env.session.bigint?("user_id")
+      halt env, status_code: 403 unless user.is_a?(Int64)
+      default_render("deposit.ecr")
     end
 
     get "/statistics" do |env|
