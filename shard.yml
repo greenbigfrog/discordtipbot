@@ -27,12 +27,12 @@ dependencies:
   kemal:
     github: kemalcr/kemal
     branch: master
-  # kemal-csrf:
-    # github: exploitd/kemal-csrf
+  kemal-csrf:
+    github: kemalcr/kemal-csrf
   kemal-session:
     github: kemalcr/kemal-session
   # kemal-session-redis:
-  #   github: codenoid/kemal-session-redis
+  #   github: greenbigfrog/kemal-session-redis
   #   branch: master
   bot_list:
     github: z64/bot_list
@@ -41,6 +41,7 @@ dependencies:
     branch: twitch
   mosquito:
     github: robacarp/mosquito
+    version: 0.5.0
 
 # development_dependencies:
 #   ameba:

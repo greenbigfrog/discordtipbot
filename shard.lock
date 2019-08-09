@@ -1,12 +1,8 @@
 version: 1.0
 shards:
-  ameba:
-    github: veelenga/ameba
-    version: 0.9.0
-
   any_hash:
-    github: Sija/any_hash.cr
-    version: 0.2.2
+    github: sija/any_hash.cr
+    commit: 1907068cdbfc3ef9759954194472b82f9f19c6e4
 
   bitcoin_rpc:
     github: citizen428/bitcoin_rpc
@@ -18,7 +14,7 @@ shards:
 
   crirc:
     github: greenbigfrog/crirc
-    commit: 6f22059f87b4346960d4ee7345ad6595bb28c0d2
+    commit: a542984553118fdc235370a167fb8af95ab3bca8
 
   db:
     github: crystal-lang/crystal-db
@@ -30,11 +26,11 @@ shards:
 
   discordcr-middleware:
     github: z64/discordcr-middleware
-    commit: 1606ec9a61aa8aa1c04810227fd796807f8ffb93
+    commit: 5c0b2ba082839aef76b6f452eacb30a54bdd2675
 
   exception_page:
     github: crystal-loot/exception_page
-    version: 0.1.1
+    version: 0.1.2
 
   humanize_time:
     github: mamantoha/humanize_time
@@ -42,35 +38,31 @@ shards:
 
   i18n:
     github: TechMagister/i18n.cr
-    commit: d8a8933f6a4eb7d9790c3803cb8bec06c304ea5c
+    version: 0.3.1
 
   kemal:
     github: kemalcr/kemal
-    commit: c3dd24482ec8379004ffd8aa61258995b80d0b41
+    commit: 15022c25b824ecbfe465862bfa8a8e37a4b6ab40
+
+  kemal-csrf:
+    github: kemalcr/kemal-csrf
+    version: 0.2.0
 
   kemal-session:
     github: kemalcr/kemal-session
-    version: 0.11.0
-
-  kemal-session-redis:
-    github: codenoid/kemal-session-redis
-    commit: 9515e315236d97fdf81bebb459cdac0f48beaaa0
+    commit: 9e4fd7336a09ec4dd0b2dbec49eb14aafc19890a
 
   kilt:
     github: jeromegn/kilt
     version: 0.4.0
 
-  micrate:
-    github: amberframework/micrate
-    version: 0.3.3
-
   mosquito:
     github: robacarp/mosquito
-    version: 0.3.0
+    version: 0.5.0
 
   pg:
     github: greenbigfrog/crystal-pg
-    commit: d8082a2f3f9f8625a1284d71b52c147ccd96c10f
+    commit: e12b2557682e7cbe18206c1e00a30cd83db19db7
 
   pool:
     github: ysbaddaden/pool
@@ -85,8 +77,8 @@ shards:
     commit: b9992a7c474f9f863aa34ac677244d6b520cba97
 
   raven:
-    github: greenbigfrog/raven.cr
-    commit: 1060c969371e4fb4f03f75f048b9d90c0b8f77ef
+    github: sija/raven.cr
+    version: 1.5.0
 
   redis:
     github: stefanwille/crystal-redis
