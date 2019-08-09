@@ -230,33 +230,6 @@ class DiscordBot
     #   @log.info("#{@coin.name_short}: Inserted deposits during down time")
     # end
 
-    # check for confirmed deposits every 60 seconds
-    # raven_spawn do
-    #   Discord.every(30.seconds) do
-    #     users = @tip.check_deposits
-    #     @log.debug("#{@coin.name_short}: Checked deposits")
-    #     next if users.nil?
-    #     next if users.empty?
-    #     users.each do |x|
-    #       dm_deposit(x)
-    #     end
-    #   end
-    # end
-
-    # Check for pending withdrawals every X seconds
-    # raven_spawn do
-    #   Discord.every(30.seconds) do
-    #     users = @tip.process_pending_withdrawals
-    #     users.each do |id, hash|
-    #       begin
-    #         @bot.create_message(@cache.resolve_dm_channel(id), "Your withdrawal just got processed #{Emoji::CHECK}\n*Transaction ID: #{hash}*")
-    #       rescue
-    #         @log.warn("#{@coin.name_short}: Unable to send confirmation message to #{id}, while processing pending withdrawals")
-    #       end
-    #     end
-    #   end
-    # end
-
     # warn users that the tipbot shouldn't be used as wallet if their balance exceeds @coin.high_balance
     # raven_spawn do
     #   Discord.every(1.hours) do
