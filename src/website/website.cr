@@ -31,10 +31,11 @@ macro default_render(file)
   render("src/website/views/#{{{file}}}", "src/website/layouts/default.ecr")
 end
 
+STDOUT.sync = true
+
 class Website
   def self.run
-    # redirect_uri = "http://127.0.0.1:3000/auth/callback/"
-    redirect_uri = "https://d396a3cc.ngrok.io/auth/callback/"
+    redirect_uri = "http://127.0.0.1:3000/auth/callback/"
 
     discord_auth = DiscordOAuth2.new(ENV["DISCORD_CLIENT_ID"], ENV["DISCORD_CLIENT_SECRET"], redirect_uri + "discord")
     twitch_auth = TwitchOAuth2.new(ENV["TWITCH_CLIENT_ID"], ENV["TWITCH_CLIENT_SECRET"], redirect_uri + "twitch")
