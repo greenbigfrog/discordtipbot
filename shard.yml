@@ -47,6 +47,6 @@ dependencies:
     github: robacarp/mosquito
     version: 0.5.0
 
-# development_dependencies:
-#   ameba:
-#     github: veelenga/ameba
+development_dependencies:
+  ameba:
+    github: veelenga/ameba

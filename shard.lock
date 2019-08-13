@@ -1,5 +1,9 @@
 version: 1.0
 shards:
+  ameba:
+    github: veelenga/ameba
+    version: 0.10.0
+
   any_hash:
     github: sija/any_hash.cr
     commit: 1907068cdbfc3ef9759954194472b82f9f19c6e4
