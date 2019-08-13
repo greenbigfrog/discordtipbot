@@ -4,7 +4,7 @@ version: 0.2.0
 authors:
   - Jonathan B. <greenbigfrog@gmail.com>
 
-crystal: 0.29.0
+crystal: 0.30.0
 
 license: MIT
 
@@ -28,12 +28,16 @@ dependencies:
     github: kemalcr/kemal
     branch: master
   kemal-csrf:
-    github: kemalcr/kemal-csrf
+    github: rndtrash/kemal-csrf
+    # version: ~> 0.5.0
+    branch: master
   kemal-session:
     github: kemalcr/kemal-session
-  # kemal-session-redis:
-  #   github: greenbigfrog/kemal-session-redis
-  #   branch: master
+    version: ~> 0.11.0
+  kemal-session-redis:
+    github: greenbigfrog/kemal-session-redis
+    # branch: master
+    commit: 13e7f2a49611562f9fc0bc37bf2f11f58d9be779
   bot_list:
     github: z64/bot_list
   crirc:
