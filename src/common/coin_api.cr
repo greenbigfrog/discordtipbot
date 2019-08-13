@@ -73,7 +73,7 @@ class CoinApi
   end
 
   def get_transaction(tx : String)
-    res = @rpc.get_transaction(tx).as_h
+    @rpc.get_transaction(tx).as_h
   end
 
   private def address_info(address : String)
