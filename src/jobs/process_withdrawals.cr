@@ -16,7 +16,7 @@ class ProcessWithdrawalsJob < Mosquito::PeriodicJob
     log "These transactions/withdrawals are pending: #{input}"
 
     Data::Coin.read.each do |coin|
-      rpc = CoinApi.new(coin, Logger.new(STDOUT))
+      rpc = CoinApi.new(coin, Logger.new(STDOUT), backoff: false)
       final = Hash(String, BigDecimal).new
 
       transactions = input[coin.id]

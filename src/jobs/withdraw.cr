@@ -17,7 +17,7 @@ class WithdrawalJob < Mosquito::QueuedJob
 
   def perform
     cfg = Data::Coin.read(coin)
-    api = CoinApi.new(cfg, Logger.new(STDOUT))
+    api = CoinApi.new(cfg, Logger.new(STDOUT), backoff: false)
     account = Data::Account.read(user)
 
     reserve_amount = amount + cfg.tx_fee

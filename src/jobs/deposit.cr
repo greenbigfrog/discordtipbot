@@ -15,7 +15,7 @@ class DepositJob < Mosquito::PeriodicJob
     new_deposits.each do |deposit|
       log("Processing deposit: #{deposit}")
       coin = coins[deposit.coin]
-      api = CoinApi.new(coin, Logger.new(STDOUT))
+      api = CoinApi.new(coin, Logger.new(STDOUT), backoff: false)
 
       tx = api.get_transaction(deposit.txhash)
       next deposit.mark_never unless tx.is_a?(Hash(String, JSON::Any))
