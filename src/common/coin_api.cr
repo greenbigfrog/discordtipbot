@@ -5,7 +5,7 @@ require "big/json"
 class CoinApi
   @rpc : BitcoinRpc
 
-  def initialize(@coin : Data::Coin, @log : Logger)
+  def initialize(@coin : Data::Coin, @log : Logger, backoff : Bool = true)
     @log.debug("#{coin.name_short}: Initializing RPC interface for #{@coin.name_long}")
 
     rpc = nil
@@ -15,6 +15,7 @@ class CoinApi
         rpc = BitcoinRpc.new(@coin.rpc_url, @coin.rpc_username, @coin.rpc_password).tap(&.getinfo)
         break
       rescue ex
+        raise "Unable to connect to RPC" unless backoff
         @log.warn("Unable to connect to Coin Daemon (#{ex.class}: #{ex.message}). Retrying after #{retry_delay} seconds.")
         sleep retry_delay
         retry_delay = Math.min(retry_delay * 2, 10)
