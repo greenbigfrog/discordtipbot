@@ -33,7 +33,7 @@ class Website
     discord_auth = DiscordOAuth2.new(ENV["DISCORD_CLIENT_ID"], ENV["DISCORD_CLIENT_SECRET"], redirect_uri + "discord")
     twitch_auth = TwitchOAuth2.new(ENV["TWITCH_CLIENT_ID"], ENV["TWITCH_CLIENT_SECRET"], redirect_uri + "twitch")
 
-    get "/" do |_env|
+    get "/" do |env|
       default_render("index.ecr")
     end
 
@@ -49,7 +49,7 @@ class Website
       default_render("deposit.ecr")
     end
 
-    get "/statistics" do |_env|
+    get "/statistics" do |env|
       default_render("statistics.ecr")
     end
 
@@ -85,7 +85,7 @@ class Website
     #   # HTML
     # end
 
-    get "/login" do |_env|
+    get "/login" do |env|
       default_render("login.ecr")
     end
 
