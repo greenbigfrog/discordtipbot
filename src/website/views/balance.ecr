@@ -1,6 +1,12 @@
 <html>
 <body>
 	<title>Balance</title>
-	<p><%= Data::Account.read(user).balances %></p>
+	<p>
+		<% coins = Data::Coin.read_all %>
+		<% Data::Account.read(user).balances.each do |bal| %>
+			<% coin = coins[bal.coin] %>
+			<%= "#{coin.name_long}: #{bal.balance} #{coin.name_short}" %>
+		<% end %>
+	</p>
 </body>
 </html>
