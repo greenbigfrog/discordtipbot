@@ -1,4 +1,5 @@
 require "./enum"
+require "../common/coin_api"
 
 struct Data::DepositAddress
   DB.mapping(
@@ -17,7 +18,7 @@ struct Data::DepositAddress
         address = db.query_one?("SELECT address FROM deposit_addresses WHERE active = true AND account_id = $1 AND coin = $2", user.id, coin.id, as: String)
         return address unless address.nil?
 
-        api = CoinApi.new(coin, Logger.new(STDOUT))
+        api = CoinApi.new(coin, Logger.new(STDOUT), backoff: false)
         address = api.new_address
 
         db.exec("INSERT INTO deposit_addresses (account_id, coin, address, active) VALUES ($1, $2, $3, true)", user.id, coin.id, address)
