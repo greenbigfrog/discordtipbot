@@ -29,7 +29,6 @@ services:
             REDIS_URL: 'redis://redis:6379'
         ports:
             - "3000:3000"
-
     discord:
         build:
             context: "."
@@ -48,3 +47,12 @@ services:
             - database
         environment:
             REDIS_URL: 'redis://redis:6379'
+    dogecoind:
+        image: 'greenbigfrog/dogecoin'
+        volumes:
+            - ./dogecoin.conf:/dogecoin/.dogecoin/dogecoin.conf
+            - dogecoin:/dogecoin/
+        command: 'dogecoind -printtoconsole -testnet'
+
+volumes:
+    dogecoin:
