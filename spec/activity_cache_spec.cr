@@ -1,5 +1,5 @@
 require "spec"
-require "../src/discordtipbot/activity_cache.cr"
+require "../src/discord/activity_cache.cr"
 
 describe ActivityCache::Entry do
   it "compares with another entry with the same ID" do
