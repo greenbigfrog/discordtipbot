@@ -1,4 +1,4 @@
-FROM crystallang/crystal:0.29.0
+FROM crystallang/crystal:0.30.1
 ADD . /src
 WORKDIR /src
 RUN crystal build --release --static -s src/discord-launcher.cr
