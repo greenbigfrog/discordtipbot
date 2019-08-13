@@ -9,17 +9,10 @@ require "../data/**"
 require "mosquito"
 require "../jobs/deposit"
 
-# require "big/json"
-# require "pg"
-# require "pg/pg_ext/big_decimal"
-# require "./discordtipbot/config"
-# require "./discordtipbot/premium"
-# require "discordcr"
-
 # TODO solve version conflict for
-# add_handler CSRF.new
+add_handler CSRF.new
 
-# add_handler AuthHandler.new
+add_handler AuthHandler.new
 
 Kemal::Session.config do |config|
   config.secret = ENV["SECRET"]
