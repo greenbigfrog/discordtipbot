@@ -19,7 +19,7 @@ require "../jobs/deposit"
 # TODO solve version conflict for
 # add_handler CSRF.new
 
-add_handler AuthHandler.new
+# add_handler AuthHandler.new
 
 Kemal::Session.config do |config|
   config.secret = ENV["SECRET"]
@@ -185,6 +185,17 @@ class Website
     get "/qr/:link" do |env|
       link = env.params.url["link"]
       env.redirect("https://chart.googleapis.com/chart?cht=qr&chs=300x300&chld=L%7C1&chl=#{link}")
+    end
+
+    post "/api/generate_deposit_address" do |env|
+      user = env.session.bigint?("user_id")
+      halt env, status_code: 403 unless user.is_a?(Int64)
+
+      coin = Data::Coin.read(env.params.query["coin"].to_i32)
+
+      Data::DepositAddress.read_or_create(coin, Data::Account.read(user))
+
+      env.redirect("/deposit")
     end
 
     Kemal.run
