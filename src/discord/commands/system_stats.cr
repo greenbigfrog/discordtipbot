@@ -37,7 +37,7 @@ class SystemStats
       payload.channel_id,
       "**bot statistics**",
       Discord::Embed.new(
-        description: "**uptime:** `#{Time.now - START_TIME}`",
+        description: "**uptime:** `#{Time.now - TB::START_TIME}`",
         fields: [stats_field, cache_field]))
 
     yield

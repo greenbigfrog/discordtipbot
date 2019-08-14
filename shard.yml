@@ -49,6 +49,9 @@ dependencies:
   crometheus:
     gitlab: bigforcegun/crometheus
     branch: master
+  tb:
+    github: greenbigfrog/tipbot-common
+    branch: master
 
 development_dependencies:
   ameba:

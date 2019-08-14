@@ -6,7 +6,7 @@ module ChatBot::Plugins::Balance
       name = msg.display_name || ChatBot.extract_nick(msg.source)
       raise NO_USER_ID unless id = msg.user_id
       # TODO get rid of static coin
-      bal = Data::Account.read(:twitch, id).balance(coin)
+      bal = TB::Data::Account.read(:twitch, id).balance(coin)
 
       bot.reply(msg, "#{name}'s balance is: #{bal} #{coin.name_short}")
     end

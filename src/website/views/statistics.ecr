@@ -1,6 +1,6 @@
 <h1>Statistics</h1>
-<% res = Data::Statistics.read %>
+<% res = TB::Data::Statistics.read %>
 <p>There have been a total of <%= res.transaction_count %> Transactions.</p>
 <p>A total of <%= res.transaction_sum %> have been transferred.<br>
 <%= res.tip_sum %> were tipped, <%= res.soak_sum %> soaked, and <%= res.rain_sum %> rained.</p>
-<p><small>These Statistics were last updated at <%= Data::Statistics.last %>.</small></p>
+<p><small>These Statistics were last updated at <%= TB::Data::Statistics.last %>.</small></p>

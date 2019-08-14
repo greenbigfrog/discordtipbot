@@ -1,21 +1,18 @@
-require "../data/account"
-require "../data/coin"
-require "../data/deposit_address"
-require "../data/deposit"
+require "tb"
 
 class DepositJob < Mosquito::PeriodicJob
   run_every 1.minute
 
   def perform
-    coins = Data::Coin.read_all
+    coins = TB::Data::Coin.read_all
 
-    new_deposits = Data::Deposit.read_new
+    new_deposits = TB::Data::Deposit.read_new
     log("There are #{new_deposits.size} pending deposits")
 
     new_deposits.each do |deposit|
       log("Processing deposit: #{deposit}")
       coin = coins[deposit.coin]
-      api = CoinApi.new(coin, Logger.new(STDOUT), backoff: false)
+      api = TB::CoinApi.new(coin, Logger.new(STDOUT), backoff: false)
 
       tx = api.get_transaction(deposit.txhash)
       next deposit.mark_never unless tx.is_a?(Hash(String, JSON::Any))
@@ -44,7 +41,7 @@ class DepositJob < Mosquito::PeriodicJob
 
         amount = details["amount"].as_f
         amount = BigDecimal.new(amount)
-        deposit_address = Data::DepositAddress.read(address)
+        deposit_address = TB::Data::DepositAddress.read(address)
 
         if deposit_address && deposit_address.active
           log("Deposit address is #{deposit_address}")
@@ -57,7 +54,7 @@ class DepositJob < Mosquito::PeriodicJob
           end
         end
 
-        account = Data::Account.read(deposit_address.account_id)
+        account = TB::Data::Account.read(deposit_address.account_id)
         log("Deposit is for account: #{account}")
 
         account.deposit(amount, coin, deposit.txhash)
@@ -76,7 +73,7 @@ class DepositJob < Mosquito::PeriodicJob
     end
   end
 
-  # private def send_msg(platform : String, coin : Data::Coin, msg : String)
+  # private def send_msg(platform : String, coin : TB::Data::Coin, msg : String)
   #   case platform
   #   when "discord" then Discord::Client.new(coin.discord_token.not_nil!).create_message(destination.to_u64, msg)
   #   when "twitch" then log "Not implemented yet" # TODO

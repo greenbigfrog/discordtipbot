@@ -3,7 +3,7 @@ require "discordcr-middleware/middleware/cached_routes"
 require "discordcr-middleware/middleware/permissions"
 require "humanize_time"
 require "bot_list"
-require "../common/string_split"
+require "tb"
 require "../jobs/webhook"
 require "../jobs/new_guild_job"
 require "../jobs/withdraw"
@@ -15,9 +15,9 @@ CONFIG_COLUMNS = ["min_soak", "min_soak_total", "min_rain", "min_rain_total", "m
 
 class DiscordBot
   include Utilities
-  include StringSplit
+  include TB::StringSplit
 
-  def initialize(@coin : Data::Coin, @bot : Discord::Client, @cache : Discord::Cache, @log : Logger)
+  def initialize(@coin : TB::Data::Coin, @bot : Discord::Client, @cache : Discord::Cache, @log : Logger)
     @log.debug("#{@coin.name_short}: starting bot: #{@coin.name_long}")
     @active_users_cache = ActivityCache.new(10.minutes)
     @presence_cache = PresenceCache.new
@@ -70,7 +70,7 @@ class DiscordBot
     @bot.on_message_create(error, config, Command.new("active"),
       rl, NoPrivate.new) { |msg, _| active(msg) }
     @bot.on_message_create(error, config, Command.new("statistics"), rl) do |msg, _|
-      stats = Data::Statistics.read
+      stats = TB::Data::Statistics.read
       string = String.build do |io|
         io.puts "*Currently the users of this bot have:*"
         io.puts "Transfered a total of **#{stats.total} #{@coin.name_short}** in #{stats.transaction_sum} transactions"
@@ -78,7 +78,7 @@ class DiscordBot
         io.puts "Of these **#{stats.tip_sum} #{@coin.name_short}** were tips,"
         io.puts "**#{stats.rain_sum} #{@coin.name_short}** were rains and"
         io.puts "**#{stats.soak_sum} #{@coin.name_short}** were soaks."
-        io.puts "*Last updated at #{Data::Statistics.last}*"
+        io.puts "*Last updated at #{TB::Data::Statistics.last}*"
       end
 
       reply(msg, string)
@@ -99,7 +99,7 @@ class DiscordBot
     end
     @bot.on_message_create(error, config,
       Command.new("getinfo"), rl, bot_admin, OnlyPrivate.new) do |msg, _|
-      api = CoinApi.new(@coin, Logger.new(STDOUT))
+      api = TB::CoinApi.new(@coin, Logger.new(STDOUT))
       info = api.get_info.as_h
       next unless info.is_a?(Hash(String, JSON::Any))
 
@@ -136,7 +136,7 @@ class DiscordBot
 
       case cmd
       when .starts_with? "terms"
-        reply(msg, TERMS)
+        reply(msg, TB::TERMS)
         # when .starts_with? "blocks"
         #   info = @tip.get_info
         #   next unless info.is_a?(JSON::Any)
@@ -152,7 +152,7 @@ class DiscordBot
       when .starts_with? "invite"
         reply(msg, "You can add this bot to your own guild using following URL: <https://discordapp.com/oauth2/authorize?&client_id=#{@coin.discord_client_id}&scope=bot>")
       when .starts_with? "uptime"
-        reply(msg, "Bot has been running for #{Time.now - START_TIME}")
+        reply(msg, "Bot has been running for #{Time.now - TB::START_TIME}")
       end
     end
 
@@ -195,8 +195,8 @@ class DiscordBot
 
     @bot.on_guild_create(error) do |payload|
       id = payload.id.to_u64.to_i64
-      if Data::Discord::Guild.new?(id, @coin)
-        guild = Data::Discord::Guild.read_config_id(id, @coin)
+      if TB::Data::Discord::Guild.new?(id, @coin)
+        guild = TB::Data::Discord::Guild.read_config_id(id, @coin)
         NewGuildJob.new(config_id: guild, coin: @coin.id, guild_name: payload.name, owner: payload.owner_id.to_u64.to_i64).enqueue
 
         owner = @cache.resolve_user(payload.owner_id)
@@ -268,7 +268,7 @@ class DiscordBot
   end
 
   private def dm_deposit(userid : UInt64)
-    @bot.create_message(@cache.resolve_dm_channel(userid), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit!\n*#{TERMS}*")
+    @bot.create_message(@cache.resolve_dm_channel(userid), "Your deposit just went through! Remember: Deposit Addresses are *one-time* use only so you'll have to generate a new address for your next deposit!\n*#{TB::TERMS}*")
   rescue ex
     user = @cache.resolve_user(userid)
     @log.warn("#{@coin.name_short}: Failed to contact #{userid} (#{user.username}##{user.discriminator}}) with deposit notification (Exception: #{ex.inspect_with_backtrace})")

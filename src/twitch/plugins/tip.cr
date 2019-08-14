@@ -1,6 +1,6 @@
 module ChatBot::Plugins::Tip
   extend self
-  include Amount
+  include TB::Amount
 
   def bind(bot, coin, twitch)
     bot.on(PRIVWHISP, message: /^#{coin.prefix}tip/, doc: {"tip", "tip [user] [amount]. Allows to tip/transfer cryptocurrency to a other user."}) do |msg|
@@ -24,9 +24,9 @@ module ChatBot::Plugins::Tip
       next bot.reply(msg, ChatBot.mention(name, "You have to tip at least #{coin.default_min_tip} #{coin.name_short}")) unless amount >= coin.default_min_tip
 
       # TODO get rid of static coin
-      res = Data::Account.transfer(amount, coin, from, target_id, :twitch, :tip)
+      res = TB::Data::Account.transfer(amount, coin, from, target_id, :twitch, :tip)
 
-      if res.is_a?(Data::Error)
+      if res.is_a?(TB::Data::Error)
         next bot.reply(msg, ChatBot.mention(name, "Insufficient Balance")) if res.reason == "insufficient balance"
         next bot.reply(msg, ChatBot.mention(name, "There was an unexpected error. Please try again later"))
       else

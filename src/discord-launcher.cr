@@ -1,4 +1,4 @@
 require "./discord/discordtipbot"
-require "./common/constants"
+require "tb"
 
 DiscordTipBot.run

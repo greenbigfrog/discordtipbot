@@ -96,3 +96,7 @@ shards:
     github: stefanwille/crystal-redis
     version: 2.1.1
 
+  tb:
+    github: greenbigfrog/tipbot-common
+    commit: 25779a3780c3388a0dfa6a11eb609ff7f39d9403
+

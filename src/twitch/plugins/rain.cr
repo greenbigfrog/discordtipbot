@@ -1,7 +1,7 @@
 module ChatBot::Plugins::Rain
   extend self
-  include Amount
-  include StringSplit
+  include TB::Amount
+  include TB::StringSplit
 
   def bind(bot, coin, twitch, active_users_cache)
     bot.on do |msg|
@@ -44,8 +44,8 @@ module ChatBot::Plugins::Rain
       next bot.reply(msg, ChatBot.mention(name, "You have to tip at least #{coin.default_min_tip} #{coin.name_short}")) unless amount >= coin.default_min_tip
 
       # TODO get rid of static coin
-      res = Data::Account.multi_transfer(total: amount, coin: coin, from: from, to: authors, platform: :twitch, memo: :rain)
-      if res.is_a?(Data::Error)
+      res = TB::Data::Account.multi_transfer(total: amount, coin: coin, from: from, to: authors, platform: :twitch, memo: :rain)
+      if res.is_a?(TB::Data::Error)
         next bot.reply(msg, ChatBot.mention(name, "Insufficient balance")) if res.reason == "insufficient balance"
         bot.reply(msg, ChatBot.mention(name, "There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{coin.prefix}support"))
       else

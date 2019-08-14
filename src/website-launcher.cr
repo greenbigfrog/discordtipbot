@@ -3,7 +3,8 @@ require "pg/pg_ext/big_decimal"
 
 require "logger"
 
+require "tb"
+
 require "./website/**"
-require "./common/constants"
 
 Website.run

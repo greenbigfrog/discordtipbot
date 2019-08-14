@@ -1,5 +1,5 @@
 class DiscordBot
-  include Amount
+  include TB::Amount
 
   def lucky(msg, ctx)
     client = ctx[Discord::Client]
@@ -23,10 +23,10 @@ class DiscordBot
 
     user = users.sample
 
-    res = Data::Account.transfer(amount: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: user.to_i64, platform: :discord, memo: :lucky)
-    if res.is_a?(Data::Error)
+    res = TB::Data::Account.transfer(amount: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: user.to_i64, platform: :discord, memo: :lucky)
+    if res.is_a?(TB::Data::Error)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient Balance") if res.reason == "insufficient balance"
-      client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{SUPPORT}")
+      client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds#{res.reason ? " (#{res.reason})" : nil}. Please try again later. If the problem persists, please visit the support server at #{TB::SUPPORT}")
     else
       client.create_message(msg.channel_id, "#{msg.author.username} luckily rained **#{amount} #{@coin.name_short}** onto **<@#{user}>**")
     end

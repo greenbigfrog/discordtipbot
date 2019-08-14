@@ -5,7 +5,7 @@ require "discordcr"
 require "big"
 require "http/client"
 
-require "./common/constants"
+require "tb"
 require "./jobs/*"
 
 Mosquito::Runner.start

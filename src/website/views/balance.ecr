@@ -2,8 +2,8 @@
 <body>
 	<title>Balance</title>
 	<p>
-		<% coins = Data::Coin.read_all %>
-		<% Data::Account.read(user).balances.each do |bal| %>
+		<% coins = TB::Data::Coin.read_all %>
+		<% TB::Data::Account.read(user).balances.each do |bal| %>
 			<% coin = coins[bal.coin] %>
 			<%= "#{coin.name_long}: #{bal.balance} #{coin.name_short}" %>
 		<% end %>

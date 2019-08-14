@@ -4,12 +4,12 @@ require "mosquito"
 require "../jobs/withdraw"
 
 class TwitchBot
-  def initialize(@coin : Data::Coin)
+  def initialize(@coin : TB::Data::Coin)
     oauth_token = coin.twitch_oauth_token
     oauth_id = coin.twitch_oauth_id
     raise "Missing oauth token or ID" unless oauth_id && oauth_token
     @twitch = Twitch::Client.new(oauth_token, oauth_id)
-    # @coin = CoinApi.new(config, Logger.new(STDOUT))
+    # @coin = TB::CoinApi.new(config, Logger.new(STDOUT))
   end
 
   def start

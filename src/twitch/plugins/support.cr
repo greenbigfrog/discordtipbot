@@ -5,7 +5,7 @@ module ChatBot::Plugins::Support
     bot.on(PRIVWHISP, message: /#{coin.prefix}support/, doc: {"support", "Responds with a link to a place to get support"}) do |msg|
       name = msg.display_name || ChatBot.extract_nick(msg.source)
 
-      bot.reply(msg, ChatBot.mention(name, "For support please visit #{SUPPORT}. (No registration required)"))
+      bot.reply(msg, ChatBot.mention(name, "For support please visit #{TB::SUPPORT}. (No registration required)"))
     end
 
     bot.on(message: /#{coin.prefix}help *$/, doc: {"help", "help [cmd]. Get help with a certain command by adding optional [cmd]"}) do |msg|

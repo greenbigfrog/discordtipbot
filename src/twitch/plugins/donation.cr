@@ -1,5 +1,5 @@
 module ChatBot::Plugins::Donation
-  include Amount
+  include TB::Amount
   extend self
 
   def bind(bot, coin)
@@ -19,9 +19,9 @@ module ChatBot::Plugins::Donation
       next bot.reply(msg, ChatBot.mention(name, "You have to tip at least #{coin.default_min_tip} #{coin.name_short}")) unless amount >= coin.default_min_tip
 
       # TODO get rid of static coin
-      res = Data::Account.transfer(amount, coin, id, 102038420, :twitch, :donation)
+      res = TB::Data::Account.transfer(amount, coin, id, 102038420, :twitch, :donation)
 
-      if res.is_a?(Data::Error)
+      if res.is_a?(TB::Data::Error)
         next bot.reply(msg, ChatBot.mention(name, "Insufficient Balance")) if res.reason == "insufficient balance"
         next bot.reply(msg, ChatBot.mention(name, "There was an unexpected error. Please try again later"))
       else

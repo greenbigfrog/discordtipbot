@@ -6,8 +6,7 @@ require "big/json"
 
 require "raven"
 
-require "../data/**"
-require "../common/**"
+require "tb"
 
 require "./bot"
 
@@ -18,7 +17,7 @@ class TwitchTipBot
     end
 
     Raven.capture do
-      Data::Coin.read.each do |coin|
+      TB::Data::Coin.read.each do |coin|
         raven_spawn(name: "#{coin.name_short} Bot") do
           chat_password = coin.twitch_chat_password
           oauth_token = coin.twitch_oauth_token

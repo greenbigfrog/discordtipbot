@@ -2,8 +2,8 @@
 <body>
 	<title>Deposit</title>
 	<p>
-		<% tmp_coin_list = Data::Coin.read_all %>
-		<% Data::DepositAddress.read_all_active_for_account(user.to_i32).each do |deposit| %>
+		<% tmp_coin_list = TB::Data::Coin.read_all %>
+		<% TB::Data::DepositAddress.read_all_active_for_account(user.to_i32).each do |deposit| %>
 			<%= "#{tmp_coin_list[deposit.coin].name_long}: #{deposit.address}" %>
 			<small><%="Generated at #{deposit.created_time}" %></small>
 			<% tmp_coin_list.delete(deposit.coin) %>

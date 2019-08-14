@@ -1,5 +1,5 @@
 require "./twitch/twitchtipbot"
 
-require "./common/constants"
+require "tb"
 
 TwitchTipBot.run

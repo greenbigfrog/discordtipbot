@@ -8,17 +8,15 @@ module Mosquito::Serializers::Primitives
   end
 end
 
-require "../common/coin_api"
-require "../data/account"
-require "../data/withdrawal"
+require "tb"
 
 class WithdrawalJob < Mosquito::QueuedJob
   params platform : String, destination : String, coin : Int32, user : Int32, address : String, amount : BigDecimal
 
   def perform
-    cfg = Data::Coin.read(coin)
-    api = CoinApi.new(cfg, Logger.new(STDOUT), backoff: false)
-    account = Data::Account.read(user)
+    cfg = TB::Data::Coin.read(coin)
+    api = TB::CoinApi.new(cfg, Logger.new(STDOUT), backoff: false)
+    account = TB::Data::Account.read(user)
 
     reserve_amount = amount + cfg.tx_fee
 
@@ -28,7 +26,7 @@ class WithdrawalJob < Mosquito::QueuedJob
     return send_msg(platform, cfg, "Please tip the other user instead of trying to send to an internal address") if api.internal?(address)
 
     res = account.withdraw(reserve_amount, cfg, address)
-    if res.is_a?(Data::Error)
+    if res.is_a?(TB::Data::Error)
       case res.reason
       when "insufficient balance" then return send_msg(platform, cfg, "Insufficient balance. #{insufficient_balance}")
       when nil                    then return send_msg(platform, cfg, "Something went wrong unexpectedly. Please try again later")
@@ -40,9 +38,9 @@ class WithdrawalJob < Mosquito::QueuedJob
       id = res
       raise "Something went wrong" unless id.is_a?(Int32)
 
-      w = Data::Withdrawal.read(id)
+      w = TB::Data::Withdrawal.read(id)
       loop do
-        w = Data::Withdrawal.read(id)
+        w = TB::Data::Withdrawal.read(id)
 
         break if w.pending == false
         sleep 5.seconds
@@ -51,7 +49,7 @@ class WithdrawalJob < Mosquito::QueuedJob
     end
   end
 
-  private def send_msg(platform : String, coin : Data::Coin, msg : String)
+  private def send_msg(platform : String, coin : TB::Data::Coin, msg : String)
     case platform
     when "discord" then Discord::Client.new(coin.discord_token.not_nil!).create_message(destination.to_u64, msg)
     when "twitch" then log "Not implemented yet" # TODO

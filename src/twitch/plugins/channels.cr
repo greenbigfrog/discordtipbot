@@ -17,7 +17,7 @@ module ChatBot::Plugins::Channels
 
       bot.join(Crirc::Protocol::Chan.new("##{channel}"))
 
-      Data::TwitchChannel.create(channel, coin)
+      TB::Data::TwitchChannel.create(channel, coin)
 
       bot.reply(msg, "Bot joined #{channel}")
 
@@ -33,7 +33,7 @@ module ChatBot::Plugins::Channels
       bot.reply(msg, "Leaving channel!")
       bot.part(Crirc::Protocol::Chan.new("#{msg.arguments}"), "not sure if this works")
 
-      Data::TwitchChannel.delete(author, coin)
+      TB::Data::TwitchChannel.delete(author, coin)
     end
   end
 end

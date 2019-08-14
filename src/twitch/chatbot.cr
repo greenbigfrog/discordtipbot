@@ -5,7 +5,7 @@ NO_USER_ID = Exception.new("There was no user_id sent")
 NO_ROOM_ID = Exception.new("No Room ID was specified")
 
 module ChatBot
-  def start(twitch : Twitch::Client, coin : Data::Coin)
+  def start(twitch : Twitch::Client, coin : TB::Data::Coin)
     raise "Missing twitch chat password" unless pass = coin.twitch_chat_password
     client = Crirc::Network::Client.new(
       ip: "irc.chat.twitch.tv",
@@ -46,7 +46,7 @@ module ChatBot
         end
 
         # Join all channels that were stored in database during last run
-        Data::TwitchChannel.read_names.each do |channel|
+        TB::Data::TwitchChannel.read_names.each do |channel|
           bot.join(Crirc::Protocol::Chan.new("##{channel}"))
         end
       end

@@ -1,7 +1,7 @@
 class Offsite
-  include Amount
+  include TB::Amount
 
-  def initialize(@coin : Data::Coin, @tip : TipBot, @config : Config)
+  def initialize(@coin : TB::Data::Coin, @tip : TipBot, @config : Config)
   end
 
   def call(msg, ctx)

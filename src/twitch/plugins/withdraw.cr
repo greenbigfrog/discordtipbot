@@ -1,6 +1,6 @@
 module ChatBot::Plugins::Withdraw
   extend self
-  include Amount
+  include TB::Amount
 
   def bind(bot, coin)
     bot.on(PRIVWHISP, message: /^#{coin.prefix}withdraw/, doc: {"withdraw", "withdraw [address] [amount]. Remove coins from the bot to your own wallet"}) do |msg|
@@ -20,7 +20,7 @@ module ChatBot::Plugins::Withdraw
       next bot.reply(msg, ChatBot.mention(name, "Please specify a valid amount")) unless amount
       # next bot.reply(msg, ChatBot.mention(name, "You have to withdraw at least #{config.min_withdraw} #{coin.name_short}")) unless amount >= coin.default_min_tip
 
-      account = Data::Account.read(:twitch, id)
+      account = TB::Data::Account.read(:twitch, id)
 
       WithdrawalJob.new(platform: "twitch", destination: msg.arguments.to_s, coin: coin.id, user: account.id, address: address, amount: amount).enqueue
     end

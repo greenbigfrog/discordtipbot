@@ -1,5 +1,5 @@
 class BotAdmin
-  def initialize(@coin : Data::Coin)
+  def initialize(@coin : TB::Data::Coin)
   end
 
   def call(msg, ctx)

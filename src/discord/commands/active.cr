@@ -8,7 +8,7 @@ class DiscordBot
   end
 
   private def active_users(msg : Discord::Message)
-    cache_users(msg) if Time.now - START_TIME < 10.minutes
+    cache_users(msg) if Time.now - TB::START_TIME < 10.minutes
 
     authors = @active_users_cache.resolve_to_id(msg.channel_id.to_u64)
     return unless authors

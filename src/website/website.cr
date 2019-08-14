@@ -4,7 +4,7 @@ require "kemal-session"
 require "oauth2"
 require "kemal-session-redis"
 
-require "../data/**"
+require "tb"
 
 require "mosquito"
 require "../jobs/deposit"
@@ -111,11 +111,11 @@ class Website
       when "twitch"
         user = twitch_auth.get_user_id_with_authorization_code(env.params.query)
         env.session.bigint("twitch", user)
-        user_id = Data::Account.read(:twitch, user).id.to_i64
+        user_id = TB::Data::Account.read(:twitch, user).id.to_i64
       when "discord"
         user = discord_auth.get_user_id_with_authorization_code(env.params.query)
         env.session.bigint("discord", user)
-        user_id = Data::Account.read(:discord, user).id.to_i64
+        user_id = TB::Data::Account.read(:discord, user).id.to_i64
       else
         halt env, status_code: 400
       end
@@ -132,10 +132,10 @@ class Website
 
     # walletnotify=curl --retry 10 -X POST http://website:3000/walletnotify?coin=0&tx=%s
     get "/walletnotify" do |env|
-      coin = Data::Coin.read(env.params.query["coin"].to_i32)
+      coin = TB::Data::Coin.read(env.params.query["coin"].to_i32)
       tx = env.params.query["tx"]
 
-      Data::Deposit.create(tx, coin, :new)
+      TB::Data::Deposit.create(tx, coin, :new)
     end
 
     # get "/docs" do |env|
@@ -193,9 +193,9 @@ class Website
       user = env.session.bigint?("user_id")
       halt env, status_code: 403 unless user.is_a?(Int64)
 
-      coin = Data::Coin.read(env.params.query["coin"].to_i32)
+      coin = TB::Data::Coin.read(env.params.query["coin"].to_i32)
 
-      Data::DepositAddress.read_or_create(coin, Data::Account.read(user))
+      TB::Data::DepositAddress.read_or_create(coin, TB::Data::Account.read(user))
 
       env.redirect("/deposit")
     end

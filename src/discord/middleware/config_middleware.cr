@@ -1,7 +1,7 @@
 class ConfigMiddleware
   getter cache : Discord::Cache | Nil
 
-  def initialize(@coin : Data::Coin)
+  def initialize(@coin : TB::Data::Coin)
   end
 
   def call(msg, ctx)
@@ -11,15 +11,15 @@ class ConfigMiddleware
 
   def get_prefix(msg)
     return @coin.prefix if @cache.not_nil!.resolve_channel(msg.channel_id).type == Discord::ChannelType::DM
-    Data::Discord::Guild.read_prefix(guild_id(msg), @coin) || @coin.prefix
+    TB::Data::Discord::Guild.read_prefix(guild_id(msg), @coin) || @coin.prefix
   end
 
   def get_config(msg : Discord::Message, memo : String)
-    Data::Discord::Guild.read_config(guild_id(msg), @coin, memo) || false
+    TB::Data::Discord::Guild.read_config(guild_id(msg), @coin, memo) || false
   end
 
   def get_decimal_config(msg : Discord::Message, memo : String)
-    res = Data::Discord::Guild.read_decimal_config(guild_id(msg), @coin, memo)
+    res = TB::Data::Discord::Guild.read_decimal_config(guild_id(msg), @coin, memo)
     # TODO `get` macro
     res || @coin.get("default_#{memo}")
   end

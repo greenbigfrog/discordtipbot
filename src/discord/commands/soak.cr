@@ -1,10 +1,10 @@
 class Soak
   include DiscordMiddleware::CachedRoutes
   include Utilities
-  include Amount
-  include StringSplit
+  include TB::Amount
+  include TB::StringSplit
 
-  def initialize(@coin : Data::Coin, @cache : Discord::Cache, @presence_cache : PresenceCache)
+  def initialize(@coin : TB::Data::Coin, @cache : Discord::Cache, @presence_cache : PresenceCache)
   end
 
   def call(msg, ctx)
@@ -59,8 +59,8 @@ class Soak
     end
     targets.reject! { |x| x == nil }
 
-    res = Data::Account.multi_transfer(total: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: targets, platform: :discord, memo: :soak)
-    if res.is_a?(Data::Error)
+    res = TB::Data::Account.multi_transfer(total: amount, coin: @coin, from: msg.author.id.to_u64.to_i64, to: targets, platform: :discord, memo: :soak)
+    if res.is_a?(TB::Data::Error)
       return client.create_message(msg.channel_id, "**ERROR**: Insufficient balance") if res.reason == "insufficient balance"
       client.create_message(msg.channel_id, "**ERROR**: There was a problem trying to transfer funds. Please try again later. If the problem persists, please contact the dev for help in #{@coin.prefix}support")
     else

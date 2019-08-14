@@ -6,14 +6,9 @@ require "discordcr"
 require "big"
 require "big/json"
 require "discordcr-middleware"
-
-require "../data/**"
 require "mosquito"
 
-require "../common/amount"
-require "../common/coin_api"
-require "../common/string_split"
-require "../common/raven_spawn"
+require "tb"
 
 require "./**"
 
@@ -35,7 +30,7 @@ class DiscordTipBot
 
       log.debug("starting forking")
 
-      Data::Coin.read.each do |coin|
+      TB::Data::Coin.read.each do |coin|
         raven_spawn(name: "#{coin.name_short} Bot") do
           token = coin.discord_token
           raise "Missing Discord Token" unless token
