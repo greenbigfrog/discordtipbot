@@ -4,6 +4,8 @@ This used to be a discord only tipbot, but now also supports multiple platforms 
 The code has been split up across multiple repos.
 
 - [Common Code across platforms](https://github.com/greenbigfrog/tipbot-common)
+- [Worker](https://github.com/greenbigfrog/tipbot-worker)
+- [Website](https://github.com/greenbigfrog/tipbot-website)
 
 [![Build Status](https://travis-ci.org/greenbigfrog/discordtipbot.svg?branch=master)](https://travis-ci.org/greenbigfrog/discordtipbot)
 
