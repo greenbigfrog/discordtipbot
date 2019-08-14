@@ -1,4 +1,9 @@
-# discordtipbot
+# Tipbot
+
+This used to be a discord only tipbot, but now also supports multiple platforms etc.
+The code has been split up across multiple repos.
+
+- [Common Code across platforms](https://github.com/greenbigfrog/tipbot-common)
 
 [![Build Status](https://travis-ci.org/greenbigfrog/discordtipbot.svg?branch=master)](https://travis-ci.org/greenbigfrog/discordtipbot)
 
@@ -34,7 +39,7 @@ In no event shall this bot or it's dev be responsible in the event of lost, stol
 - Copy and edit `sample-config.json` into `tipbot`
 - Modify `scripts/postgres-init.sh` to reflect the various coins, which will both create the required databases, as well as initialize a empty schema
 - Launch watchtower to automatically watch for changes to the images (in usual build process made by Travis): `docker run -d --name watchtower --network dtb -v /var/run/docker.sock:/var/run/docker.sock v2tec/watchtower`
-- Start a docker container called `database`, which'll mount a folder called `postgres-data` in the local directory: `docker run -d --name database --network dtb -v $PWD/postgres-data:/var/lib/postgresql/data -v $PWD/../sql/schema.sql:/schema.sql -v $PWD/../scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh -d postgres:11.1-alpine`
+- Start a docker container called `database`, which'll mount a folder called `postgres-data` in the local directory: `docker run -d --name database --network dtb -v $PWD/postgres-data:/var/lib/postgresql/data -v $PWD/sql/schema.sql:/schema.sql -v $PWD/scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh -d postgres:11.1-alpine`
 
 ## Building
 `scripts/deploy_to_docker.bash` contains instructions to build both a `dtb-launcher` and `dtb-website` image which will then contain binaries.
