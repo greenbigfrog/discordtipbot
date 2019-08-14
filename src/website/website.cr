@@ -9,10 +9,19 @@ require "../data/**"
 require "mosquito"
 require "../jobs/deposit"
 
+require "crometheus"
+
 # TODO solve version conflict for
 add_handler CSRF.new
 
 add_handler AuthHandler.new
+
+# Prometheus
+metrics_handler = Crometheus.default_registry.get_handler
+Crometheus.default_registry.path = "/metrics"
+
+add_handler metrics_handler
+add_handler Crometheus::Middleware::HttpCollector.new
 
 Kemal::Session.config do |config|
   config.secret = ENV["SECRET"]

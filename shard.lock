@@ -20,6 +20,10 @@ shards:
     github: greenbigfrog/crirc
     commit: a542984553118fdc235370a167fb8af95ab3bca8
 
+  crometheus:
+    gitlab: bigforcegun/crometheus
+    commit: 42bec4e2d2ab92d2b3d2dc21ec443aaa9feb7555
+
   db:
     github: crystal-lang/crystal-db
     version: 0.5.1
