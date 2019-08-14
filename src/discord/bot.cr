@@ -197,7 +197,7 @@ class DiscordBot
       id = payload.id.to_u64.to_i64
       if TB::Data::Discord::Guild.new?(id, @coin)
         guild = TB::Data::Discord::Guild.read_config_id(id, @coin)
-        NewGuildJob.new(config_id: guild, coin: @coin.id, guild_name: payload.name, owner: payload.owner_id.to_u64.to_i64).enqueue
+        TB::Worker::NewGuildJob.new(config_id: guild, coin: @coin.id, guild_name: payload.name, owner: payload.owner_id.to_u64.to_i64).enqueue
 
         owner = @cache.resolve_user(payload.owner_id)
         embed = Discord::Embed.new(
@@ -210,7 +210,7 @@ class DiscordBot
             Discord::EmbedField.new(name: "Membercount", value: payload.member_count.to_s),
           ]
         )
-        WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue
+        TB::Worker::WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue
       end
     end
 
@@ -323,7 +323,7 @@ class DiscordBot
   #       timestamp: Time.now,
   #       fields: offsite_fields(users, wallet, current_percentage, goal_percentage * 100)
   #     )
-  #     WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
+  #     TB::Worker::WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
   #     wait_for_balance_change(wallet, Compare::Smaller)
   #   end
   # end
@@ -345,7 +345,7 @@ class DiscordBot
   #       timestamp: Time.now,
   #       fields: offsite_fields(users, wallet, current_percentage, goal_percentage * 100)
   #     )
-  #     WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
+  #     TB::Worker::WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
   #     wait_for_balance_change(wallet, Compare::Bigger)
   #   end
   # end
@@ -378,6 +378,6 @@ class DiscordBot
   #     timestamp: Time.now,
   #     fields: [Discord::EmbedField.new(name: "New wallet balance", value: "#{new_balance} #{@coin.name_short}")]
   #   )
-  #   WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
+  #   TB::Worker::WebhookJob.new(webhook_type: "admin", embed: embed.to_json).enqueue
   # end
 end

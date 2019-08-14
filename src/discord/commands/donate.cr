@@ -38,7 +38,7 @@ class Donate
         timestamp: Time.now,
         fields: fields
       )
-      WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue
+      TB::Worker::WebhookJob.new(webhook_type: "general", embed: embed.to_json).enqueue
     end
     yield
   end

@@ -36,10 +36,6 @@ shards:
     github: z64/discordcr-middleware
     commit: 5c0b2ba082839aef76b6f452eacb30a54bdd2675
 
-  exception_page:
-    github: crystal-loot/exception_page
-    version: 0.1.2
-
   humanize_time:
     github: mamantoha/humanize_time
     version: 0.3.0
@@ -47,26 +43,6 @@ shards:
   i18n:
     github: TechMagister/i18n.cr
     version: 0.3.1
-
-  kemal:
-    github: kemalcr/kemal
-    commit: 15022c25b824ecbfe465862bfa8a8e37a4b6ab40
-
-  kemal-csrf:
-    github: rndtrash/kemal-csrf
-    commit: d20ee97d69dfe345b3436c4f3bbe7e5317f989fd
-
-  kemal-session:
-    github: kemalcr/kemal-session
-    version: 0.11.1
-
-  kemal-session-redis:
-    github: greenbigfrog/kemal-session-redis
-    commit: 13e7f2a49611562f9fc0bc37bf2f11f58d9be779
-
-  kilt:
-    github: jeromegn/kilt
-    version: 0.4.0
 
   mosquito:
     github: robacarp/mosquito
@@ -79,10 +55,6 @@ shards:
   pool:
     github: ysbaddaden/pool
     version: 0.2.3
-
-  radix:
-    github: luislavena/radix
-    version: 0.3.9
 
   rate_limiter:
     github: z64/rate_limiter
@@ -98,5 +70,9 @@ shards:
 
   tb:
     github: greenbigfrog/tipbot-common
-    commit: 25779a3780c3388a0dfa6a11eb609ff7f39d9403
+    commit: 2835f37874fab7f4b67ebaef13ea860c26bcf9d2
+
+  tb-worker:
+    github: greenbigfrog/tipbot-worker
+    commit: a2af010d18b9d977236a88b0f5f1e043efc27a09
 

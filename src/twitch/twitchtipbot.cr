@@ -1,6 +1,3 @@
-require "pg"
-require "pg/pg_ext/big_decimal"
-
 require "big"
 require "big/json"
 

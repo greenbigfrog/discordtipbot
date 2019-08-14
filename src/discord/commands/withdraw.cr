@@ -27,7 +27,7 @@ class Withdraw
     address = cmd[0]
 
     account = TB::Data::Account.read(:discord, msg.author.id.to_u64.to_i64)
-    WithdrawalJob.new(platform: "discord", destination: msg.channel_id.to_s, coin: @coin.id, user: account.id, address: address, amount: amount).enqueue
+    TB::Worker::WithdrawalJob.new(platform: "discord", destination: msg.channel_id.to_s, coin: @coin.id, user: account.id, address: address, amount: amount).enqueue
     yield
   end
 end

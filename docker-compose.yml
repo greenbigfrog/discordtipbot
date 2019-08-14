@@ -4,24 +4,21 @@ services:
     database:
         image: "postgres:11-alpine"
         volumes:
+            - postgres:/var/lib/postgresql/data
             - ./sql/schema.sql:/schema.sql
-            - ./scripts/postgres-init.sh:/docker-entrypoint-initdatabase.d/postgres-init.sh
+            - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/postgres-init.sh
     redis:
         image: "redis:alpine"
     worker:
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.worker"
+        image: "gbf/tb-worker"
         command: bash -c 'while !</dev/tcp/database/5432; do echo "waiting for database"; sleep 1; done; /worker'
         depends_on:
             - database
         environment:
             REDIS_URL: 'redis://redis:6379'
     website:
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.website"
-        command: bash -c 'while !</dev/tcp/database/5432; do echo "waiting for database"; sleep 1; done; /website-launcher'
+        image: "gbf/tb-website"
+        command: bash -c 'while !</dev/tcp/database/5432; do echo "waiting for database"; sleep 1; done; /website-entrypoint'
         depends_on:
             - database
             - redis
@@ -56,3 +53,4 @@ services:
 
 volumes:
     dogecoin:
+    postgres:

@@ -1,5 +1,3 @@
-# require "../../data/**"
-
 class DiscordBot
   include TB::Amount
 

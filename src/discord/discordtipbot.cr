@@ -1,7 +1,5 @@
 require "raven"
 require "logger"
-require "pg"
-require "pg/pg_ext/big_decimal"
 require "discordcr"
 require "big"
 require "big/json"
