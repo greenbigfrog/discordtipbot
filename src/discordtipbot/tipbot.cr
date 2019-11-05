@@ -9,7 +9,8 @@ class TipBot
   end
 
   def transfer(from : UInt64, to : UInt64, amount : BigDecimal, memo : String)
-    @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}")
+    log = memo == "rain" || memo == "soak"
+    @log.debug("#{@config.coinname_short}: Attempting to transfer #{amount} #{@config.coinname_full} from #{from} to #{to}") unless log
     ensure_user(from)
     ensure_user(to)
 
@@ -21,7 +22,7 @@ class TipBot
         transaction = tx.connection.exec(sql, memo, from, to, amount)
 
         if transaction.rows_affected == 1
-          @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}")
+          @log.debug("#{@config.coinname_short}: Transfered #{amount} #{@config.coinname_full} from #{from} to #{to}") unless log
         else
           @log.error("#{@config.coinname_short}: Failed to transfer #{amount} from #{from} to #{to}")
           return "error"
@@ -30,7 +31,7 @@ class TipBot
         update_balance(from, tx.connection)
         update_balance(to, tx.connection)
 
-        @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}")
+        @log.debug("#{@config.coinname_short}: Calculated balances for #{from} and #{to}") unless log
       rescue ex : PQ::PQError
         @log.error(ex)
         tx.rollback
